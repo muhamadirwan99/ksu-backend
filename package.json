@@ -4,8 +4,10 @@
   "description": "Backend for KSU",
   "main": "src/main.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "test": "jest -i",
-    "start": "node src/main.js"
+    "start": "node src/main.js",
+    "build": "prisma generate && <actual-build-command>"
   },
   "jest": {
     "transform": {

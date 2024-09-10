@@ -7,9 +7,8 @@ import {
 } from "../validation/user-validation.js";
 import {prismaClient} from "../application/database.js";
 import bcrypt from "bcrypt";
-import {v4 as uuid} from "uuid";
 import {ResponseError} from "../utils/response-error.js";
-import {logger} from "../application/logging.js";
+import {generateToken} from "../utils/generate-token.js";
 
 const register = async (request) => {
     const user = validate(registerUserValidation, request);
@@ -37,8 +36,6 @@ const register = async (request) => {
 
 const login = async (request) => {
     const loginRequest = validate(loginUserValidation, request);
-    logger.warn("loginRequest");
-    logger.warn(loginRequest);
 
     const user = await prismaClient.user.findUnique({
         where: {
@@ -60,7 +57,7 @@ const login = async (request) => {
         throw new ResponseError("Username or password wrong", {});
     }
 
-    const token = uuid().toString()
+    const token = generateToken(user);
     return prismaClient.user.update({
         data: {
             token: token
@@ -81,17 +78,16 @@ const get = async (username) => {
         where: {
             username: username
         },
-        select: {
-            username: true,
-            name: true
-        }
+
     });
 
     if (!user) {
         throw new ResponseError("User is not found", {});
     }
 
-    return user;
+    const { password, ...userWithoutPassword } = user;
+
+    return userWithoutPassword;
 }
 
 const update = async (request) => {

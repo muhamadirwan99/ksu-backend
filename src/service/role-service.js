@@ -7,7 +7,6 @@ import {
     updateRoleValidation
 } from "../validation/role-validation.js";
 import {ResponseError} from "../utils/response-error.js";
-import {logger} from "../application/logging.js";
 
 const registerRole = async (request) => {
     const role = validate(roleValidation, request);
@@ -31,9 +30,6 @@ const registerRole = async (request) => {
 }
 const getRole = async (request) => {
     request = validate(getRoleValidation, request);
-
-    logger.info("getRole request");
-    logger.info(request);
 
     const role = await prismaClient.role.findUnique({
         where: {

@@ -6,8 +6,6 @@ const validate = (schema, request) => {
         abortEarly: false,
         allowUnknown: false
     })
-    logger.warn("result");
-    logger.warn(result);
 
     if (result.error) {
         throw new ResponseError(result.error.message,{});

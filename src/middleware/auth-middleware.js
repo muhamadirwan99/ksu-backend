@@ -26,7 +26,19 @@ export const authMiddleware = async (req, res, next) => {
         // Verify the token
         const decodedToken = jwt.verify(token, secretKey);
 
+        const tokenInDatabase = await prismaClient.user.count({
+            where: {
+                token: token
+            },
+        });
+
         // Find the user based on the decoded token information (assuming the payload has a user ID)
+        if (tokenInDatabase !== 1) {
+            return res.status(200).json(
+                new ResponseError("Unauthorized", {}).getResponse()
+            ).end();
+        }
+
         const user = await prismaClient.user.findUnique({
             where: {
                 username: decodedToken.username  // Assuming the JWT payload contains the user's ID

@@ -2,13 +2,14 @@ import {validate} from "../validation/validation.js";
 import {
     getUserValidation,
     loginUserValidation,
-    registerUserValidation,
+    registerUserValidation, searchUserValidation,
     updateUserValidation
 } from "../validation/user-validation.js";
 import {prismaClient} from "../application/database.js";
 import bcrypt from "bcrypt";
 import {ResponseError} from "../utils/response-error.js";
 import {generateToken} from "../utils/generate-token.js";
+import {searchRoleValidation} from "../validation/role-validation.js";
 
 const register = async (request) => {
     const user = validate(registerUserValidation, request);
@@ -107,20 +108,35 @@ const update = async (request) => {
     if (user.name) {
         data.name = user.name;
     }
+
+    if (user.role_id) {
+        data.role = {
+            connect: {
+                id: user.role_id
+            }
+        };
+    }
+
     if (user.password) {
         data.password = await bcrypt.hash(user.password, 10);
     }
 
-    return prismaClient.user.update({
+    const date = new Date();
+
+    const gmtPlus7Offset = 7 * 60; // 7 hours converted to minutes
+
+    data.updated_at = new Date(date.getTime() + gmtPlus7Offset * 60 * 1000);
+
+    const userUpdate = await prismaClient.user.update({
         where: {
             username: user.username
         },
         data: data,
-        select: {
-            username: true,
-            name: true
-        }
-    })
+    });
+
+    const { token, password, ...userWithoutPassword } = userUpdate;
+
+    return userWithoutPassword;
 }
 
 const logout = async (username) => {
@@ -149,10 +165,69 @@ const logout = async (username) => {
     })
 }
 
+const searchUser = async (request) => {
+    request = validate(searchUserValidation, request);
+
+    // 1 ((page - 1) * size) = 0
+    // 2 ((page - 1) * size) = 10
+    const skip = (request.page - 1) * request.size;
+
+    const filters = [];
+
+    if (request.username) {
+        filters.push({
+            username: {
+                contains: request.username
+            }
+        });
+    }
+
+    const sortBy = request.sort_by || ['username']; // Default sortBy ke 'username'
+    const sortOrder = request.sort_order || ['asc']; // Default sortOrder ke 'asc'
+
+    // Membuat array untuk multiple orderBy
+    const orderBy = sortBy.map((column, index) => ({
+        [column]: sortOrder[index] === 'desc' ? 'desc' : 'asc'
+    }));
+
+
+    const users = await prismaClient.user.findMany({
+        where: {
+            AND: filters
+        },
+        take: request.size,
+        skip: skip,
+        orderBy: orderBy
+    });
+
+    const totalItems = await prismaClient.user.count({
+        where: {
+            AND: filters
+        }
+    });
+
+    const listFilteredUser = [];
+
+    users.map((user) => {
+        const {token, password, ...userWithoutPassword} = user;
+        listFilteredUser.push(userWithoutPassword);
+    });
+
+    return {
+        data_users: listFilteredUser,
+        paging: {
+            page: request.page,
+            total_item: totalItems,
+            total_page: Math.ceil(totalItems / request.size)
+        }
+    }
+}
+
 export default {
     register,
     login,
     get,
     update,
-    logout
+    logout,
+    searchUser
 }

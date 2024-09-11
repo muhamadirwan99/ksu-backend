@@ -7,9 +7,10 @@ const userRouter = new express.Router();
 userRouter.use(authMiddleware);
 
 // User API
-userRouter.get('/api/users/current', userController.get);
-userRouter.patch('/api/users/current', userController.update);
-userRouter.delete('/api/users/logout', userController.logout);
+userRouter.post('/api/users/detail-user', userController.get);
+userRouter.post('/api/users/update-user', userController.update);
+userRouter.post('/api/users/logout', userController.logout);
+userRouter.post('/api/users/list-users', userController.listUsers);
 
 // Role API
 userRouter.post('/api/references/register-role', roleController.registerRole);

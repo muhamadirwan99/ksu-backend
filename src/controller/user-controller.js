@@ -1,5 +1,6 @@
 import userService from "../service/user-service.js";
 import {ResponseSuccess} from "../utils/response-success.js";
+import roleService from "../service/role-service.js";
 
 const register = async (req, res, next) => {
     try {
@@ -24,7 +25,7 @@ const login = async (req, res, next) => {
 
 const get = async (req, res, next) => {
     try {
-        const username = req.user.username;
+        const username = req.body.username;
         const result = await userService.get(username);
         const responses = new ResponseSuccess("success",result).getResponse();
 
@@ -36,7 +37,7 @@ const get = async (req, res, next) => {
 
 const update = async (req, res, next) => {
     try {
-        const username = req.user.username;
+        const username = req.body.username;
         const request = req.body;
         request.username = username;
 
@@ -53,10 +54,19 @@ const logout = async (req, res, next) => {
     try {
         await userService.logout(req.user.username);
         res.status(200).json(
-            new ResponseSuccess("success", {
-                data: "OK"
-            }).getResponse()
-           );
+            new ResponseSuccess("Logout success", {}).getResponse()
+        );
+    } catch (e) {
+        next(e);
+    }
+}
+
+const listUsers = async (req, res, next) => {
+    try {
+        const result = await userService.searchUser(req.body);
+        const responses = new ResponseSuccess("Success get list users", result).getResponse();
+
+        res.status(200).json(responses);
     } catch (e) {
         next(e);
     }
@@ -67,5 +77,6 @@ export default {
     login,
     get,
     update,
-    logout
+    logout,
+    listUsers
 }

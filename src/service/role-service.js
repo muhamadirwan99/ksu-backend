@@ -7,8 +7,9 @@ import {
     updateRoleValidation
 } from "../validation/role-validation.js";
 import {ResponseError} from "../utils/response-error.js";
+import {generateDate} from "../utils/generate-date.js";
 
-const registerRole = async (request) => {
+const createRole = async (request) => {
     const role = validate(roleValidation, request);
 
     const countUser = await prismaClient.role.count({
@@ -20,6 +21,8 @@ const registerRole = async (request) => {
     if (countUser === 1) {
         throw new ResponseError("Role already exists");
     }
+
+    role.created_at = generateDate();
 
     return prismaClient.role.create({
         data: role,
@@ -66,6 +69,8 @@ const updateRole = async (request) => {
     if (role.role_name) {
         data.role_name = role.role_name;
     }
+
+    data.updated_at = generateDate();
 
     return prismaClient.role.update({
         where: {
@@ -148,7 +153,7 @@ const searchRole = async (request) => {
 }
 
 export default {
-    registerRole,
+    createRole,
     getRole,
     updateRole,
     removeRole,

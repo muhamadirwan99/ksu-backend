@@ -9,7 +9,7 @@ import {prismaClient} from "../application/database.js";
 import bcrypt from "bcrypt";
 import {ResponseError} from "../utils/response-error.js";
 import {generateToken} from "../utils/generate-token.js";
-import {searchRoleValidation} from "../validation/role-validation.js";
+import {generateDate} from "../utils/generate-date.js";
 
 const register = async (request) => {
     const user = validate(registerUserValidation, request);
@@ -25,6 +25,7 @@ const register = async (request) => {
     }
 
     user.password = await bcrypt.hash(user.password, 10);
+    user.created_at = generateDate();
 
     return prismaClient.user.create({
         data: user,
@@ -121,11 +122,7 @@ const update = async (request) => {
         data.password = await bcrypt.hash(user.password, 10);
     }
 
-    const date = new Date();
-
-    const gmtPlus7Offset = 7 * 60; // 7 hours converted to minutes
-
-    data.updated_at = new Date(date.getTime() + gmtPlus7Offset * 60 * 1000);
+    data.updated_at = generateDate();
 
     const userUpdate = await prismaClient.user.update({
         where: {

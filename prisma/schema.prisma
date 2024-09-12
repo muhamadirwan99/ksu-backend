@@ -41,6 +41,11 @@ model ResponseLog {
   @@map("response_logs")
 }
 
+model Divisi {
+  kd_divisi String @id @db.VarChar(10)
+  nm_divisi String @db.VarChar(100)
+}
+
 //
 // model Address {
 //   id          Int     @id @default(autoincrement())

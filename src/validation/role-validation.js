@@ -17,6 +17,8 @@ const searchRoleValidation = Joi.object({
     page: Joi.number().min(1).positive().default(1),
     size: Joi.number().min(1).positive().max(100).default(10),
     role_name: Joi.string().optional(),
+    sort_by: Joi.array().optional(),
+    sort_order: Joi.array().optional()
 })
 
 export {

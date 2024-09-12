@@ -2,6 +2,7 @@ import express from "express";
 import userController from "../controller/user-controller.js";
 import {authMiddleware} from "../middleware/auth-middleware.js";
 import roleController from "../controller/role-controller.js";
+import divisiController from "../controller/divisi-controller.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -13,11 +14,18 @@ userRouter.post('/api/users/logout', userController.logout);
 userRouter.post('/api/users/list-users', userController.listUsers);
 
 // Role API
-userRouter.post('/api/references/register-role', roleController.registerRole);
-userRouter.post('/api/references/detail-role', roleController.getRole);
-userRouter.post('/api/references/update-role', roleController.updateRole);
-userRouter.post('/api/references/remove-role', roleController.removeRole);
-userRouter.post('/api/references/list-roles', roleController.listRole);
+userRouter.post('/api/roles/register-role', roleController.registerRole);
+userRouter.post('/api/roles/detail-role', roleController.getRole);
+userRouter.post('/api/roles/update-role', roleController.updateRole);
+userRouter.post('/api/roles/remove-role', roleController.removeRole);
+userRouter.post('/api/roles/list-roles', roleController.listRole);
+
+// Divisi API
+userRouter.post('/api/divisi/add-divisi', divisiController.addDivisi);
+userRouter.post('/api/divisi/get-divisi', divisiController.getDivisi);
+userRouter.post('/api/divisi/update-divisi', divisiController.updateDivisi);
+userRouter.post('/api/divisi/remove-divisi', divisiController.removeDivisi);
+userRouter.post('/api/divisi/list-divisi', divisiController.listDivisi);
 
 export {
     userRouter

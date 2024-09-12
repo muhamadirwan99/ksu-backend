@@ -1,9 +1,9 @@
 import {ResponseSuccess} from "../utils/response-success.js";
 import roleService from "../service/role-service.js";
 
-const registerRole = async (req, res, next) => {
+const createRole = async (req, res, next) => {
     try {
-        const result = await roleService.registerRole(req.body);
+        const result = await roleService.createRole(req.body);
         const responses = new ResponseSuccess("Role registered", result).getResponse();
         res.status(200).json(responses);
     } catch (e) {
@@ -56,7 +56,7 @@ const listRole = async (req, res, next) => {
 }
 
 export default {
-    registerRole,
+    createRole,
     getRole,
     updateRole,
     removeRole,

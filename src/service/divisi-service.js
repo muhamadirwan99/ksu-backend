@@ -8,8 +8,9 @@ import {
 } from "../validation/role-validation.js";
 import {ResponseError} from "../utils/response-error.js";
 import {addDivisiValidation, getDivisiValidation, searchDivisiValidation} from "../validation/divisi-validation.js";
+import {generateDate} from "../utils/generate-date.js";
 
-const addDivisi = async (request) => {
+const createDivisi = async (request) => {
     const divisi = validate(addDivisiValidation, request);
 
     const countDivisi = await prismaClient.divisi.count({
@@ -21,6 +22,8 @@ const addDivisi = async (request) => {
     if (countDivisi === 1) {
         throw new ResponseError("Divisi already exists");
     }
+
+    data.created_at = generateDate();
 
     return prismaClient.divisi.create({
         data: divisi,
@@ -69,6 +72,8 @@ const updateDivisi = async (request) => {
     if (request.kd_divisi) {
         data.nm_divisi = request.nm_divisi;
     }
+
+    data.updated_at = generateDate();
 
     return prismaClient.divisi.update({
         where: {
@@ -151,7 +156,7 @@ const searchDivisi = async (request) => {
 }
 
 export default {
-    addDivisi,
+    createDivisi,
     getDivisi,
     updateDivisi,
     removeDivisi,

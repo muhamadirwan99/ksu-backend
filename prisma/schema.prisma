@@ -15,7 +15,7 @@ model User {
   password   String    @db.VarChar(100)
   name       String    @db.VarChar(100)
   token      String?   @db.VarChar(255)
-  created_at DateTime  @default(now()) @db.Timestamp(6)
+  created_at DateTime  @db.Timestamp(6)
   updated_at DateTime? @db.Timestamp(6)
   role       Role      @relation(fields: [role_id], references: [id])
   role_id    Int
@@ -24,9 +24,11 @@ model User {
 }
 
 model Role {
-  id        Int    @id @default(autoincrement())
-  role_name String @db.VarChar(100)
-  users     User[]
+  id         Int       @id @default(autoincrement())
+  role_name  String    @db.VarChar(100)
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  users      User[]
 
   @@map("roles")
 }
@@ -36,14 +38,16 @@ model ResponseLog {
   success    Boolean
   message    String   @db.VarChar(255)
   data       Json
-  created_at DateTime @default(now())
+  created_at DateTime @db.Timestamp(6)
 
   @@map("response_logs")
 }
 
 model Divisi {
-  kd_divisi String @id @db.VarChar(10)
-  nm_divisi String @db.VarChar(100)
+  kd_divisi  String    @id @db.VarChar(10)
+  nm_divisi  String    @db.VarChar(100)
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
 }
 
 //

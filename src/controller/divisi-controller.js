@@ -1,7 +1,7 @@
 import {ResponseSuccess} from "../utils/response-success.js";
 import divisiService from "../service/divisi-service.js";
 
-const addDivisi = async (req, res, next) => {
+const createDivisi = async (req, res, next) => {
     try {
         const result = await divisiService.addDivisi(req.body);
         const responses = new ResponseSuccess("Divisi registered", result).getResponse();
@@ -56,7 +56,7 @@ const listDivisi = async (req, res, next) => {
 }
 
 export default {
-    addDivisi,
+    createDivisi,
     getDivisi,
     updateDivisi,
     removeDivisi,

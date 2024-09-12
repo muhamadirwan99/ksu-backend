@@ -115,12 +115,20 @@ const searchRole = async (request) => {
         });
     }
 
+    const sortBy = request.sort_by || ['role_name'];
+    const sortOrder = request.sort_order || ['asc'];
+
+    const orderBy = sortBy.map((column, index) => ({
+        [column]: sortOrder[index] === 'desc' ? 'desc' : 'asc'
+    }));
+
     const roles = await prismaClient.role.findMany({
         where: {
             AND: filters
         },
         take: request.size,
-        skip: skip
+        skip: skip,
+        orderBy: orderBy
     });
 
     const totalItems = await prismaClient.role.count({

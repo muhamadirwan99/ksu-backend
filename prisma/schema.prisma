@@ -48,6 +48,22 @@ model Divisi {
   nm_divisi  String    @db.VarChar(100)
   created_at DateTime  @db.Timestamp(6)
   updated_at DateTime? @db.Timestamp(6)
+
+  @@map("divisi")
+}
+
+model Supplier {
+  kd_supplier   String    @id @db.VarChar(10)
+  nm_supplier   String    @db.VarChar(100)
+  nm_pemilik    String    @db.VarChar(100)
+  nm_pic        String    @db.VarChar(100)
+  no_wa         String    @db.VarChar(20)
+  alamat        String    @db.VarChar(255)
+  hutang_dagang Decimal?  @db.Decimal(10, 2)
+  created_at    DateTime  @db.Timestamp(6)
+  updated_at    DateTime? @db.Timestamp(6)
+
+  @@map("suppliers")
 }
 
 //

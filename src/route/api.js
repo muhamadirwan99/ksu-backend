@@ -3,6 +3,7 @@ import userController from "../controller/user-controller.js";
 import {authMiddleware} from "../middleware/auth-middleware.js";
 import roleController from "../controller/role-controller.js";
 import divisiController from "../controller/divisi-controller.js";
+import supplierController from "../controller/supplier-controller.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -26,6 +27,13 @@ userRouter.post('/api/divisi/detail-divisi', divisiController.getDivisi);
 userRouter.post('/api/divisi/update-divisi', divisiController.updateDivisi);
 userRouter.post('/api/divisi/remove-divisi', divisiController.removeDivisi);
 userRouter.post('/api/divisi/list-divisi', divisiController.listDivisi);
+
+// Supplier API
+userRouter.post('/api/suppliers/create-supplier', supplierController.createSupplier);
+userRouter.post('/api/suppliers/detail-supplier', supplierController.getSupplier);
+userRouter.post('/api/suppliers/update-supplier', supplierController.updateSupplier);
+userRouter.post('/api/suppliers/remove-supplier', supplierController.removeSupplier);
+userRouter.post('/api/suppliers/list-suppliers', supplierController.listSupplier);
 
 export {
     userRouter

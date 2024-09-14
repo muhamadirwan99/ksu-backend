@@ -1,14 +1,8 @@
 import {validate} from "../validation/validation.js";
 import {prismaClient} from "../application/database.js";
-import {
-    getRoleValidation,
-    roleValidation,
-    searchRoleValidation,
-    updateRoleValidation
-} from "../validation/role-validation.js";
-import {ResponseError} from "../utils/response-error.js";
 import {addDivisiValidation, getDivisiValidation, searchDivisiValidation} from "../validation/divisi-validation.js";
 import {generateDate} from "../utils/generate-date.js";
+import {ResponseError} from "../utils/response-error.js";
 
 const createDivisi = async (request) => {
     const divisi = validate(addDivisiValidation, request);
@@ -23,7 +17,7 @@ const createDivisi = async (request) => {
         throw new ResponseError("Divisi already exists");
     }
 
-    data.created_at = generateDate();
+    divisi.created_at = generateDate();
 
     return prismaClient.divisi.create({
         data: divisi,

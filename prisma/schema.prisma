@@ -44,38 +44,44 @@ model ResponseLog {
 }
 
 model Divisi {
-  kd_divisi  String    @id @db.VarChar(10)
-  nm_divisi  String    @db.VarChar(100)
-  created_at DateTime  @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
+  kd_divisi  String     @id @db.VarChar(10)
+  nm_divisi  String     @db.VarChar(100)
+  created_at DateTime   @db.Timestamp(6)
+  updated_at DateTime?  @db.Timestamp(6)
+  Products   Products[]
 
   @@map("divisi")
 }
 
 model Supplier {
-  kd_supplier   String    @id @db.VarChar(10)
-  nm_supplier   String    @db.VarChar(100)
-  nm_pemilik    String    @db.VarChar(100)
-  nm_pic        String    @db.VarChar(100)
-  no_wa         String    @db.VarChar(20)
-  alamat        String    @db.VarChar(255)
-  hutang_dagang Decimal?  @db.Decimal(10, 2)
-  created_at    DateTime  @db.Timestamp(6)
-  updated_at    DateTime? @db.Timestamp(6)
+  kd_supplier   String     @id @db.VarChar(10)
+  nm_supplier   String     @db.VarChar(100)
+  nm_pemilik    String     @db.VarChar(100)
+  nm_pic        String     @db.VarChar(100)
+  no_wa         String     @db.VarChar(20)
+  alamat        String     @db.VarChar(255)
+  hutang_dagang Decimal?   @db.Decimal(10, 2)
+  created_at    DateTime   @db.Timestamp(6)
+  updated_at    DateTime?  @db.Timestamp(6)
+  Products      Products[]
 
   @@map("suppliers")
 }
 
-//
-// model Address {
-//   id          Int     @id @default(autoincrement())
-//   street      String? @db.VarChar(255)
-//   city        String? @db.VarChar(100)
-//   province    String? @db.VarChar(100)
-//   country     String  @db.VarChar(100)
-//   postal_code String  @db.VarChar(10)
-//   contact_id  Int
-//   contact     Contact @relation(fields: [contact_id], references: [id])
-//
-//   @@map("addresses")
-// }
+model Products {
+  kd_product     String    @id @db.VarChar(100)
+  nm_product     String    @db.VarChar(100)
+  kd_divisi      String    @db.VarChar(10)
+  kd_supplier    String    @db.VarChar(10)
+  harga_jual     Decimal   @db.Decimal(10, 2)
+  harga_beli     Decimal   @db.Decimal(10, 2)
+  status_product Boolean
+  jumlah         Int       @db.Int
+  keterangan     String?   @db.VarChar(255)
+  created_at     DateTime  @db.Timestamp(6)
+  updated_at     DateTime? @db.Timestamp(6)
+  supplier       Supplier  @relation(fields: [kd_supplier], references: [kd_supplier])
+  divisi         Divisi    @relation(fields: [kd_divisi], references: [kd_divisi])
+
+  @@map("products")
+}

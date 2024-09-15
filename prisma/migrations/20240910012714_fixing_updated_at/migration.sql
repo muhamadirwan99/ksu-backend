@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `users` MODIFY `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-    MODIFY `updated_at` TIMESTAMP(6) NULL;

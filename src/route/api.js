@@ -17,7 +17,6 @@ userRouter.post('/api/users/logout', userController.logout);
 userRouter.post('/api/users/list-users', userController.listUsers);
 
 // Role API
-userRouter.post('/api/roles/create-role', roleController.createRole);
 userRouter.post('/api/roles/detail-role', roleController.getRole);
 userRouter.post('/api/roles/update-role', roleController.updateRole);
 userRouter.post('/api/roles/remove-role', roleController.removeRole);

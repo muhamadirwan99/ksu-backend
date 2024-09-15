@@ -126,18 +126,45 @@ const searchProduct = async (request) => {
         orderBy: orderBy
     });
 
+    // Lakukan perhitungan total_beli dan total_jual di backend
+    const rolesWithTotals = roles.map(product => ({
+        ...product,
+        total_jual: product.harga_jual * product.jumlah,
+        total_beli: product.harga_beli * product.jumlah
+    }));
+
+
     const totalItems = await prismaClient.products.count({
         where: {
             AND: filters
         }
     });
 
+    // Perhitungan total keseluruhan (total beli dan jual)
+    const totalAggregates = await prismaClient.products.aggregate({
+        _sum: {
+            harga_beli: true,
+            harga_jual: true,
+            jumlah: true
+        }
+    });
+
+    // Total beli dan jual untuk keseluruhan produk
+    const totalBeliKeseluruhan = totalAggregates._sum.harga_beli * totalAggregates._sum.jumlah;
+    const totalJualKeseluruhan = totalAggregates._sum.harga_jual * totalAggregates._sum.jumlah;
+
+
     return {
-        data_product: roles,
+        data_product: rolesWithTotals,
         paging: {
             page: request.page,
             total_item: totalItems,
             total_page: Math.ceil(totalItems / request.size)
+        },
+        total_keseluruhan: {
+            total_jumlah: totalAggregates._sum.jumlah,
+            total_jual: totalJualKeseluruhan,
+            total_beli: totalBeliKeseluruhan
         }
     }
 }

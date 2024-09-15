@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `Divisi` (
+CREATE TABLE `divisi` (
     `kd_divisi` VARCHAR(10) NOT NULL,
     `nm_divisi` VARCHAR(100) NOT NULL,
 

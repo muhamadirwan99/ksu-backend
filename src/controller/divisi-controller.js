@@ -3,7 +3,7 @@ import divisiService from "../service/divisi-service.js";
 
 const createDivisi = async (req, res, next) => {
     try {
-        const result = await divisiService.addDivisi(req.body);
+        const result = await divisiService.createDivisi(req.body);
         const responses = new ResponseSuccess("Divisi registered", result).getResponse();
         res.status(200).json(responses);
     } catch (e) {

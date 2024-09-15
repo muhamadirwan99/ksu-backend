@@ -11,7 +11,7 @@ datasource db {
 }
 
 model ResponseLog {
-  id         Int      @id @default(autoincrement())
+  id_log     Int      @id @default(autoincrement())
   success    Boolean
   message    String   @db.VarChar(255)
   data       Json
@@ -25,16 +25,16 @@ model User {
   password   String    @db.VarChar(100)
   name       String    @db.VarChar(100)
   token      String?   @db.VarChar(255)
+  id_role    String    @db.VarChar(10)
   created_at DateTime  @db.Timestamp(6)
   updated_at DateTime? @db.Timestamp(6)
-  role       Role      @relation(fields: [role_id], references: [id])
-  role_id    Int
+  role       Role      @relation(fields: [id_role], references: [id_role])
 
   @@map("users")
 }
 
 model Role {
-  id         Int       @id @default(autoincrement())
+  id_role    String    @id @db.VarChar(10)
   role_name  String    @db.VarChar(100)
   created_at DateTime  @db.Timestamp(6)
   updated_at DateTime? @db.Timestamp(6)
@@ -44,12 +44,12 @@ model Role {
 }
 
 model Anggota {
-  kd_anggota     Int       @id @default(autoincrement())
+  id_anggota     String    @id @db.VarChar(6)
   nm_anggota     String    @db.VarChar(100)
   alamat         String    @db.VarChar(255)
   no_wa          String    @db.VarChar(20)
   limit_pinjaman Decimal   @db.Decimal(10, 2)
-  pinjaman       Decimal?  @db.Decimal(10, 2)
+  hutang         Decimal?  @db.Decimal(10, 2)
   created_at     DateTime  @db.Timestamp(6)
   updated_at     DateTime? @db.Timestamp(6)
 
@@ -57,17 +57,17 @@ model Anggota {
 }
 
 model Divisi {
-  kd_divisi  String     @id @db.VarChar(10)
+  id_divisi  String     @id @db.VarChar(10)
   nm_divisi  String     @db.VarChar(100)
   created_at DateTime   @db.Timestamp(6)
   updated_at DateTime?  @db.Timestamp(6)
-  Products   Products[]
+  products   Products[]
 
   @@map("divisi")
 }
 
 model Supplier {
-  kd_supplier   String     @id @db.VarChar(10)
+  id_supplier   String     @id @db.VarChar(10)
   nm_supplier   String     @db.VarChar(100)
   nm_pemilik    String     @db.VarChar(100)
   nm_pic        String     @db.VarChar(100)
@@ -76,16 +76,16 @@ model Supplier {
   hutang_dagang Decimal?   @db.Decimal(10, 2)
   created_at    DateTime   @db.Timestamp(6)
   updated_at    DateTime?  @db.Timestamp(6)
-  Products      Products[]
+  products      Products[]
 
   @@map("suppliers")
 }
 
 model Products {
-  kd_product     String    @id @db.VarChar(100)
+  id_product     String    @id @db.VarChar(100)
   nm_product     String    @db.VarChar(100)
-  kd_divisi      String    @db.VarChar(10)
-  kd_supplier    String    @db.VarChar(10)
+  id_divisi      String    @db.VarChar(10)
+  id_supplier    String    @db.VarChar(10)
   harga_jual     Decimal   @db.Decimal(10, 2)
   harga_beli     Decimal   @db.Decimal(10, 2)
   status_product Boolean
@@ -93,8 +93,41 @@ model Products {
   keterangan     String?   @db.VarChar(255)
   created_at     DateTime  @db.Timestamp(6)
   updated_at     DateTime? @db.Timestamp(6)
-  supplier       Supplier  @relation(fields: [kd_supplier], references: [kd_supplier])
-  divisi         Divisi    @relation(fields: [kd_divisi], references: [kd_divisi])
+  supplier       Supplier  @relation(fields: [id_supplier], references: [id_supplier])
+  divisi         Divisi    @relation(fields: [id_divisi], references: [id_divisi])
 
   @@map("products")
+}
+
+model ReferenceCashInOut {
+  id_cash                      String                     @id @db.VarChar(10)
+  nm_cash                      String                     @db.VarChar(100)
+  created_at                   DateTime                   @db.Timestamp(6)
+  updated_at                   DateTime?                  @db.Timestamp(6)
+  reference_jenis_cash_in_out  ReferenceJenisCashInOut[]
+  reference_detail_cash_in_out ReferenceDetailCashInOut[]
+
+  @@map("reference_cash_in_out")
+}
+
+model ReferenceJenisCashInOut {
+  id_jenis              Int                @id @default(autoincrement())
+  nm_jenis              String             @db.VarChar(100)
+  id_cash               String             @db.VarChar(10)
+  created_at            DateTime           @db.Timestamp(6)
+  updated_at            DateTime?          @db.Timestamp(6)
+  reference_cash_in_out ReferenceCashInOut @relation(fields: [id_cash], references: [id_cash])
+
+  @@map("reference_jenis_cash_in_out")
+}
+
+model ReferenceDetailCashInOut {
+  id_detail             Int                @id @default(autoincrement())
+  nm_detail             String             @db.VarChar(100)
+  id_cash               String             @db.VarChar(10)
+  created_at            DateTime           @db.Timestamp(6)
+  updated_at            DateTime?          @db.Timestamp(6)
+  reference_cash_in_out ReferenceCashInOut @relation(fields: [id_cash], references: [id_cash])
+
+  @@map("reference_detail_cash_in_out")
 }

@@ -10,6 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ResponseLog {
+  id         Int      @id @default(autoincrement())
+  success    Boolean
+  message    String   @db.VarChar(255)
+  data       Json
+  created_at DateTime @db.Timestamp(6)
+
+  @@map("response_logs")
+}
+
 model User {
   username   String    @id @db.VarChar(100)
   password   String    @db.VarChar(100)
@@ -33,14 +43,17 @@ model Role {
   @@map("roles")
 }
 
-model ResponseLog {
-  id         Int      @id @default(autoincrement())
-  success    Boolean
-  message    String   @db.VarChar(255)
-  data       Json
-  created_at DateTime @db.Timestamp(6)
+model Anggota {
+  kd_anggota     Int       @id @default(autoincrement())
+  nm_anggota     String    @db.VarChar(100)
+  alamat         String    @db.VarChar(255)
+  no_wa          String    @db.VarChar(20)
+  limit_pinjaman Decimal   @db.Decimal(10, 2)
+  pinjaman       Decimal?  @db.Decimal(10, 2)
+  created_at     DateTime  @db.Timestamp(6)
+  updated_at     DateTime? @db.Timestamp(6)
 
-  @@map("response_logs")
+  @@map("anggota")
 }
 
 model Divisi {

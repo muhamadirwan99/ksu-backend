@@ -5,6 +5,7 @@ import roleController from "../controller/role-controller.js";
 import divisiController from "../controller/divisi-controller.js";
 import supplierController from "../controller/supplier-controller.js";
 import productController from "../controller/product-controller.js";
+import anggotaController from "../controller/anggota-controller.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -42,6 +43,13 @@ userRouter.post('/api/products/detail-product', productController.getProduct);
 userRouter.post('/api/products/update-product', productController.updateProduct);
 userRouter.post('/api/products/remove-product', productController.removeProduct);
 userRouter.post('/api/products/list-products', productController.listProduct);
+
+// Product API
+userRouter.post('/api/anggota/create-anggota', anggotaController.createAnggota);
+userRouter.post('/api/anggota/detail-anggota', anggotaController.getAnggota);
+userRouter.post('/api/anggota/update-anggota', anggotaController.updateAnggota);
+userRouter.post('/api/anggota/remove-anggota', anggotaController.removeAnggota);
+userRouter.post('/api/anggota/list-anggota', anggotaController.listAnggota);
 
 export {
     userRouter

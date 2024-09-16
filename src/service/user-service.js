@@ -47,6 +47,13 @@ const login = async (request) => {
     select: {
       username: true,
       password: true,
+      id_role: true,
+    },
+  });
+
+  const listRole = await prismaClient.role.findUnique({
+    where: {
+      id_role: user.id_role,
     },
   });
 
@@ -56,24 +63,30 @@ const login = async (request) => {
 
   const isPasswordValid = await bcrypt.compare(
     loginRequest.password,
-    user.password
+    user.password,
   );
   if (!isPasswordValid) {
     throw new ResponseError("Username or password wrong", {});
   }
 
-  const token = generateToken(user);
-  return prismaClient.user.update({
+  const userData = await prismaClient.user.update({
     data: {
-      token: token,
+      token: generateToken(user),
     },
     where: {
       username: user.username,
     },
     select: {
+      username: true,
+      name: true,
       token: true,
     },
   });
+
+  return {
+    user_data: userData,
+    role_data: listRole,
+  };
 };
 
 const get = async (username) => {

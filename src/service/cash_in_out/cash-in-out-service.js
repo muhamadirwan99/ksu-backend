@@ -9,11 +9,14 @@ import {
 } from "../../validation/cash-in-out-validation.js";
 
 const createCash = async (request) => {
+  console.log("request");
+  console.log(request);
+
   request = validate(addCashValidation, request);
 
   const countCash = await prismaClient.referenceCashInOut.count({
     where: {
-      nm_jenis: request.nm_jenis,
+      nm_cash: request.nm_cash,
     },
   });
 
@@ -27,7 +30,7 @@ const createCash = async (request) => {
     data: request,
     select: {
       id_cash: true,
-      nm_jenis: true,
+      nm_cash: true,
     },
   });
 };
@@ -47,8 +50,8 @@ const updateCash = async (request) => {
 
   const data = {};
 
-  if (request.nm_jenis) {
-    data.nm_jenis = request.nm_jenis;
+  if (request.nm_cash) {
+    data.nm_cash = request.nm_cash;
   }
 
   data.updated_at = generateDate();

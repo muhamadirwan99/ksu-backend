@@ -2,7 +2,7 @@
 CREATE TABLE `response_logs` (
     `id_log` INTEGER NOT NULL AUTO_INCREMENT,
     `success` BOOLEAN NOT NULL,
-    `message` VARCHAR(255) NOT NULL,
+    `message` TEXT NOT NULL,
     `data` JSON NOT NULL,
     `created_at` TIMESTAMP(6) NOT NULL,
 

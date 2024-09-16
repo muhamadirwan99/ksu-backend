@@ -1,5 +1,38 @@
 import Joi from "joi";
 
+// Cash In Out API
+const addCashInOutValidation = Joi.object({
+  tg_transaksi: Joi.string().required(),
+  id_cash: Joi.string().max(10).required(),
+  id_jenis: Joi.number().required(),
+  id_detail: Joi.number().required(),
+  nominal: Joi.number().required(),
+  keterangan: Joi.string().max(255).optional(),
+});
+
+const getDetailCashInOutValidation = Joi.object({
+  id_cash_in_out: Joi.string().max(3).required(),
+});
+
+const updateCashInOutValidation = Joi.object({
+  id_cash_in_out: Joi.string().max(3).required(),
+  tg_transaksi: Joi.string().required(),
+  id_cash: Joi.string().max(10).optional(),
+  id_jenis: Joi.number().optional(),
+  id_detail: Joi.number().optional(),
+  nominal: Joi.number().optional(),
+  keterangan: Joi.string().max(255).optional(),
+});
+
+const searchCashInOutValidation = Joi.object({
+  page: Joi.number().min(1).positive().default(1),
+  size: Joi.number().min(1).positive().max(100).default(10),
+  id_cash: Joi.string().max(10).optional(),
+  keterangan: Joi.string().optional(),
+  sort_by: Joi.array().optional(),
+  sort_order: Joi.array().optional(),
+});
+
 // Reference Cash In Out API
 const addCashValidation = Joi.object({
   id_cash: Joi.string().max(10).required(),
@@ -59,6 +92,10 @@ const listDetailCashValidation = Joi.object({
 });
 
 export {
+  addCashInOutValidation,
+  getDetailCashInOutValidation,
+  updateCashInOutValidation,
+  searchCashInOutValidation,
   addCashValidation,
   updateCashValidation,
   removeCashValidation,

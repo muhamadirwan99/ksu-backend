@@ -1,96 +1,188 @@
 import { validate } from "../../validation/validation.js";
 import { prismaClient } from "../../application/database.js";
-import { ResponseError } from "../../utils/response-error.js";
 import { generateDate } from "../../utils/generate-date.js";
+import { ResponseError } from "../../utils/response-error.js";
 import {
-  addCashValidation,
-  removeCashValidation,
-  updateCashValidation,
+  addCashInOutValidation,
+  getDetailCashInOutValidation,
+  searchCashInOutValidation,
+  updateCashInOutValidation,
 } from "../../validation/cash-in-out-validation.js";
+import { updateFields } from "../../utils/update-fields.js";
+import { parse } from "date-fns";
 
-const createCash = async (request) => {
-  console.log("request");
-  console.log(request);
+const createCashInOut = async (request) => {
+  // Validasi input
+  request = validate(addCashInOutValidation, request);
 
-  request = validate(addCashValidation, request);
-
-  const countCash = await prismaClient.referenceCashInOut.count({
-    where: {
-      nm_cash: request.nm_cash,
+  const lastCashInOut = await prismaClient.cashInOut.findFirst({
+    orderBy: {
+      id_cash_in_out: "desc",
     },
   });
 
-  if (countCash === 1) {
-    throw new ResponseError("Cash already exists");
+  let newIdCashInOut;
+  if (lastCashInOut) {
+    const lastIdNumber = parseInt(lastCashInOut.id_cash_in_out); // Ambil angka dari ID terakhir
+    newIdCashInOut = String(lastIdNumber + 1).padStart(3, "0"); // Tambahkan 1 dan format jadi 3 digit
+  } else {
+    newIdCashInOut = "001"; // Jika belum ada ID, mulai dari 001
   }
 
+  request.id_cash_in_out = newIdCashInOut;
+
+  request.tg_transaksi = parse(
+    request.tg_transaksi,
+    "dd-MM-yyyy, HH:mm",
+    new Date(),
+  );
   request.created_at = generateDate();
 
-  return prismaClient.referenceCashInOut.create({
+  return prismaClient.cashInOut.create({
     data: request,
-    select: {
-      id_cash: true,
-      nm_cash: true,
-    },
   });
 };
 
-const updateCash = async (request) => {
-  request = validate(updateCashValidation, request);
+const getCashInOut = async (request) => {
+  request = validate(getDetailCashInOutValidation, request);
 
-  const totalRoleInDatabase = await prismaClient.referenceCashInOut.count({
+  const cashInOut = await prismaClient.cashInOut.findUnique({
     where: {
-      id_cash: request.id_cash,
+      id_cash_in_out: request.id_cash_in_out,
     },
   });
 
-  if (totalRoleInDatabase !== 1) {
-    throw new ResponseError("Cash is not found", {});
+  if (!cashInOut) {
+    throw new ResponseError("CashInOut is not found");
+  }
+
+  return cashInOut;
+};
+
+const updateCashInOut = async (request) => {
+  request = validate(updateCashInOutValidation, request);
+
+  const fieldCashInOut = [
+    "tg_transaksi",
+    "id_cash",
+    "id_jenis",
+    "id_detail",
+    "nominal",
+    "keterangan",
+  ];
+
+  const totalInDatabase = await prismaClient.cashInOut.count({
+    where: {
+      id_cash_in_out: request.id_cash_in_out,
+    },
+  });
+
+  if (totalInDatabase !== 1) {
+    throw new ResponseError("CashInOut is not found", {});
   }
 
   const data = {};
+  updateFields(request, data, fieldCashInOut);
 
-  if (request.nm_cash) {
-    data.nm_cash = request.nm_cash;
+  if (request.tg_transaksi) {
+    data.tg_transaksi = parse(
+      request.tg_transaksi,
+      "dd-MM-yyyy, HH:mm",
+      new Date(),
+    );
   }
 
   data.updated_at = generateDate();
 
-  return prismaClient.referenceCashInOut.update({
+  return prismaClient.cashInOut.update({
     where: {
-      id_cash: request.id_cash,
+      id_cash_in_out: request.id_cash_in_out,
     },
     data: data,
   });
 };
 
-const removeCash = async (request) => {
-  request = validate(removeCashValidation, request);
+const removeCashInOut = async (request) => {
+  request = validate(getDetailCashInOutValidation, request);
 
-  const totalInDatabase = await prismaClient.referenceCashInOut.count({
+  const totalInDatabase = await prismaClient.cashInOut.count({
     where: {
-      id_cash: request.id_cash,
+      id_cash_in_out: request.id_cash_in_out,
     },
   });
 
   if (totalInDatabase !== 1) {
-    throw new ResponseError("Cash is not found", {});
+    throw new ResponseError("CashInOut is not found", {});
   }
 
-  return prismaClient.referenceCashInOut.delete({
+  return prismaClient.cashInOut.delete({
     where: {
-      id_cash: request.id_cash,
+      id_cash_in_out: request.id_cash_in_out,
     },
   });
 };
 
-const listCash = async () => {
-  return prismaClient.referenceCashInOut.findMany();
+const searchCashInOut = async (request) => {
+  request = validate(searchCashInOutValidation, request);
+
+  // 1 ((page - 1) * size) = 0
+  // 2 ((page - 1) * size) = 10
+  const skip = (request.page - 1) * request.size;
+
+  const filters = [];
+
+  if (request.keterangan) {
+    filters.push({
+      keterangan: {
+        contains: request.keterangan,
+      },
+    });
+  }
+
+  if (request.id_cash) {
+    filters.push({
+      id_cash: {
+        contains: request.id_cash,
+      },
+    });
+  }
+
+  const sortBy = request.sort_by || ["tg_transaksi"];
+  const sortOrder = request.sort_order || ["asc"];
+
+  const orderBy = sortBy.map((column, index) => ({
+    [column]: sortOrder[index] === "desc" ? "desc" : "asc",
+  }));
+
+  const roles = await prismaClient.cashInOut.findMany({
+    where: {
+      AND: filters,
+    },
+    take: request.size,
+    skip: skip,
+    orderBy: orderBy,
+  });
+
+  const totalItems = await prismaClient.cashInOut.count({
+    where: {
+      AND: filters,
+    },
+  });
+
+  return {
+    data_cash_in_out: roles,
+    paging: {
+      page: request.page,
+      total_item: totalItems,
+      total_page: Math.ceil(totalItems / request.size),
+    },
+  };
 };
 
 export default {
-  createCash,
-  updateCash,
-  removeCash,
-  listCash,
+  createCashInOut,
+  getCashInOut,
+  updateCashInOut,
+  removeCashInOut,
+  searchCashInOut,
 };

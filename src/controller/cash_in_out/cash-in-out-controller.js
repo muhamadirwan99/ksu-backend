@@ -1,12 +1,24 @@
 import { ResponseSuccess } from "../../utils/response-success.js";
-import cashinoutService from "../../service/cash_in_out/cash-in-out-service.js";
+import cashInOutService from "../../service/cash_in_out/cash-in-out-service.js";
 
-const createCash = async (req, res, next) => {
+const createCashInOut = async (req, res, next) => {
   try {
-    const result = await cashinoutService.createCash(req.body);
-
+    const result = await cashInOutService.createCashInOut(req.body);
     const responses = new ResponseSuccess(
-      "Cash registered",
+      "CashInOut registered",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
+const getCashInOut = async (req, res, next) => {
+  try {
+    const result = await cashInOutService.getCashInOut(req.body);
+    const responses = new ResponseSuccess(
+      "Success get cash in out",
       result,
     ).getResponse();
 
@@ -16,12 +28,11 @@ const createCash = async (req, res, next) => {
   }
 };
 
-const updateCash = async (req, res, next) => {
+const updateCashInOut = async (req, res, next) => {
   try {
-    const result = await cashinoutService.updateCash(req.body);
-
+    const result = await cashInOutService.updateCashInOut(req.body);
     const responses = new ResponseSuccess(
-      "Success update cash",
+      "Success update cash in out",
       result,
     ).getResponse();
 
@@ -31,12 +42,11 @@ const updateCash = async (req, res, next) => {
   }
 };
 
-const removeCash = async (req, res, next) => {
+const removeCashInOut = async (req, res, next) => {
   try {
-    const result = await cashinoutService.removeCash(req.body);
-
+    const result = await cashInOutService.removeCashInOut(req.body);
     const responses = new ResponseSuccess(
-      "Success remove cash",
+      "Success remove cash in out",
       result,
     ).getResponse();
 
@@ -46,12 +56,11 @@ const removeCash = async (req, res, next) => {
   }
 };
 
-const listCash = async (req, res, next) => {
+const listCashInOut = async (req, res, next) => {
   try {
-    const result = await cashinoutService.listCash();
-
+    const result = await cashInOutService.searchCashInOut(req.body);
     const responses = new ResponseSuccess(
-      "Success get list cash",
+      "Success get list cash in out",
       result,
     ).getResponse();
 
@@ -62,8 +71,9 @@ const listCash = async (req, res, next) => {
 };
 
 export default {
-  createCash,
-  updateCash,
-  removeCash,
-  listCash,
+  createCashInOut,
+  getCashInOut,
+  updateCashInOut,
+  removeCashInOut,
+  listCashInOut,
 };

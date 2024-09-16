@@ -6,9 +6,10 @@ import divisiController from "../controller/divisi-controller.js";
 import supplierController from "../controller/supplier-controller.js";
 import productController from "../controller/product-controller.js";
 import anggotaController from "../controller/anggota-controller.js";
-import cashinoutController from "../controller/cash_in_out/cash-in-out-controller.js";
+import refCashinoutController from "../controller/cash_in_out/ref-cash-in-out-controller.js";
 import jenisCashInOutController from "../controller/cash_in_out/jenis-cash-in-out-controller.js";
 import detailCashInOutController from "../controller/cash_in_out/detail-cash-in-out-controller.js";
+import cashInOutController from "../controller/cash_in_out/cash-in-out-controller.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -77,11 +78,45 @@ userRouter.post("/api/anggota/update-anggota", anggotaController.updateAnggota);
 userRouter.post("/api/anggota/remove-anggota", anggotaController.removeAnggota);
 userRouter.post("/api/anggota/list-anggota", anggotaController.listAnggota);
 
+// Cash In Out API
+userRouter.post(
+  "/api/cash-in-out/create-cash",
+  cashInOutController.createCashInOut,
+);
+userRouter.post(
+  "/api/cash-in-out/detail-cash",
+  cashInOutController.getCashInOut,
+);
+userRouter.post(
+  "/api/cash-in-out/update-cash",
+  cashInOutController.updateCashInOut,
+);
+userRouter.post(
+  "/api/cash-in-out/remove-cash",
+  cashInOutController.removeCashInOut,
+);
+userRouter.post(
+  "/api/cash-in-out/list-cash",
+  cashInOutController.listCashInOut,
+);
+
 // Reference Cash In Out API
-userRouter.post("/api/cash-in-out/create-cash", cashinoutController.createCash);
-userRouter.post("/api/cash-in-out/update-cash", cashinoutController.updateCash);
-userRouter.post("/api/cash-in-out/remove-cash", cashinoutController.removeCash);
-userRouter.post("/api/cash-in-out/list-cash", cashinoutController.listCash);
+userRouter.post(
+  "/api/cash-in-out/ref-create-cash",
+  refCashinoutController.createCash,
+);
+userRouter.post(
+  "/api/cash-in-out/ref-update-cash",
+  refCashinoutController.updateCash,
+);
+userRouter.post(
+  "/api/cash-in-out/ref-remove-cash",
+  refCashinoutController.removeCash,
+);
+userRouter.post(
+  "/api/cash-in-out/ref-list-cash",
+  refCashinoutController.listCash,
+);
 userRouter.post(
   "/api/cash-in-out/create-jenis-cash",
   jenisCashInOutController.createJenisCash,

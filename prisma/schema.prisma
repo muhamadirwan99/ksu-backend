@@ -99,6 +99,23 @@ model Products {
   @@map("products")
 }
 
+model CashInOut {
+  id_cash_in_out String                   @id @db.VarChar(3)
+  tg_transaksi   DateTime
+  id_cash        String                   @db.VarChar(10)
+  id_jenis       Int
+  id_detail      Int
+  nominal        Decimal                  @db.Decimal(10, 2)
+  keterangan     String?                  @db.VarChar(255)
+  created_at     DateTime                 @db.Timestamp(6)
+  updated_at     DateTime?                @db.Timestamp(6)
+  reference_cash ReferenceCashInOut       @relation(fields: [id_cash], references: [id_cash])
+  jenis_cash     ReferenceJenisCashInOut  @relation(fields: [id_jenis], references: [id_jenis])
+  detail_cash    ReferenceDetailCashInOut @relation(fields: [id_detail], references: [id_detail])
+
+  @@map("cash_in_out")
+}
+
 model ReferenceCashInOut {
   id_cash                      String                     @id @db.VarChar(10)
   nm_cash                      String                     @db.VarChar(100)
@@ -106,6 +123,7 @@ model ReferenceCashInOut {
   updated_at                   DateTime?                  @db.Timestamp(6)
   reference_jenis_cash_in_out  ReferenceJenisCashInOut[]
   reference_detail_cash_in_out ReferenceDetailCashInOut[]
+  cash_in_out                  CashInOut[]
 
   @@map("reference_cash_in_out")
 }
@@ -118,6 +136,7 @@ model ReferenceJenisCashInOut {
   updated_at                   DateTime?                  @db.Timestamp(6)
   reference_cash_in_out        ReferenceCashInOut         @relation(fields: [id_cash], references: [id_cash])
   reference_detail_cash_in_out ReferenceDetailCashInOut[]
+  CashInOut                    CashInOut[]
 
   @@map("reference_jenis_cash_in_out")
 }
@@ -131,6 +150,7 @@ model ReferenceDetailCashInOut {
   updated_at                  DateTime?               @db.Timestamp(6)
   reference_cash_in_out       ReferenceCashInOut      @relation(fields: [id_cash], references: [id_cash])
   reference_jenis_cash_in_out ReferenceJenisCashInOut @relation(fields: [id_jenis], references: [id_jenis])
+  CashInOut                   CashInOut[]
 
   @@map("reference_detail_cash_in_out")
 }

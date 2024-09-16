@@ -89,6 +89,21 @@ CREATE TABLE `products` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `cash_in_out` (
+    `id_cash_in_out` VARCHAR(3) NOT NULL,
+    `tg_transaksi` DATETIME(3) NOT NULL,
+    `id_cash` VARCHAR(10) NOT NULL,
+    `id_jenis` INTEGER NOT NULL,
+    `id_detail` INTEGER NOT NULL,
+    `nominal` DECIMAL(10, 2) NOT NULL,
+    `keterangan` VARCHAR(255) NULL,
+    `created_at` TIMESTAMP(6) NOT NULL,
+    `updated_at` TIMESTAMP(6) NULL,
+
+    PRIMARY KEY (`id_cash_in_out`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `reference_cash_in_out` (
     `id_cash` VARCHAR(10) NOT NULL,
     `nm_cash` VARCHAR(100) NOT NULL,
@@ -129,6 +144,15 @@ ALTER TABLE `products` ADD CONSTRAINT `products_id_supplier_fkey` FOREIGN KEY (`
 
 -- AddForeignKey
 ALTER TABLE `products` ADD CONSTRAINT `products_id_divisi_fkey` FOREIGN KEY (`id_divisi`) REFERENCES `divisi`(`id_divisi`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `cash_in_out` ADD CONSTRAINT `cash_in_out_id_cash_fkey` FOREIGN KEY (`id_cash`) REFERENCES `reference_cash_in_out`(`id_cash`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `cash_in_out` ADD CONSTRAINT `cash_in_out_id_jenis_fkey` FOREIGN KEY (`id_jenis`) REFERENCES `reference_jenis_cash_in_out`(`id_jenis`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `cash_in_out` ADD CONSTRAINT `cash_in_out_id_detail_fkey` FOREIGN KEY (`id_detail`) REFERENCES `reference_detail_cash_in_out`(`id_detail`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `reference_jenis_cash_in_out` ADD CONSTRAINT `reference_jenis_cash_in_out_id_cash_fkey` FOREIGN KEY (`id_cash`) REFERENCES `reference_cash_in_out`(`id_cash`) ON DELETE RESTRICT ON UPDATE CASCADE;

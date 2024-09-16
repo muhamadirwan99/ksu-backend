@@ -44,7 +44,7 @@ model Role {
 }
 
 model Anggota {
-  id_anggota     String    @id @db.VarChar(6)
+  id_anggota     String    @id @db.VarChar(8)
   nm_anggota     String    @db.VarChar(100)
   alamat         String    @db.VarChar(255)
   no_wa          String    @db.VarChar(20)
@@ -57,7 +57,7 @@ model Anggota {
 }
 
 model Divisi {
-  id_divisi  String     @id @db.VarChar(10)
+  id_divisi  String     @id @db.VarChar(3)
   nm_divisi  String     @db.VarChar(100)
   created_at DateTime   @db.Timestamp(6)
   updated_at DateTime?  @db.Timestamp(6)
@@ -84,7 +84,7 @@ model Supplier {
 model Products {
   id_product     String    @id @db.VarChar(100)
   nm_product     String    @db.VarChar(100)
-  id_divisi      String    @db.VarChar(10)
+  id_divisi      String    @db.VarChar(3)
   id_supplier    String    @db.VarChar(10)
   harga_jual     Decimal   @db.Decimal(10, 2)
   harga_beli     Decimal   @db.Decimal(10, 2)

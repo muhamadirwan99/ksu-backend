@@ -13,7 +13,7 @@ datasource db {
 model ResponseLog {
   id_log     Int      @id @default(autoincrement())
   success    Boolean
-  message    String   @db.VarChar(255)
+  message    String   @db.Text
   data       Json
   created_at DateTime @db.Timestamp(6)
 

@@ -111,23 +111,26 @@ model ReferenceCashInOut {
 }
 
 model ReferenceJenisCashInOut {
-  id_jenis              Int                @id @default(autoincrement())
-  nm_jenis              String             @db.VarChar(100)
-  id_cash               String             @db.VarChar(10)
-  created_at            DateTime           @db.Timestamp(6)
-  updated_at            DateTime?          @db.Timestamp(6)
-  reference_cash_in_out ReferenceCashInOut @relation(fields: [id_cash], references: [id_cash])
+  id_jenis                     Int                        @id @default(autoincrement())
+  nm_jenis                     String                     @db.VarChar(100)
+  id_cash                      String                     @db.VarChar(10)
+  created_at                   DateTime                   @db.Timestamp(6)
+  updated_at                   DateTime?                  @db.Timestamp(6)
+  reference_cash_in_out        ReferenceCashInOut         @relation(fields: [id_cash], references: [id_cash])
+  reference_detail_cash_in_out ReferenceDetailCashInOut[]
 
   @@map("reference_jenis_cash_in_out")
 }
 
 model ReferenceDetailCashInOut {
-  id_detail             Int                @id @default(autoincrement())
-  nm_detail             String             @db.VarChar(100)
-  id_cash               String             @db.VarChar(10)
-  created_at            DateTime           @db.Timestamp(6)
-  updated_at            DateTime?          @db.Timestamp(6)
-  reference_cash_in_out ReferenceCashInOut @relation(fields: [id_cash], references: [id_cash])
+  id_detail                   Int                     @id @default(autoincrement())
+  nm_detail                   String                  @db.VarChar(100)
+  id_cash                     String                  @db.VarChar(10)
+  id_jenis                    Int
+  created_at                  DateTime                @db.Timestamp(6)
+  updated_at                  DateTime?               @db.Timestamp(6)
+  reference_cash_in_out       ReferenceCashInOut      @relation(fields: [id_cash], references: [id_cash])
+  reference_jenis_cash_in_out ReferenceJenisCashInOut @relation(fields: [id_jenis], references: [id_jenis])
 
   @@map("reference_detail_cash_in_out")
 }

@@ -9,11 +9,11 @@ const addAnggotaValidation = Joi.object({
 });
 
 const getAnggotaValidation = Joi.object({
-  id_anggota: Joi.number().required(),
+  id_anggota: Joi.string().max(8).required(),
 });
 
 const updateAnggotaValidation = Joi.object({
-  id_anggota: Joi.number().required(),
+  id_anggota: Joi.string().max(8).required(),
   nm_anggota: Joi.string().max(100).optional(),
   alamat: Joi.string().max(255).optional(),
   no_wa: Joi.string().max(20).optional(),

@@ -1,36 +1,54 @@
-import { validate } from "../validation/validation.js";
-import { prismaClient } from "../application/database.js";
-import {
-  addDivisiValidation,
-  getDivisiValidation,
-  searchDivisiValidation,
-} from "../validation/divisi-validation.js";
-import { generateDate } from "../utils/generate-date.js";
-import { ResponseError } from "../utils/response-error.js";
+import {validate} from "../validation/validation.js";
+import {prismaClient} from "../application/database.js";
+import {addDivisiValidation, getDivisiValidation, searchDivisiValidation,} from "../validation/divisi-validation.js";
+import {generateDate} from "../utils/generate-date.js";
+import {ResponseError} from "../utils/response-error.js";
 
 const createDivisi = async (request) => {
-  const divisi = validate(addDivisiValidation, request);
+  // Validasi input
+  request = validate(addDivisiValidation, request);
 
+  // Cek apakah nama divisi sudah ada di database
   const countDivisi = await prismaClient.divisi.count({
     where: {
-      id_divisi: divisi.id_divisi,
+      nm_divisi: request.nm_divisi,
     },
   });
 
-  if (countDivisi === 1) {
+  if (countDivisi > 0) {
     throw new ResponseError("Divisi already exists");
   }
 
-  divisi.created_at = generateDate();
+  // Cari ID divisi terakhir yang sudah ada di database
+  const lastDivisi = await prismaClient.divisi.findFirst({
+    orderBy: {
+      id_divisi: 'desc', // Urutkan berdasarkan id_divisi secara descending
+    },
+  });
+
+  // Generate ID divisi baru dengan format 001, 002, 003, dll.
+  let newIdDivisi;
+  if (lastDivisi) {
+    const lastIdNumber = parseInt(lastDivisi.id_divisi); // Ambil angka dari ID terakhir
+    newIdDivisi = String(lastIdNumber + 1).padStart(3, '0'); // Tambahkan 1 dan format jadi 3 digit
+  } else {
+    newIdDivisi = '001'; // Jika belum ada ID, mulai dari 001
+  }
+
+  // Set id_divisi dan created_at
+  request.id_divisi = newIdDivisi;
+  request.created_at = generateDate();
 
   return prismaClient.divisi.create({
-    data: divisi,
+    data: request,
     select: {
       id_divisi: true,
       nm_divisi: true,
     },
   });
+
 };
+
 
 const getDivisi = async (request) => {
   request = validate(getDivisiValidation, request);

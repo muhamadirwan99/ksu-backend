@@ -1,14 +1,15 @@
-import { validate } from "../validation/validation.js";
-import { prismaClient } from "../application/database.js";
-import { ResponseError } from "../utils/response-error.js";
-import { generateDate } from "../utils/generate-date.js";
+import {validate} from "../validation/validation.js";
+import {prismaClient} from "../application/database.js";
+import {ResponseError} from "../utils/response-error.js";
+import {generateDate} from "../utils/generate-date.js";
 import {
   addAnggotaValidation,
   getAnggotaValidation,
   searchAnggotaValidation,
   updateAnggotaValidation,
 } from "../validation/anggota-validation.js";
-import { updateFields } from "../utils/update-fields.js";
+import {updateFields} from "../utils/update-fields.js";
+import generateShortIdFromUUID from "../utils/generate-uuid.js";
 
 const createAnggota = async (request) => {
   request = validate(addAnggotaValidation, request);
@@ -22,6 +23,8 @@ const createAnggota = async (request) => {
   if (countAnggota === 1) {
     throw new ResponseError("Anggota already exists");
   }
+
+  request.id_anggota = generateShortIdFromUUID();
 
   request.created_at = generateDate();
 

@@ -15,7 +15,7 @@ CREATE TABLE `users` (
     `password` VARCHAR(100) NOT NULL,
     `name` VARCHAR(100) NOT NULL,
     `token` VARCHAR(255) NULL,
-    `id_role` INTEGER NOT NULL,
+    `id_role` VARCHAR(10) NOT NULL,
     `created_at` TIMESTAMP(6) NOT NULL,
     `updated_at` TIMESTAMP(6) NULL,
 
@@ -24,7 +24,7 @@ CREATE TABLE `users` (
 
 -- CreateTable
 CREATE TABLE `roles` (
-    `id_role` INTEGER NOT NULL AUTO_INCREMENT,
+    `id_role` VARCHAR(10) NOT NULL,
     `role_name` VARCHAR(100) NOT NULL,
     `created_at` TIMESTAMP(6) NOT NULL,
     `updated_at` TIMESTAMP(6) NULL,
@@ -34,7 +34,7 @@ CREATE TABLE `roles` (
 
 -- CreateTable
 CREATE TABLE `anggota` (
-    `id_anggota` INTEGER NOT NULL AUTO_INCREMENT,
+    `id_anggota` VARCHAR(8) NOT NULL,
     `nm_anggota` VARCHAR(100) NOT NULL,
     `alamat` VARCHAR(255) NOT NULL,
     `no_wa` VARCHAR(20) NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE `anggota` (
 
 -- CreateTable
 CREATE TABLE `divisi` (
-    `id_divisi` VARCHAR(10) NOT NULL,
+    `id_divisi` VARCHAR(3) NOT NULL,
     `nm_divisi` VARCHAR(100) NOT NULL,
     `created_at` TIMESTAMP(6) NOT NULL,
     `updated_at` TIMESTAMP(6) NULL,
@@ -75,7 +75,7 @@ CREATE TABLE `suppliers` (
 CREATE TABLE `products` (
     `id_product` VARCHAR(100) NOT NULL,
     `nm_product` VARCHAR(100) NOT NULL,
-    `id_divisi` VARCHAR(10) NOT NULL,
+    `id_divisi` VARCHAR(3) NOT NULL,
     `id_supplier` VARCHAR(10) NOT NULL,
     `harga_jual` DECIMAL(10, 2) NOT NULL,
     `harga_beli` DECIMAL(10, 2) NOT NULL,
@@ -114,6 +114,7 @@ CREATE TABLE `reference_detail_cash_in_out` (
     `id_detail` INTEGER NOT NULL AUTO_INCREMENT,
     `nm_detail` VARCHAR(100) NOT NULL,
     `id_cash` VARCHAR(10) NOT NULL,
+    `id_jenis` INTEGER NOT NULL,
     `created_at` TIMESTAMP(6) NOT NULL,
     `updated_at` TIMESTAMP(6) NULL,
 
@@ -134,3 +135,6 @@ ALTER TABLE `reference_jenis_cash_in_out` ADD CONSTRAINT `reference_jenis_cash_i
 
 -- AddForeignKey
 ALTER TABLE `reference_detail_cash_in_out` ADD CONSTRAINT `reference_detail_cash_in_out_id_cash_fkey` FOREIGN KEY (`id_cash`) REFERENCES `reference_cash_in_out`(`id_cash`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `reference_detail_cash_in_out` ADD CONSTRAINT `reference_detail_cash_in_out_id_jenis_fkey` FOREIGN KEY (`id_jenis`) REFERENCES `reference_jenis_cash_in_out`(`id_jenis`) ON DELETE RESTRICT ON UPDATE CASCADE;

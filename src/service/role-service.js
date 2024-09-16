@@ -1,13 +1,14 @@
-import {validate} from "../validation/validation.js";
-import {prismaClient} from "../application/database.js";
+import { validate } from "../validation/validation.js";
+import { prismaClient } from "../application/database.js";
 import {
   getRoleValidation,
   roleValidation,
   searchRoleValidation,
   updateRoleValidation,
 } from "../validation/role-validation.js";
-import {ResponseError} from "../utils/response-error.js";
-import {generateDate} from "../utils/generate-date.js";
+import { ResponseError } from "../utils/response-error.js";
+import { generateDate } from "../utils/generate-date.js";
+import { updateFields } from "../utils/update-fields.js";
 
 const createRole = async (request) => {
   const role = validate(roleValidation, request);
@@ -26,17 +27,17 @@ const createRole = async (request) => {
   // Ambil ID terakhir dari tabel role
   const lastRole = await prismaClient.role.findFirst({
     orderBy: {
-      id_role: 'desc', // Urutkan berdasarkan ID role secara descending
+      id_role: "desc", // Urutkan berdasarkan ID role secara descending
     },
   });
 
   // Generate ID role baru
   let newId;
   if (lastRole) {
-    const lastIdNumber = parseInt(lastRole.id_role.replace('ROLE', ''), 10); // Ambil angka dari ID terakhir
-    newId = `ROLE${String(lastIdNumber + 1).padStart(3, '0')}`; // Tambahkan 1 dan pastikan 3 digit
+    const lastIdNumber = parseInt(lastRole.id_role.replace("ROLE", ""), 10); // Ambil angka dari ID terakhir
+    newId = `ROLE${String(lastIdNumber + 1).padStart(3, "0")}`; // Tambahkan 1 dan pastikan 3 digit
   } else {
-    newId = 'ROLE001'; // Jika belum ada ID, mulai dari ROLE001
+    newId = "ROLE001"; // Jika belum ada ID, mulai dari ROLE001
   }
 
   // Set id_role dan created_at
@@ -46,13 +47,8 @@ const createRole = async (request) => {
   // Buat role baru di database
   return prismaClient.role.create({
     data: role,
-    select: {
-      role_name: true,
-      id_role: true, // Tambahkan id_role agar bisa melihat hasil ID yang digenerate
-    },
   });
 };
-
 
 const getRole = async (request) => {
   request = validate(getRoleValidation, request);
@@ -60,10 +56,6 @@ const getRole = async (request) => {
   const role = await prismaClient.role.findUnique({
     where: {
       id_role: request.id_role,
-    },
-    select: {
-      id_role: true,
-      role_name: true,
     },
   });
 
@@ -77,6 +69,32 @@ const getRole = async (request) => {
 const updateRole = async (request) => {
   const role = validate(updateRoleValidation, request);
 
+  const fieldRole = [
+    "role_name",
+    "sts_anggota",
+    "sts_pembayaran_pinjaman",
+    "sts_kartu_piutang",
+    "sts_supplier",
+    "sts_divisi",
+    "sts_produk",
+    "sts_pembelian",
+    "sts_penjualan",
+    "sts_retur",
+    "sts_pembayaran_hutang",
+    "sts_estimasi",
+    "sts_stocktake_harian",
+    "sts_stock_opname",
+    "sts_cash_in_cash_out",
+    "sts_cash_movement",
+    "sts_user",
+    "sts_role",
+    "sts_cetak_label",
+    "sts_cetak_barcode",
+    "sts_awal_akhir_hari",
+    "sts_dashboard",
+    "sts_laporan",
+  ];
+
   const totalRoleInDatabase = await prismaClient.role.count({
     where: {
       id_role: role.id_role,
@@ -88,10 +106,7 @@ const updateRole = async (request) => {
   }
 
   const data = {};
-
-  if (role.role_name) {
-    data.role_name = role.role_name;
-  }
+  updateFields(request, data, fieldRole);
 
   data.updated_at = generateDate();
 
@@ -100,9 +115,6 @@ const updateRole = async (request) => {
       id_role: role.id_role,
     },
     data: data,
-    select: {
-      role_name: true,
-    },
   });
 };
 

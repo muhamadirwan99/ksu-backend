@@ -34,11 +34,33 @@ model User {
 }
 
 model Role {
-  id_role    String    @id @db.VarChar(10)
-  role_name  String    @db.VarChar(100)
-  created_at DateTime  @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
-  users      User[]
+  id_role                 String    @id @db.VarChar(10)
+  role_name               String    @db.VarChar(100)
+  sts_anggota             Boolean   @default(false)
+  sts_pembayaran_pinjaman Boolean   @default(false)
+  sts_kartu_piutang       Boolean   @default(false)
+  sts_supplier            Boolean   @default(false)
+  sts_divisi              Boolean   @default(false)
+  sts_produk              Boolean   @default(false)
+  sts_pembelian           Boolean   @default(false)
+  sts_penjualan           Boolean   @default(false)
+  sts_retur               Boolean   @default(false)
+  sts_pembayaran_hutang   Boolean   @default(false)
+  sts_estimasi            Boolean   @default(false)
+  sts_stocktake_harian    Boolean   @default(false)
+  sts_stock_opname        Boolean   @default(false)
+  sts_cash_in_cash_out    Boolean   @default(false)
+  sts_cash_movement       Boolean   @default(false)
+  sts_user                Boolean   @default(false)
+  sts_role                Boolean   @default(false)
+  sts_cetak_label         Boolean   @default(false)
+  sts_cetak_barcode       Boolean   @default(false)
+  sts_awal_akhir_hari     Boolean   @default(false)
+  sts_dashboard           Boolean   @default(false)
+  sts_laporan             Boolean   @default(false)
+  created_at              DateTime  @default(now()) @db.Timestamp(6)
+  updated_at              DateTime? @db.Timestamp(6)
+  users                   User[]
 
   @@map("roles")
 }

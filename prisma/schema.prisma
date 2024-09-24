@@ -60,7 +60,8 @@ model Role {
   sts_laporan             Boolean   @default(false)
   created_at              DateTime  @default(now()) @db.Timestamp(6)
   updated_at              DateTime? @db.Timestamp(6)
-  users                   User[]
+
+  users User[]
 
   @@map("roles")
 }
@@ -79,31 +80,34 @@ model Anggota {
 }
 
 model Divisi {
-  id_divisi  String     @id @db.VarChar(3)
-  nm_divisi  String     @db.VarChar(100)
-  created_at DateTime   @db.Timestamp(6)
-  updated_at DateTime?  @db.Timestamp(6)
-  products   Products[]
+  id_divisi  String    @id @db.VarChar(3)
+  nm_divisi  String    @db.VarChar(100)
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+
+  products Product[]
 
   @@map("divisi")
 }
 
 model Supplier {
-  id_supplier   String     @id @db.VarChar(10)
-  nm_supplier   String     @db.VarChar(100)
-  nm_pemilik    String     @db.VarChar(100)
-  nm_pic        String     @db.VarChar(100)
-  no_wa         String     @db.VarChar(20)
-  alamat        String     @db.VarChar(255)
-  hutang_dagang Decimal?   @db.Decimal(10, 2)
-  created_at    DateTime   @db.Timestamp(6)
-  updated_at    DateTime?  @db.Timestamp(6)
-  products      Products[]
+  id_supplier   String    @id @db.VarChar(10)
+  nm_supplier   String    @db.VarChar(100)
+  nm_pemilik    String    @db.VarChar(100)
+  nm_pic        String    @db.VarChar(100)
+  no_wa         String    @db.VarChar(20)
+  alamat        String    @db.VarChar(255)
+  hutang_dagang Decimal?  @db.Decimal(10, 2)
+  created_at    DateTime  @db.Timestamp(6)
+  updated_at    DateTime? @db.Timestamp(6)
+
+  products  Product[]
+  pembelian Pembelian[]
 
   @@map("suppliers")
 }
 
-model Products {
+model Product {
   id_product     String    @id @db.VarChar(100)
   nm_product     String    @db.VarChar(100)
   id_divisi      String    @db.VarChar(3)
@@ -115,22 +119,25 @@ model Products {
   keterangan     String?   @db.VarChar(255)
   created_at     DateTime  @db.Timestamp(6)
   updated_at     DateTime? @db.Timestamp(6)
-  supplier       Supplier  @relation(fields: [id_supplier], references: [id_supplier])
-  divisi         Divisi    @relation(fields: [id_divisi], references: [id_divisi])
+
+  supplier         Supplier          @relation(fields: [id_supplier], references: [id_supplier])
+  divisi           Divisi            @relation(fields: [id_divisi], references: [id_divisi])
+  detail_pembelian DetailPembelian[]
 
   @@map("products")
 }
 
 model CashInOut {
-  id_cash_in_out String                   @id @db.VarChar(3)
+  id_cash_in_out String    @id @db.VarChar(3)
   tg_transaksi   DateTime
-  id_cash        String                   @db.VarChar(10)
+  id_cash        String    @db.VarChar(10)
   id_jenis       Int
   id_detail      Int
-  nominal        Decimal                  @db.Decimal(10, 2)
-  keterangan     String?                  @db.VarChar(255)
-  created_at     DateTime                 @db.Timestamp(6)
-  updated_at     DateTime?                @db.Timestamp(6)
+  nominal        Decimal   @db.Decimal(10, 2)
+  keterangan     String?   @db.VarChar(255)
+  created_at     DateTime  @db.Timestamp(6)
+  updated_at     DateTime? @db.Timestamp(6)
+
   reference_cash ReferenceCashInOut       @relation(fields: [id_cash], references: [id_cash])
   jenis_cash     ReferenceJenisCashInOut  @relation(fields: [id_jenis], references: [id_jenis])
   detail_cash    ReferenceDetailCashInOut @relation(fields: [id_detail], references: [id_detail])
@@ -139,40 +146,87 @@ model CashInOut {
 }
 
 model ReferenceCashInOut {
-  id_cash                      String                     @id @db.VarChar(10)
-  nm_cash                      String                     @db.VarChar(100)
-  created_at                   DateTime                   @db.Timestamp(6)
-  updated_at                   DateTime?                  @db.Timestamp(6)
+  id_cash    String    @id @db.VarChar(10)
+  nm_cash    String    @db.VarChar(100)
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+
   reference_jenis_cash_in_out  ReferenceJenisCashInOut[]
   reference_detail_cash_in_out ReferenceDetailCashInOut[]
-  cash_in_out                  CashInOut[]
+
+  cash_in_out CashInOut[]
 
   @@map("reference_cash_in_out")
 }
 
 model ReferenceJenisCashInOut {
-  id_jenis                     Int                        @id @default(autoincrement())
-  nm_jenis                     String                     @db.VarChar(100)
-  id_cash                      String                     @db.VarChar(10)
-  created_at                   DateTime                   @db.Timestamp(6)
-  updated_at                   DateTime?                  @db.Timestamp(6)
+  id_jenis   Int       @id @default(autoincrement())
+  nm_jenis   String    @db.VarChar(100)
+  id_cash    String    @db.VarChar(10)
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+
   reference_cash_in_out        ReferenceCashInOut         @relation(fields: [id_cash], references: [id_cash])
   reference_detail_cash_in_out ReferenceDetailCashInOut[]
-  CashInOut                    CashInOut[]
+
+  CashInOut CashInOut[]
 
   @@map("reference_jenis_cash_in_out")
 }
 
 model ReferenceDetailCashInOut {
-  id_detail                   Int                     @id @default(autoincrement())
-  nm_detail                   String                  @db.VarChar(100)
-  id_cash                     String                  @db.VarChar(10)
-  id_jenis                    Int
-  created_at                  DateTime                @db.Timestamp(6)
-  updated_at                  DateTime?               @db.Timestamp(6)
+  id_detail  Int       @id @default(autoincrement())
+  nm_detail  String    @db.VarChar(100)
+  id_cash    String    @db.VarChar(10)
+  id_jenis   Int
+  created_at DateTime  @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+
   reference_cash_in_out       ReferenceCashInOut      @relation(fields: [id_cash], references: [id_cash])
   reference_jenis_cash_in_out ReferenceJenisCashInOut @relation(fields: [id_jenis], references: [id_jenis])
-  CashInOut                   CashInOut[]
+
+  CashInOut CashInOut[]
 
   @@map("reference_detail_cash_in_out")
+}
+
+model Pembelian {
+  id_pembelian     String    @id @db.VarChar(20)
+  tg_pembelian     DateTime
+  id_supplier      String    @db.VarChar(10)
+  nm_supplier      String    @db.VarChar(100)
+  jumlah           Int       @db.Int
+  total_harga_beli Decimal   @db.Decimal(10, 2)
+  total_harga_jual Decimal   @db.Decimal(10, 2)
+  jenis_pembayaran String    @db.VarChar(100)
+  keterangan       String?   @db.VarChar(255)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  supplier        Supplier          @relation(fields: [id_supplier], references: [id_supplier])
+  DetailPembelian DetailPembelian[]
+
+  @@map("pembelian")
+}
+
+model DetailPembelian {
+  id_detail_pembelian Int       @id @default(autoincrement())
+  id_pembelian        String    @db.VarChar(20)
+  id_product          String    @db.VarChar(100)
+  nm_divisi           String    @db.VarChar(100)
+  nm_produk           String    @db.VarChar(100)
+  harga_beli          Decimal   @db.Decimal(10, 2)
+  harga_jual          Decimal   @db.Decimal(10, 2)
+  jumlah              Int       @db.Int
+  diskon              Decimal   @db.Decimal(10, 2)
+  ppn                 Decimal   @db.Decimal(10, 2)
+  total_nilai_beli    Decimal   @db.Decimal(10, 2)
+  total_nilai_jual    Decimal   @db.Decimal(10, 2)
+  created_at          DateTime  @db.Timestamp(6)
+  updated_at          DateTime? @db.Timestamp(6)
+
+  pembelian Pembelian @relation(fields: [id_pembelian], references: [id_pembelian])
+  product   Product   @relation(fields: [id_product], references: [id_product])
+
+  @@map("detail_pembelian")
 }

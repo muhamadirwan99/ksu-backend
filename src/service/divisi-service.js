@@ -1,8 +1,13 @@
-import {validate} from "../validation/validation.js";
-import {prismaClient} from "../application/database.js";
-import {addDivisiValidation, getDivisiValidation, searchDivisiValidation,} from "../validation/divisi-validation.js";
-import {generateDate} from "../utils/generate-date.js";
-import {ResponseError} from "../utils/response-error.js";
+import { validate } from "../validation/validation.js";
+import { prismaClient } from "../application/database.js";
+import {
+  addDivisiValidation,
+  getDivisiValidation,
+  searchDivisiValidation,
+  updateDivisiValidation,
+} from "../validation/divisi-validation.js";
+import { generateDate } from "../utils/generate-date.js";
+import { ResponseError } from "../utils/response-error.js";
 
 const createDivisi = async (request) => {
   // Validasi input
@@ -22,7 +27,7 @@ const createDivisi = async (request) => {
   // Cari ID divisi terakhir yang sudah ada di database
   const lastDivisi = await prismaClient.divisi.findFirst({
     orderBy: {
-      id_divisi: 'desc', // Urutkan berdasarkan id_divisi secara descending
+      id_divisi: "desc", // Urutkan berdasarkan id_divisi secara descending
     },
   });
 
@@ -30,9 +35,9 @@ const createDivisi = async (request) => {
   let newIdDivisi;
   if (lastDivisi) {
     const lastIdNumber = parseInt(lastDivisi.id_divisi); // Ambil angka dari ID terakhir
-    newIdDivisi = String(lastIdNumber + 1).padStart(3, '0'); // Tambahkan 1 dan format jadi 3 digit
+    newIdDivisi = String(lastIdNumber + 1).padStart(3, "0"); // Tambahkan 1 dan format jadi 3 digit
   } else {
-    newIdDivisi = '001'; // Jika belum ada ID, mulai dari 001
+    newIdDivisi = "001"; // Jika belum ada ID, mulai dari 001
   }
 
   // Set id_divisi dan created_at
@@ -46,9 +51,7 @@ const createDivisi = async (request) => {
       nm_divisi: true,
     },
   });
-
 };
-
 
 const getDivisi = async (request) => {
   request = validate(getDivisiValidation, request);
@@ -71,7 +74,7 @@ const getDivisi = async (request) => {
 };
 
 const updateDivisi = async (request) => {
-  request = validate(addDivisiValidation, request);
+  request = validate(updateDivisiValidation, request);
 
   const totalDivisiInDatabase = await prismaClient.divisi.count({
     where: {

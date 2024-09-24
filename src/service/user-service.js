@@ -13,11 +13,11 @@ import { generateToken } from "../utils/generate-token.js";
 import { generateDate } from "../utils/generate-date.js";
 
 const register = async (request) => {
-  const user = validate(registerUserValidation, request);
+  request = validate(registerUserValidation, request);
 
   const countUser = await prismaClient.user.count({
     where: {
-      username: user.username,
+      username: request.username,
     },
   });
 
@@ -25,11 +25,11 @@ const register = async (request) => {
     throw new ResponseError("Username already exists", {});
   }
 
-  user.password = await bcrypt.hash(user.password, 10);
-  user.created_at = generateDate();
+  request.password = await bcrypt.hash(request.password, 10);
+  request.created_at = generateDate();
 
   return prismaClient.user.create({
-    data: user,
+    data: request,
     select: {
       username: true,
       name: true,
@@ -51,15 +51,15 @@ const login = async (request) => {
     },
   });
 
+  if (!user) {
+    throw new ResponseError("Username or password wrong", {});
+  }
+
   const listRole = await prismaClient.role.findUnique({
     where: {
       id_role: user.id_role,
     },
   });
-
-  if (!user) {
-    throw new ResponseError("Username or password wrong", {});
-  }
 
   const isPasswordValid = await bcrypt.compare(
     loginRequest.password,
@@ -108,11 +108,11 @@ const get = async (username) => {
 };
 
 const update = async (request) => {
-  const user = validate(updateUserValidation, request);
+  request = validate(updateUserValidation, request);
 
   const totalUserInDatabase = await prismaClient.user.count({
     where: {
-      username: user.username,
+      username: request.username,
     },
   });
 
@@ -121,27 +121,27 @@ const update = async (request) => {
   }
 
   const data = {};
-  if (user.name) {
-    data.name = user.name;
+  if (request.name) {
+    data.name = request.name;
   }
 
-  if (user.id_role) {
+  if (request.id_role) {
     data.role = {
       connect: {
-        id: user.id_role,
+        id_role: request.id_role,
       },
     };
   }
 
-  if (user.password) {
-    data.password = await bcrypt.hash(user.password, 10);
+  if (request.password) {
+    data.password = await bcrypt.hash(request.password, 10);
   }
 
   data.updated_at = generateDate();
 
   const userUpdate = await prismaClient.user.update({
     where: {
-      username: user.username,
+      username: request.username,
     },
     data: data,
   });
@@ -149,6 +149,26 @@ const update = async (request) => {
   const { token, password, ...userWithoutPassword } = userUpdate;
 
   return userWithoutPassword;
+};
+
+const removeUser = async (username) => {
+  username = validate(getUserValidation, username);
+
+  const totalInDatabase = await prismaClient.user.count({
+    where: {
+      username: username,
+    },
+  });
+
+  if (totalInDatabase !== 1) {
+    throw new ResponseError("User is not found", {});
+  }
+
+  return prismaClient.user.delete({
+    where: {
+      username: username,
+    },
+  });
 };
 
 const logout = async (username) => {
@@ -240,5 +260,6 @@ export default {
   get,
   update,
   logout,
+  removeUser,
   searchUser,
 };

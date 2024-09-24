@@ -26,7 +26,29 @@ CREATE TABLE `users` (
 CREATE TABLE `roles` (
     `id_role` VARCHAR(10) NOT NULL,
     `role_name` VARCHAR(100) NOT NULL,
-    `created_at` TIMESTAMP(6) NOT NULL,
+    `sts_anggota` BOOLEAN NOT NULL DEFAULT false,
+    `sts_pembayaran_pinjaman` BOOLEAN NOT NULL DEFAULT false,
+    `sts_kartu_piutang` BOOLEAN NOT NULL DEFAULT false,
+    `sts_supplier` BOOLEAN NOT NULL DEFAULT false,
+    `sts_divisi` BOOLEAN NOT NULL DEFAULT false,
+    `sts_produk` BOOLEAN NOT NULL DEFAULT false,
+    `sts_pembelian` BOOLEAN NOT NULL DEFAULT false,
+    `sts_penjualan` BOOLEAN NOT NULL DEFAULT false,
+    `sts_retur` BOOLEAN NOT NULL DEFAULT false,
+    `sts_pembayaran_hutang` BOOLEAN NOT NULL DEFAULT false,
+    `sts_estimasi` BOOLEAN NOT NULL DEFAULT false,
+    `sts_stocktake_harian` BOOLEAN NOT NULL DEFAULT false,
+    `sts_stock_opname` BOOLEAN NOT NULL DEFAULT false,
+    `sts_cash_in_cash_out` BOOLEAN NOT NULL DEFAULT false,
+    `sts_cash_movement` BOOLEAN NOT NULL DEFAULT false,
+    `sts_user` BOOLEAN NOT NULL DEFAULT false,
+    `sts_role` BOOLEAN NOT NULL DEFAULT false,
+    `sts_cetak_label` BOOLEAN NOT NULL DEFAULT false,
+    `sts_cetak_barcode` BOOLEAN NOT NULL DEFAULT false,
+    `sts_awal_akhir_hari` BOOLEAN NOT NULL DEFAULT false,
+    `sts_dashboard` BOOLEAN NOT NULL DEFAULT false,
+    `sts_laporan` BOOLEAN NOT NULL DEFAULT false,
+    `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     `updated_at` TIMESTAMP(6) NULL,
 
     PRIMARY KEY (`id_role`)
@@ -136,6 +158,43 @@ CREATE TABLE `reference_detail_cash_in_out` (
     PRIMARY KEY (`id_detail`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `pembelian` (
+    `id_pembelian` VARCHAR(20) NOT NULL,
+    `tg_pembelian` DATETIME(3) NOT NULL,
+    `id_supplier` VARCHAR(10) NOT NULL,
+    `nm_supplier` VARCHAR(100) NOT NULL,
+    `jumlah` INTEGER NOT NULL,
+    `total_harga_beli` DECIMAL(10, 2) NOT NULL,
+    `total_harga_jual` DECIMAL(10, 2) NOT NULL,
+    `jenis_pembayaran` VARCHAR(100) NOT NULL,
+    `keterangan` VARCHAR(255) NULL,
+    `created_at` TIMESTAMP(6) NOT NULL,
+    `updated_at` TIMESTAMP(6) NULL,
+
+    PRIMARY KEY (`id_pembelian`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `detail_pembelian` (
+    `id_detail_pembelian` INTEGER NOT NULL AUTO_INCREMENT,
+    `id_pembelian` VARCHAR(20) NOT NULL,
+    `id_product` VARCHAR(100) NOT NULL,
+    `nm_divisi` VARCHAR(100) NOT NULL,
+    `nm_produk` VARCHAR(100) NOT NULL,
+    `harga_beli` DECIMAL(10, 2) NOT NULL,
+    `harga_jual` DECIMAL(10, 2) NOT NULL,
+    `jumlah` INTEGER NOT NULL,
+    `diskon` DECIMAL(10, 2) NOT NULL,
+    `ppn` DECIMAL(10, 2) NOT NULL,
+    `total_nilai_beli` DECIMAL(10, 2) NOT NULL,
+    `total_nilai_jual` DECIMAL(10, 2) NOT NULL,
+    `created_at` TIMESTAMP(6) NOT NULL,
+    `updated_at` TIMESTAMP(6) NULL,
+
+    PRIMARY KEY (`id_detail_pembelian`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `users` ADD CONSTRAINT `users_id_role_fkey` FOREIGN KEY (`id_role`) REFERENCES `roles`(`id_role`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -162,3 +221,12 @@ ALTER TABLE `reference_detail_cash_in_out` ADD CONSTRAINT `reference_detail_cash
 
 -- AddForeignKey
 ALTER TABLE `reference_detail_cash_in_out` ADD CONSTRAINT `reference_detail_cash_in_out_id_jenis_fkey` FOREIGN KEY (`id_jenis`) REFERENCES `reference_jenis_cash_in_out`(`id_jenis`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `pembelian` ADD CONSTRAINT `pembelian_id_supplier_fkey` FOREIGN KEY (`id_supplier`) REFERENCES `suppliers`(`id_supplier`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_pembelian` ADD CONSTRAINT `detail_pembelian_id_pembelian_fkey` FOREIGN KEY (`id_pembelian`) REFERENCES `pembelian`(`id_pembelian`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `detail_pembelian` ADD CONSTRAINT `detail_pembelian_id_product_fkey` FOREIGN KEY (`id_product`) REFERENCES `products`(`id_product`) ON DELETE RESTRICT ON UPDATE CASCADE;

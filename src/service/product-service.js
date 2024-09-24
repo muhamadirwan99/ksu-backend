@@ -13,7 +13,7 @@ import { updateFields } from "../utils/update-fields.js";
 const createProduct = async (request) => {
   request = validate(addProductValidation, request);
 
-  const countProduct = await prismaClient.products.count({
+  const countProduct = await prismaClient.product.count({
     where: {
       id_product: request.id_product,
     },
@@ -25,7 +25,7 @@ const createProduct = async (request) => {
 
   request.created_at = generateDate();
 
-  return prismaClient.products.create({
+  return prismaClient.product.create({
     data: request,
   });
 };
@@ -33,7 +33,7 @@ const createProduct = async (request) => {
 const getProduct = async (request) => {
   request = validate(getProductValidation, request);
 
-  const product = await prismaClient.products.findUnique({
+  const product = await prismaClient.product.findUnique({
     where: {
       id_product: request.id_product,
     },
@@ -59,7 +59,7 @@ const updateProduct = async (request) => {
     "keterangan",
   ];
 
-  const totalProductInDatabase = await prismaClient.products.count({
+  const totalProductInDatabase = await prismaClient.product.count({
     where: {
       id_product: request.id_product,
     },
@@ -74,7 +74,7 @@ const updateProduct = async (request) => {
 
   data.updated_at = generateDate();
 
-  return prismaClient.products.update({
+  return prismaClient.product.update({
     where: {
       id_product: request.id_product,
     },
@@ -85,7 +85,7 @@ const updateProduct = async (request) => {
 const removeProduct = async (request) => {
   request = validate(getProductValidation, request);
 
-  const totalInDatabase = await prismaClient.products.count({
+  const totalInDatabase = await prismaClient.product.count({
     where: {
       id_product: request.id_product,
     },
@@ -95,7 +95,7 @@ const removeProduct = async (request) => {
     throw new ResponseError("Product is not found", {});
   }
 
-  return prismaClient.products.delete({
+  return prismaClient.product.delete({
     where: {
       id_product: request.id_product,
     },
@@ -126,7 +126,7 @@ const searchProduct = async (request) => {
     [column]: sortOrder[index] === "desc" ? "desc" : "asc",
   }));
 
-  const roles = await prismaClient.products.findMany({
+  const roles = await prismaClient.product.findMany({
     where: {
       AND: filters,
     },
@@ -142,14 +142,14 @@ const searchProduct = async (request) => {
     total_beli: product.harga_beli * product.jumlah,
   }));
 
-  const totalItems = await prismaClient.products.count({
+  const totalItems = await prismaClient.product.count({
     where: {
       AND: filters,
     },
   });
 
   // Perhitungan total keseluruhan (total beli dan jual)
-  const totalAggregates = await prismaClient.products.aggregate({
+  const totalAggregates = await prismaClient.product.aggregate({
     _sum: {
       harga_beli: true,
       harga_jual: true,

@@ -110,6 +110,9 @@ const updateRole = async (request) => {
 
   data.updated_at = generateDate();
 
+  console.log("data");
+  console.log(data);
+
   return prismaClient.role.update({
     where: {
       id_role: role.id_role,

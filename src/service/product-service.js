@@ -105,8 +105,6 @@ const removeProduct = async (request) => {
 const searchProduct = async (request) => {
   request = validate(searchProductValidation, request);
 
-  // 1 ((page - 1) * size) = 0
-  // 2 ((page - 1) * size) = 10
   const skip = (request.page - 1) * request.size;
 
   const filters = [];
@@ -135,7 +133,7 @@ const searchProduct = async (request) => {
     orderBy: orderBy,
   });
 
-  // Lakukan perhitungan total_beli dan total_jual di backend
+  // Hitung total_jual dan total_beli secara manual
   const rolesWithTotals = roles.map((product) => ({
     ...product,
     total_jual: product.harga_jual * product.jumlah,
@@ -148,20 +146,16 @@ const searchProduct = async (request) => {
     },
   });
 
-  // Perhitungan total keseluruhan (total beli dan jual)
-  const totalAggregates = await prismaClient.product.aggregate({
-    _sum: {
-      harga_beli: true,
-      harga_jual: true,
-      jumlah: true,
-    },
-  });
+  // Lakukan perhitungan total keseluruhan secara manual
+  let totalBeliKeseluruhan = 0;
+  let totalJualKeseluruhan = 0;
+  let totalJumlahKeseluruhan = 0;
 
-  // Total beli dan jual untuk keseluruhan produk
-  const totalBeliKeseluruhan =
-    totalAggregates._sum.harga_beli * totalAggregates._sum.jumlah;
-  const totalJualKeseluruhan =
-    totalAggregates._sum.harga_jual * totalAggregates._sum.jumlah;
+  rolesWithTotals.forEach((product) => {
+    totalBeliKeseluruhan += product.total_beli;
+    totalJualKeseluruhan += product.total_jual;
+    totalJumlahKeseluruhan += product.jumlah;
+  });
 
   return {
     data_product: rolesWithTotals,
@@ -171,7 +165,7 @@ const searchProduct = async (request) => {
       total_page: Math.ceil(totalItems / request.size),
     },
     total_keseluruhan: {
-      total_jumlah: totalAggregates._sum.jumlah,
+      total_jumlah: totalJumlahKeseluruhan,
       total_jual: totalJualKeseluruhan,
       total_beli: totalBeliKeseluruhan,
     },

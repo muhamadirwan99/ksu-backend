@@ -8,6 +8,7 @@ import userRoute from "./routes/user-route.js";
 import purchaseRoute from "./routes/purchase-route.js";
 import supplierRoute from "./routes/supplier-route.js";
 import divisiRoute from "./routes/divisi-route.js";
+import saleRoute from "./routes/sale-route.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -20,5 +21,6 @@ productRoute();
 anggotaRoute();
 cashInOutRoute();
 purchaseRoute();
+saleRoute();
 
 export { userRouter };

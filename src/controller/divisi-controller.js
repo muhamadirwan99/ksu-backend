@@ -5,8 +5,8 @@ const createDivisi = async (req, res, next) => {
   try {
     const result = await divisiService.createDivisi(req.body);
     const responses = new ResponseSuccess(
-      "Divisi registered",
-      result,
+      "Divisi successfully registered",
+      result
     ).getResponse();
     res.status(200).json(responses);
   } catch (e) {
@@ -19,7 +19,7 @@ const getDivisi = async (req, res, next) => {
     const result = await divisiService.getDivisi(req.body);
     const responses = new ResponseSuccess(
       "Success get divisi",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -33,7 +33,7 @@ const updateDivisi = async (req, res, next) => {
     const result = await divisiService.updateDivisi(req.body);
     const responses = new ResponseSuccess(
       "Success update divisi",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -47,7 +47,7 @@ const removeDivisi = async (req, res, next) => {
     const result = await divisiService.removeDivisi(req.body);
     const responses = new ResponseSuccess(
       "Success remove divisi",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -61,7 +61,7 @@ const listDivisi = async (req, res, next) => {
     const result = await divisiService.searchDivisi(req.body);
     const responses = new ResponseSuccess(
       "Success get list divisi",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);

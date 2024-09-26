@@ -5,7 +5,7 @@ const createPurchase = async (req, res, next) => {
   try {
     const result = await purchaseService.createPurchase(req.body);
     const responses = new ResponseSuccess(
-      "Purchase registered",
+      "Purchase successfully registered",
       result,
     ).getResponse();
     res.status(200).json(responses);
@@ -18,7 +18,7 @@ const detailPurchase = async (req, res, next) => {
   try {
     const result = await purchaseService.getDetailPurchase(req.body);
     const responses = new ResponseSuccess(
-      "Detail Purchase",
+      "Success get detail purchase",
       result,
     ).getResponse();
     res.status(200).json(responses);
@@ -31,7 +31,20 @@ const getPurchaseList = async (req, res, next) => {
   try {
     const result = await purchaseService.getPurchaseList(req.body);
     const responses = new ResponseSuccess(
-      "Purchase list",
+      "Success get list purchase",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
+const removePurchase = async (req, res, next) => {
+  try {
+    const result = await purchaseService.removePurchase(req.body);
+    const responses = new ResponseSuccess(
+      "Success remove purchase",
       result,
     ).getResponse();
     res.status(200).json(responses);
@@ -44,4 +57,5 @@ export default {
   createPurchase,
   detailPurchase,
   getPurchaseList,
+  removePurchase,
 };

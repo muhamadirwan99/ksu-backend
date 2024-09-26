@@ -6,8 +6,8 @@ const createCash = async (req, res, next) => {
     const result = await refCashinoutService.createCash(req.body);
 
     const responses = new ResponseSuccess(
-      "Cash registered",
-      result,
+      "Cash successfully registered",
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -22,7 +22,7 @@ const updateCash = async (req, res, next) => {
 
     const responses = new ResponseSuccess(
       "Success update cash",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -37,7 +37,7 @@ const removeCash = async (req, res, next) => {
 
     const responses = new ResponseSuccess(
       "Success remove cash",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -52,7 +52,7 @@ const listCash = async (req, res, next) => {
 
     const responses = new ResponseSuccess(
       "Success get list cash",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);

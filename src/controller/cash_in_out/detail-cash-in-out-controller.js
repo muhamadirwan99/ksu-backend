@@ -6,7 +6,7 @@ const createDetailCash = async (req, res, next) => {
     const result = await detailCashInOutService.createDetailCash(req.body);
 
     const responses = new ResponseSuccess(
-      "DetailCash registered",
+      "Detail cash successfully registered",
       result,
     ).getResponse();
 

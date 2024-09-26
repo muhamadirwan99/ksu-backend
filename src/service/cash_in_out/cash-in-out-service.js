@@ -9,7 +9,6 @@ import {
   updateCashInOutValidation,
 } from "../../validation/cash-in-out-validation.js";
 import { updateFields } from "../../utils/update-fields.js";
-import { parse } from "date-fns";
 
 const createCashInOut = async (request) => {
   // Validasi input
@@ -31,11 +30,6 @@ const createCashInOut = async (request) => {
 
   request.id_cash_in_out = newIdCashInOut;
 
-  request.tg_transaksi = parse(
-    request.tg_transaksi,
-    "dd-MM-yyyy, HH:mm",
-    new Date(),
-  );
   request.created_at = generateDate();
 
   return prismaClient.cashInOut.create({
@@ -84,13 +78,9 @@ const updateCashInOut = async (request) => {
   const data = {};
   updateFields(request, data, fieldCashInOut);
 
-  if (request.tg_transaksi) {
-    data.tg_transaksi = parse(
-      request.tg_transaksi,
-      "dd-MM-yyyy, HH:mm",
-      new Date(),
-    );
-  }
+  // if (request.tg_transaksi) {
+  //   data.tg_transaksi = parse(request.tg_transaksi);
+  // }
 
   data.updated_at = generateDate();
 
@@ -154,7 +144,7 @@ const searchCashInOut = async (request) => {
     [column]: sortOrder[index] === "desc" ? "desc" : "asc",
   }));
 
-  const roles = await prismaClient.cashInOut.findMany({
+  const dataCashInOut = await prismaClient.cashInOut.findMany({
     where: {
       AND: filters,
     },
@@ -163,6 +153,28 @@ const searchCashInOut = async (request) => {
     orderBy: orderBy,
   });
 
+  //mendapatkan nama jenis cash
+  for (let i = 0; i < dataCashInOut.length; i++) {
+    const jenisCash = await prismaClient.referenceJenisCashInOut.findUnique({
+      where: {
+        id_jenis: dataCashInOut[i].id_jenis,
+      },
+    });
+
+    dataCashInOut[i].nm_jenis = jenisCash.nm_jenis;
+  }
+
+  //mendapatkan nama detail cash
+  for (let i = 0; i < dataCashInOut.length; i++) {
+    const detailCash = await prismaClient.referenceDetailCashInOut.findUnique({
+      where: {
+        id_detail: dataCashInOut[i].id_detail,
+      },
+    });
+
+    dataCashInOut[i].nm_detail = detailCash.nm_detail;
+  }
+
   const totalItems = await prismaClient.cashInOut.count({
     where: {
       AND: filters,
@@ -170,7 +182,7 @@ const searchCashInOut = async (request) => {
   });
 
   return {
-    data_cash_in_out: roles,
+    data_cash_in_out: dataCashInOut,
     paging: {
       page: request.page,
       total_item: totalItems,

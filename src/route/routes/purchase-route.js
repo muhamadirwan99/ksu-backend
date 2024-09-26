@@ -15,6 +15,10 @@ const purchaseRoute = () => {
     "/api/purchase/list-purchase",
     purchaseController.getPurchaseList,
   );
+  userRouter.post(
+    "/api/purchase/remove-purchase",
+    purchaseController.removePurchase,
+  );
 };
 
 export default purchaseRoute;

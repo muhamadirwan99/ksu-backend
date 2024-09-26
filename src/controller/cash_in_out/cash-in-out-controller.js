@@ -5,7 +5,7 @@ const createCashInOut = async (req, res, next) => {
   try {
     const result = await cashInOutService.createCashInOut(req.body);
     const responses = new ResponseSuccess(
-      "CashInOut registered",
+      "Cash In Out successfully registered",
       result,
     ).getResponse();
     res.status(200).json(responses);

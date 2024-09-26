@@ -21,14 +21,15 @@ model ResponseLog {
 }
 
 model User {
-  username   String    @id @db.VarChar(100)
-  password   String    @db.VarChar(100)
-  name       String    @db.VarChar(100)
-  token      String?   @db.VarChar(255)
-  id_role    String    @db.VarChar(10)
-  created_at DateTime  @db.Timestamp(6)
-  updated_at DateTime? @db.Timestamp(6)
-  role       Role      @relation(fields: [id_role], references: [id_role])
+  username   String      @id @db.VarChar(100)
+  password   String      @db.VarChar(100)
+  name       String      @db.VarChar(100)
+  token      String?     @db.VarChar(255)
+  id_role    String      @db.VarChar(10)
+  created_at DateTime    @db.Timestamp(6)
+  updated_at DateTime?   @db.Timestamp(6)
+  role       Role        @relation(fields: [id_role], references: [id_role])
+  Penjualan  Penjualan[]
 
   @@map("users")
 }
@@ -67,14 +68,16 @@ model Role {
 }
 
 model Anggota {
-  id_anggota     String    @id @db.VarChar(8)
-  nm_anggota     String    @db.VarChar(100)
-  alamat         String    @db.VarChar(255)
-  no_wa          String    @db.VarChar(20)
-  limit_pinjaman Decimal   @db.Decimal(10, 2)
-  hutang         Decimal?  @db.Decimal(10, 2)
-  created_at     DateTime  @db.Timestamp(6)
-  updated_at     DateTime? @db.Timestamp(6)
+  id_anggota     String          @id @db.VarChar(8)
+  nm_anggota     String          @db.VarChar(100)
+  alamat         String          @db.VarChar(255)
+  no_wa          String          @db.VarChar(20)
+  limit_pinjaman Decimal         @db.Decimal(10, 2)
+  hutang         Decimal?        @db.Decimal(10, 2)
+  created_at     DateTime        @db.Timestamp(6)
+  updated_at     DateTime?       @db.Timestamp(6)
+  Penjualan      Penjualan[]
+  HutangAnggota  HutangAnggota[]
 
   @@map("anggota")
 }
@@ -123,13 +126,14 @@ model Product {
   supplier         Supplier          @relation(fields: [id_supplier], references: [id_supplier])
   divisi           Divisi            @relation(fields: [id_divisi], references: [id_divisi])
   detail_pembelian DetailPembelian[]
+  DetailPenjualan  DetailPenjualan[]
 
   @@map("products")
 }
 
 model CashInOut {
   id_cash_in_out String    @id @db.VarChar(3)
-  tg_transaksi   DateTime
+  tg_transaksi   String    @db.VarChar(20)
   id_cash        String    @db.VarChar(10)
   id_jenis       Int
   id_detail      Int
@@ -229,4 +233,61 @@ model DetailPembelian {
   product   Product   @relation(fields: [id_product], references: [id_product])
 
   @@map("detail_pembelian")
+}
+
+model Penjualan {
+  id_penjualan     String    @id @db.VarChar(20)
+  tg_penjualan     String    @db.VarChar(20)
+  jumlah           Int       @db.Int
+  total_nilai_beli Decimal   @db.Decimal(10, 2)
+  total_nilai_jual Decimal   @db.Decimal(10, 2)
+  id_anggota       String    @db.VarChar(8)
+  nm_anggota       String    @db.VarChar(100)
+  jenis_pembayaran String    @db.VarChar(100)
+  keterangan       String?   @db.VarChar(255)
+  username         String    @db.VarChar(100)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  anggota         Anggota           @relation(fields: [id_anggota], references: [id_anggota])
+  user            User              @relation(fields: [username], references: [username])
+  DetailPenjualan DetailPenjualan[]
+  HutangAnggota   HutangAnggota[]
+
+  @@map("penjualan")
+}
+
+model DetailPenjualan {
+  id_detail_penjualan Int       @id @default(autoincrement())
+  id_penjualan        String    @db.VarChar(20)
+  id_product          String    @db.VarChar(100)
+  nm_divisi           String    @db.VarChar(100)
+  nm_produk           String    @db.VarChar(100)
+  harga               Decimal   @db.Decimal(10, 2)
+  jumlah              Int       @db.Int
+  diskon              Decimal   @db.Decimal(10, 2)
+  total               Decimal   @db.Decimal(10, 2)
+  created_at          DateTime  @db.Timestamp(6)
+  updated_at          DateTime? @db.Timestamp(6)
+
+  penjualan Penjualan @relation(fields: [id_penjualan], references: [id_penjualan])
+  product   Product   @relation(fields: [id_product], references: [id_product])
+
+  @@map("detail_penjualan")
+}
+
+model HutangAnggota {
+  id_hutang_anggota String    @id @db.VarChar(20)
+  id_anggota        String    @db.VarChar(8)
+  nm_anggota        String    @db.VarChar(100)
+  tg_hutang         String    @db.VarChar(20)
+  nominal           Decimal   @db.Decimal(10, 2)
+  id_penjualan      String    @db.VarChar(20)
+  created_at        DateTime  @db.Timestamp(6)
+  updated_at        DateTime? @db.Timestamp(6)
+
+  anggota   Anggota   @relation(fields: [id_anggota], references: [id_anggota])
+  penjualan Penjualan @relation(fields: [id_penjualan], references: [id_penjualan])
+
+  @@map("hutang_anggota")
 }

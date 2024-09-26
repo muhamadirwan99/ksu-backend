@@ -6,7 +6,7 @@ const createJenisCash = async (req, res, next) => {
     const result = await jenisCashInOutService.createJenisCash(req.body);
 
     const responses = new ResponseSuccess(
-      "JenisCash registered",
+      "Jenis cash successfully registered",
       result,
     ).getResponse();
 

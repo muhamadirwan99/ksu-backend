@@ -107,7 +107,17 @@ const createPurchase = async (request) => {
 const getDetailPurchase = async (request) => {
   request = validate(getDetailPurchaseValidation, request);
 
-  const detailPurchase = await prismaClient.detailPembelian.findFirst({
+  const countPurchase = await prismaClient.detailPembelian.count({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+
+  if (countPurchase === 0) {
+    throw new ResponseError("Purchase is not found");
+  }
+
+  const detailPurchase = await prismaClient.detailPembelian.findMany({
     where: {
       id_pembelian: request.id_pembelian,
     },
@@ -169,8 +179,35 @@ const getPurchaseList = async (request) => {
   };
 };
 
+const removePurchase = async (request) => {
+  request = validate(getDetailPurchaseValidation, request);
+
+  const detailPurchase = await prismaClient.detailPembelian.count({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+
+  if (detailPurchase === 0) {
+    throw new ResponseError("Purchase is not found");
+  }
+
+  await prismaClient.detailPembelian.deleteMany({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+
+  return prismaClient.pembelian.delete({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+};
+
 export default {
   createPurchase,
   getDetailPurchase,
   getPurchaseList,
+  removePurchase,
 };

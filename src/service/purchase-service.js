@@ -24,7 +24,7 @@ const createPurchase = async (request) => {
   const newPurchase = await prismaClient.pembelian.create({
     data: {
       id_pembelian: await generatePurchaseId(parseDate),
-      tg_pembelian: parse(request.tg_pembelian, "dd-MM-yyyy", new Date()),
+      tg_pembelian: request.tg_pembelian,
       id_supplier: request.id_supplier,
       nm_supplier: request.nm_supplier,
       jumlah: request.jumlah,

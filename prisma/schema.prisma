@@ -196,7 +196,7 @@ model ReferenceDetailCashInOut {
 
 model Pembelian {
   id_pembelian     String    @id @db.VarChar(20)
-  tg_pembelian     DateTime
+  tg_pembelian     String    @db.VarChar(20)
   id_supplier      String    @db.VarChar(10)
   nm_supplier      String    @db.VarChar(100)
   jumlah           Int       @db.Int

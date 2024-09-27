@@ -104,8 +104,9 @@ model Supplier {
   created_at    DateTime  @db.Timestamp(6)
   updated_at    DateTime? @db.Timestamp(6)
 
-  products  Product[]
-  pembelian Pembelian[]
+  products     Product[]
+  pembelian    Pembelian[]
+  HutangDagang HutangDagang[]
 
   @@map("suppliers")
 }
@@ -209,6 +210,7 @@ model Pembelian {
 
   supplier        Supplier          @relation(fields: [id_supplier], references: [id_supplier])
   DetailPembelian DetailPembelian[]
+  HutangDagang    HutangDagang[]
 
   @@map("pembelian")
 }
@@ -290,4 +292,20 @@ model HutangAnggota {
   penjualan Penjualan @relation(fields: [id_penjualan], references: [id_penjualan])
 
   @@map("hutang_anggota")
+}
+
+model HutangDagang {
+  id_hutang_dagang String    @id @db.VarChar(20)
+  id_supplier      String    @db.VarChar(8)
+  nm_supplier      String    @db.VarChar(100)
+  tg_hutang        String    @db.VarChar(20)
+  nominal          Decimal   @db.Decimal(10, 2)
+  id_pembelian     String    @db.VarChar(20)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  supplier  Supplier  @relation(fields: [id_supplier], references: [id_supplier])
+  pembelian Pembelian @relation(fields: [id_pembelian], references: [id_pembelian])
+
+  @@map("hutang_dagang")
 }

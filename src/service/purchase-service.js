@@ -9,6 +9,7 @@ import { generatePurchaseId } from "../utils/generate-purchase-id.js";
 import { generateDate } from "../utils/generate-date.js";
 import { parse } from "date-fns";
 import { ResponseError } from "../utils/response-error.js";
+import { generateHutangDagangId } from "../utils/generate-hutang-dagang-id.js";
 
 const createPurchase = async (request) => {
   request = validate(addPurchaseValidation, request);
@@ -35,6 +36,47 @@ const createPurchase = async (request) => {
       created_at: generateDate(),
     },
   });
+
+  // tambahkan untuk menambahkan hutang apabila jenis_pembayaran == kredit
+  if (request.jenis_pembayaran === "kredit") {
+    await prismaClient.hutangDagang.create({
+      data: {
+        id_hutang_dagang: await generateHutangDagangId(parseDate),
+        id_supplier: newPurchase.id_supplier,
+        nm_supplier: newPurchase.nm_supplier,
+        tg_hutang: request.tg_pembelian,
+        nominal: newPurchase.total_harga_beli,
+        id_pembelian: newPurchase.id_pembelian,
+        created_at: generateDate(),
+      },
+    });
+
+    // Periksa jika nilai hutang null, ganti dengan 0
+    const supplier = await prismaClient.supplier.findUnique({
+      where: {
+        id_supplier: newPurchase.id_supplier,
+      },
+      select: {
+        hutang_dagang: true,
+      },
+    });
+
+    // Jika hutang null, set ke 0
+    const currentHutang = supplier.hutang_dagang ?? 0; // Jika hutang null, gunakan 0 sebagai nilai awal
+
+    const newHutang =
+      parseFloat(currentHutang) + parseFloat(newPurchase.total_harga_beli);
+
+    await prismaClient.supplier.update({
+      where: {
+        id_supplier: newPurchase.id_supplier,
+      },
+      data: {
+        hutang_dagang: newHutang,
+        updated_at: generateDate(),
+      },
+    });
+  }
 
   // Proses detail pembelian dan update tabel produk
   const purchaseDetails = await Promise.all(
@@ -191,6 +233,73 @@ const removePurchase = async (request) => {
   if (detailPurchase === 0) {
     throw new ResponseError("Purchase is not found");
   }
+
+  const existingDetailPurchase = await prismaClient.detailPembelian.findMany({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+
+  //menghapus data di table hutang dagang
+  await prismaClient.hutangDagang.deleteMany({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+
+  //mengurangi hutang supplier
+  const existingPurchase = await prismaClient.pembelian.findUnique({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+  if (existingPurchase.jenis_pembayaran === "kredit") {
+    const supplier = await prismaClient.supplier.findUnique({
+      where: {
+        id_supplier: existingPurchase.id_supplier,
+      },
+      select: {
+        hutang_dagang: true,
+      },
+    });
+
+    const currentHutang = supplier.hutang_dagang ?? 0;
+
+    const newHutang =
+      parseFloat(currentHutang) - parseFloat(existingPurchase.total_harga_beli);
+
+    await prismaClient.supplier.update({
+      where: {
+        id_supplier: existingPurchase.id_supplier,
+      },
+      data: {
+        hutang_dagang: newHutang,
+        updated_at: generateDate(),
+      },
+    });
+  }
+
+  //mengembalikan jumlah produk ke jumlah sebelum pembelian
+  await Promise.all(
+    existingDetailPurchase.map(async (detail) => {
+      const existingProduct = await prismaClient.product.findUnique({
+        where: {
+          id_product: detail.id_product,
+        },
+      });
+
+      const newQty = existingProduct.jumlah - detail.jumlah;
+
+      await prismaClient.product.update({
+        where: {
+          id_product: detail.id_product,
+        },
+        data: {
+          jumlah: newQty,
+        },
+      });
+    }),
+  );
 
   await prismaClient.detailPembelian.deleteMany({
     where: {

@@ -47,20 +47,35 @@ const createSale = async (request) => {
         id_anggota: newSale.id_anggota,
         nm_anggota: newSale.nm_anggota,
         tg_hutang: request.tg_penjualan,
-        nominal: newSale.total_nilai_beli,
+        nominal: newSale.total_nilai_jual,
         id_penjualan: newSale.id_penjualan,
         created_at: generateDate(),
       },
     });
+
+    // Periksa jika nilai hutang null, ganti dengan 0
+    const anggota = await prismaClient.anggota.findUnique({
+      where: {
+        id_anggota: newSale.id_anggota,
+      },
+      select: {
+        hutang: true,
+      },
+    });
+
+    // Jika hutang null, set ke 0
+    const currentHutang = anggota.hutang ?? 0; // Jika hutang null, gunakan 0 sebagai nilai awal
+
+    const newHutang =
+      parseFloat(currentHutang) + parseFloat(newSale.total_nilai_jual);
 
     await prismaClient.anggota.update({
       where: {
         id_anggota: newSale.id_anggota,
       },
       data: {
-        hutang: {
-          increment: newSale.total_nilai_beli,
-        },
+        hutang: newHutang,
+        updated_at: generateDate(),
       },
     });
   }

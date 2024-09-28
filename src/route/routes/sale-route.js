@@ -6,6 +6,7 @@ const saleRoute = () => {
   userRouter.post("/api/sale/create-sale", saleController.createSale);
   userRouter.post("/api/sale/detail-sale", saleController.detailSale);
   userRouter.post("/api/sale/list-sale", saleController.getSaleList);
+  userRouter.post("/api/sale/remove-sale", saleController.removeSale);
 };
 
 export default saleRoute;

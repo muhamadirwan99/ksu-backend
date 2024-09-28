@@ -195,8 +195,106 @@ const getSaleList = async (request) => {
   };
 };
 
+const removeSale = async (request) => {
+  request = validate(getDetailSaleValidation, request);
+
+  const detailSale = await prismaClient.detailPenjualan.count({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+
+  if (detailSale === 0) {
+    throw new ResponseError("Sale is not found");
+  }
+
+  const existingDetailSale = await prismaClient.detailPenjualan.findMany({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+
+  //menghapus data di table hutang anggota
+  await prismaClient.hutangAnggota.deleteMany({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+
+  //mengurangi hutang anggota
+  const existingSale = await prismaClient.penjualan.findUnique({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+
+  console.log("existingSale");
+  console.log(existingSale);
+
+  if (existingSale.jenis_pembayaran === "kredit") {
+    const anggota = await prismaClient.anggota.findUnique({
+      where: {
+        id_anggota: existingSale.id_anggota,
+      },
+      select: {
+        hutang: true,
+      },
+    });
+
+    const currentHutang = anggota.hutang ?? 0;
+
+    const newHutang =
+      parseFloat(currentHutang) - parseFloat(existingSale.total_nilai_jual);
+
+    await prismaClient.anggota.update({
+      where: {
+        id_anggota: existingSale.id_anggota,
+      },
+      data: {
+        hutang: newHutang,
+        updated_at: generateDate(),
+      },
+    });
+  }
+
+  //mengembalikan jumlah produk ke jumlah sebelum penjualan
+  await Promise.all(
+    existingDetailSale.map(async (detail) => {
+      const existingProduct = await prismaClient.product.findUnique({
+        where: {
+          id_product: detail.id_product,
+        },
+      });
+
+      const newQty = existingProduct.jumlah + detail.jumlah;
+
+      await prismaClient.product.update({
+        where: {
+          id_product: detail.id_product,
+        },
+        data: {
+          jumlah: newQty,
+        },
+      });
+    }),
+  );
+
+  await prismaClient.detailPenjualan.deleteMany({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+
+  return prismaClient.penjualan.delete({
+    where: {
+      id_penjualan: request.id_penjualan,
+    },
+  });
+};
+
 export default {
   createSale,
   getDetailSale,
   getSaleList,
+  removeSale,
 };

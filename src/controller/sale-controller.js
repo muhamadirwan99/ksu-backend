@@ -6,7 +6,7 @@ const createSale = async (req, res, next) => {
     const result = await saleService.createSale(req.body);
     const responses = new ResponseSuccess(
       "Sale successfully registered",
-      result
+      result,
     ).getResponse();
     res.status(200).json(responses);
   } catch (e) {
@@ -19,7 +19,7 @@ const detailSale = async (req, res, next) => {
     const result = await saleService.getDetailSale(req.body);
     const responses = new ResponseSuccess(
       "Success get detail Sale",
-      result
+      result,
     ).getResponse();
     res.status(200).json(responses);
   } catch (e) {
@@ -32,7 +32,20 @@ const getSaleList = async (req, res, next) => {
     const result = await saleService.getSaleList(req.body);
     const responses = new ResponseSuccess(
       "Success get sale list",
-      result
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
+const removeSale = async (req, res, next) => {
+  try {
+    const result = await saleService.removeSale(req.body);
+    const responses = new ResponseSuccess(
+      "Success remove sale",
+      result,
     ).getResponse();
     res.status(200).json(responses);
   } catch (e) {
@@ -44,4 +57,5 @@ export default {
   createSale,
   detailSale,
   getSaleList,
+  removeSale,
 };

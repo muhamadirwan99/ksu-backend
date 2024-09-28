@@ -9,6 +9,7 @@ import purchaseRoute from "./routes/purchase-route.js";
 import supplierRoute from "./routes/supplier-route.js";
 import divisiRoute from "./routes/divisi-route.js";
 import saleRoute from "./routes/sale-route.js";
+import stockTakeRoute from "./routes/stock-take-route.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -22,5 +23,6 @@ anggotaRoute();
 cashInOutRoute();
 purchaseRoute();
 saleRoute();
+stockTakeRoute();
 
 export { userRouter };

@@ -30,6 +30,7 @@ model User {
   updated_at DateTime?   @db.Timestamp(6)
   role       Role        @relation(fields: [id_role], references: [id_role])
   Penjualan  Penjualan[]
+  StockTake  StockTake[]
 
   @@map("users")
 }
@@ -128,6 +129,7 @@ model Product {
   divisi           Divisi            @relation(fields: [id_divisi], references: [id_divisi])
   detail_pembelian DetailPembelian[]
   DetailPenjualan  DetailPenjualan[]
+  StockTake        StockTake[]
 
   @@map("products")
 }
@@ -308,4 +310,23 @@ model HutangDagang {
   pembelian Pembelian @relation(fields: [id_pembelian], references: [id_pembelian])
 
   @@map("hutang_dagang")
+}
+
+model StockTake {
+  id_stocktake Int       @id @default(autoincrement())
+  tg_stocktake String    @db.VarChar(20)
+  id_product   String    @db.VarChar(100)
+  nm_product   String    @db.VarChar(100)
+  stok_awal    Int       @db.Int
+  stok_akhir   Int       @db.Int
+  selisih      Int       @db.Int
+  username     String    @db.VarChar(100)
+  name         String    @db.VarChar(100)
+  created_at   DateTime  @db.Timestamp(6)
+  updated_at   DateTime? @db.Timestamp(6)
+
+  product Product @relation(fields: [id_product], references: [id_product])
+  user    User    @relation(fields: [username], references: [username])
+
+  @@map("stocktake")
 }

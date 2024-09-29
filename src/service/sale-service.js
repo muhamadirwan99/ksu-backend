@@ -228,9 +228,6 @@ const removeSale = async (request) => {
     },
   });
 
-  console.log("existingSale");
-  console.log(existingSale);
-
   if (existingSale.jenis_pembayaran === "kredit") {
     const anggota = await prismaClient.anggota.findUnique({
       where: {

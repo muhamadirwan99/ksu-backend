@@ -9,9 +9,6 @@ import {
 } from "../../validation/cash-in-out-validation.js";
 
 const createCash = async (request) => {
-  console.log("request");
-  console.log(request);
-
   request = validate(addCashValidation, request);
 
   const countCash = await prismaClient.referenceCashInOut.count({

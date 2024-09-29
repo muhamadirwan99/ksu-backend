@@ -18,8 +18,6 @@ const generatePurchaseId = async (tg_pembelian) => {
     increment = String(countToday).padStart(3, "0");
     purchaseId = `BL-${datePrefix}${increment}`;
 
-    console.log(`Checking if Purchase ID ${purchaseId} already exists`);
-
     // Cek apakah ID sudah ada di database
     const existingPurchase = await prismaClient.pembelian.findUnique({
       where: {
@@ -32,7 +30,6 @@ const generatePurchaseId = async (tg_pembelian) => {
     }
   }
 
-  console.log("Generated Purchase ID: ", purchaseId);
   return purchaseId;
 };
 

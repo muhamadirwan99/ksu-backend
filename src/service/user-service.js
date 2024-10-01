@@ -75,7 +75,6 @@ const login = async (request) => {
     },
     where: {
       username: user.username,
-      updated_at: generateDate(),
     },
     select: {
       username: true,
@@ -191,7 +190,6 @@ const logout = async (username) => {
     },
     data: {
       token: null,
-      updated_at: generateDate(),
     },
     select: {
       username: true,

@@ -77,6 +77,7 @@ const updateProduct = async (request) => {
   return prismaClient.product.update({
     where: {
       id_product: request.id_product,
+      updated_at: request.updated_at,
     },
     data: data,
   });

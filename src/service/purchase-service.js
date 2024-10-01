@@ -118,6 +118,7 @@ const createPurchase = async (request) => {
           harga_beli: hargaBeliBaru, // Harga beli baru yang sudah di-average
           jumlah: existingProduct.jumlah + detail.jumlah, // Update jumlah produk
           harga_jual: detail.harga_jual, // Update harga jual
+          updated_at: generateDate(),
         },
       });
 
@@ -293,6 +294,7 @@ const removePurchase = async (request) => {
       await prismaClient.product.update({
         where: {
           id_product: detail.id_product,
+          updated_at: generateDate(),
         },
         data: {
           jumlah: newQty,

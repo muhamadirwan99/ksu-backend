@@ -5,21 +5,23 @@ import { prismaClient } from "../application/database.js";
 let startDate, endDate;
 let lastMonthStartDate, lastMonthEndDate;
 let totalCurrentMonthSale, totalLastMonthSale;
+let grossProfitCurrent, grossProfitLast;
 
 function getDate(request) {
   // Mendapatkan data bulan dan tahun dari request
   const month = request.month;
   const year = request.year;
+  const timezoneOffset = 7 * 60 * 60 * 1000; // UTC+7 dalam milidetik
 
-  // Tanggal awal dan akhir bulan saat ini
-  startDate = new Date(Date.UTC(year, month - 1, 1));
-  endDate = new Date(Date.UTC(year, month, 1)); // Awal bulan berikutnya
+  // Tanggal awal bulan ini dalam zona waktu lokal
+  startDate = new Date(Date.UTC(year, month - 1, 1) - timezoneOffset);
+  endDate = new Date(Date.UTC(year, month, 1) - timezoneOffset);
 
   // Jika bulan adalah Januari (1), bulan sebelumnya harus Desember tahun lalu
   if (month === 1) {
     // Bulan sebelumnya adalah Desember tahun sebelumnya
     lastMonthStartDate = new Date(Date.UTC(year - 1, 11, 1)); // Desember tahun lalu
-    lastMonthEndDate = new Date(Date.UTC(year - 1, 12, 1)); // Awal Januari tahun ini
+    lastMonthEndDate = new Date(Date.UTC(year, 0, 1)); // Awal Januari tahun ini (bulan 0 adalah Januari)
   } else {
     // Bulan sebelumnya masih dalam tahun yang sama
     lastMonthStartDate = new Date(Date.UTC(year, month - 2, 1)); // Bulan sebelumnya
@@ -264,8 +266,8 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCreditPurchase -
     returLast;
 
-  const grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent;
-  const grossProfitLast = totalLastMonthSale - totalSalesLast;
+  grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent;
+  grossProfitLast = totalLastMonthSale - totalSalesLast;
 
   return {
     persediaan_awal: totalCurrentInventoryValue,
@@ -289,16 +291,227 @@ async function laporanHargaPokokPenjualan() {
   };
 }
 
+async function getTotalCashInOutByDateRange(idDetail, startDate, endDate) {
+  const result = await prismaClient.cashInOut.aggregate({
+    where: {
+      id_detail: idDetail,
+      created_at: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+    _sum: {
+      nominal: true,
+    },
+  });
+
+  return parseFloat(result._sum.nominal) || 0;
+}
+
+async function laporanBebanOperasional() {
+  try {
+    const [totalBebanGajiCurrent, totalBebanGajiLast] = await Promise.all([
+      getTotalCashInOutByDateRange(5, startDate, endDate),
+      getTotalCashInOutByDateRange(5, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalUangMakanCurrent, totalUangMakanLast] = await Promise.all([
+      getTotalCashInOutByDateRange(6, startDate, endDate),
+      getTotalCashInOutByDateRange(6, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalThrKaryawanCurrent, totalThrKaryawanLast] = await Promise.all([
+      getTotalCashInOutByDateRange(7, startDate, endDate),
+      getTotalCashInOutByDateRange(7, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalTunjanganPanganCurrent, totalTunjanganPanganLast] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(8, startDate, endDate),
+        getTotalCashInOutByDateRange(8, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalBebanAdmCurrent, totalBebanAdmLast] = await Promise.all([
+      getTotalCashInOutByDateRange(9, startDate, endDate),
+      getTotalCashInOutByDateRange(9, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalBebanPerlengkapanCurrent, totalBebanPerlengkapanLast] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(10, startDate, endDate),
+        getTotalCashInOutByDateRange(10, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalTunjanganKesehatanCurrent, totalTunjanganKesehatanLast] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(11, startDate, endDate),
+        getTotalCashInOutByDateRange(11, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalBebanInventarisCurrent, totalBebanInventarisLast] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(12, startDate, endDate),
+        getTotalCashInOutByDateRange(12, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalBebanGedungCurrent, totalBebanGedungLast] = await Promise.all([
+      getTotalCashInOutByDateRange(13, startDate, endDate),
+      getTotalCashInOutByDateRange(13, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalBebanPensiunCurrent, totalBebanPensiunLast] = await Promise.all(
+      [
+        getTotalCashInOutByDateRange(14, startDate, endDate),
+        getTotalCashInOutByDateRange(14, lastMonthStartDate, lastMonthEndDate),
+      ],
+    );
+
+    //BELUM TAU DATA DARI MANA
+    const totalBebanKerugianPersediaan = 0;
+    const totalBebanKerugianPersediaanLast = 0;
+    const totalPengeluaranLain = 0;
+    const totalPengeluaranLainLast = 0;
+
+    const totalBebanOperasionalCurrent =
+      totalBebanGajiCurrent +
+      totalUangMakanCurrent +
+      totalThrKaryawanCurrent +
+      totalTunjanganPanganCurrent +
+      totalBebanAdmCurrent +
+      totalBebanPerlengkapanCurrent +
+      totalTunjanganKesehatanCurrent +
+      totalBebanInventarisCurrent +
+      totalBebanGedungCurrent +
+      totalBebanPensiunCurrent +
+      totalBebanKerugianPersediaan +
+      totalPengeluaranLain;
+
+    const totalBebanOperasionalLast =
+      totalBebanGajiLast +
+      totalUangMakanLast +
+      totalThrKaryawanLast +
+      totalTunjanganPanganLast +
+      totalBebanAdmLast +
+      totalBebanPerlengkapanLast +
+      totalTunjanganKesehatanLast +
+      totalBebanInventarisLast +
+      totalBebanGedungLast +
+      totalBebanPensiunLast +
+      totalBebanKerugianPersediaanLast +
+      totalPengeluaranLainLast;
+
+    const hasilUsahaBersih = grossProfitCurrent - totalBebanOperasionalCurrent;
+    const hasilUsahaBersihLast = grossProfitLast - totalBebanOperasionalLast;
+
+    return {
+      beban_gaji: totalBebanGajiCurrent,
+      beban_gaji_last_month: totalBebanGajiLast,
+      uang_makan: totalUangMakanCurrent,
+      uang_makan_last_month: totalUangMakanLast,
+      thr_karyawan: totalThrKaryawanCurrent,
+      thr_karyawan_last_month: totalThrKaryawanLast,
+      tunjangan_pangan: totalTunjanganPanganCurrent,
+      tunjangan_pangan_last_month: totalTunjanganPanganLast,
+      beban_adm: totalBebanAdmCurrent,
+      beban_adm_last_month: totalBebanAdmLast,
+      beban_perlengkapan: totalBebanPerlengkapanCurrent,
+      beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
+      tunjangan_kesehatan: totalTunjanganKesehatanCurrent,
+      tunjangan_kesehatan_last_month: totalTunjanganKesehatanLast,
+      beban_inventaris: totalBebanInventarisCurrent,
+      beban_inventaris_last_month: totalBebanInventarisLast,
+      beban_gedung: totalBebanGedungCurrent,
+      beban_gedung_last_month: totalBebanGedungLast,
+      beban_pensiun: totalBebanPensiunCurrent,
+      beban_pensiun_last_month: totalBebanPensiunLast,
+      beban_kerugian_persediaan: totalBebanKerugianPersediaan,
+      beban_kerugian_persediaan_last_month: totalBebanKerugianPersediaanLast,
+      pengeluaran_lain: totalPengeluaranLain,
+      pengeluaran_lain_last_month: totalPengeluaranLainLast,
+      beban_operasional: totalBebanOperasionalCurrent,
+      beban_operasional_last_month: totalBebanOperasionalLast,
+      hasil_usaha_bersih: hasilUsahaBersih,
+      hasil_usaha_bersih_last_month: hasilUsahaBersihLast,
+    };
+  } catch (error) {
+    console.error("Error in laporanBebanOperasional:", error);
+    throw new Error("Failed to retrieve operational expenses report.");
+  }
+}
+
+async function laporanPendapatanLain() {
+  try {
+    const [totalPenarikanBank1Current, totalPenarikanBank1Last] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(1, startDate, endDate),
+        getTotalCashInOutByDateRange(1, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalPenarikanBank2Current, totalPenarikanBank2Last] =
+      await Promise.all([
+        getTotalCashInOutByDateRange(2, startDate, endDate),
+        getTotalCashInOutByDateRange(2, lastMonthStartDate, lastMonthEndDate),
+      ]);
+
+    const [totalTenantCurrent, totalTenantLast] = await Promise.all([
+      getTotalCashInOutByDateRange(3, startDate, endDate),
+      getTotalCashInOutByDateRange(3, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const [totalLainLainCurrent, totalLainLainLast] = await Promise.all([
+      getTotalCashInOutByDateRange(4, startDate, endDate),
+      getTotalCashInOutByDateRange(4, lastMonthStartDate, lastMonthEndDate),
+    ]);
+
+    const totalPenarikanBankCurrent =
+      totalPenarikanBank1Current + totalPenarikanBank2Current;
+    const totalPenarikanBankLast =
+      totalPenarikanBank1Last + totalPenarikanBank2Last;
+
+    const totalPendapatanLainCurrent =
+      totalPenarikanBankCurrent + totalTenantCurrent + totalLainLainCurrent;
+    const totalPendapatanLainLast =
+      totalPenarikanBankLast + totalTenantLast + totalLainLainLast;
+
+    return {
+      penarikan_bank: totalPenarikanBankCurrent,
+      penarikan_bank_last_month: totalPenarikanBankLast,
+      tenant: totalTenantCurrent,
+      tenant_last_month: totalTenantLast,
+      lain_lain: totalLainLainCurrent,
+      lain_lain_last_month: totalLainLainLast,
+      pendapatan_lain: totalPendapatanLainCurrent,
+      pendapatan_lain_last_month: totalPendapatanLainLast,
+    };
+  } catch (error) {
+    console.error("Error in laporanBebanOperasional:", error);
+    throw new Error("Failed to retrieve operational other report.");
+  }
+}
+
 const getLaporanHasilUsaha = async (request) => {
   request = validate(monthlyIncomeValidation, request);
 
   getDate(request);
   const laporanPenjualanResult = await laporanPenjualan();
   const laporanHargaPokokPenjualanResult = await laporanHargaPokokPenjualan();
+  const laporanBebanOperasionalResult = await laporanBebanOperasional();
+  const laporanPendapatanLainResult = await laporanPendapatanLain();
+  const laporanSisaHasilUsaha = {
+    sisa_hasil_usaha:
+      laporanBebanOperasionalResult.hasil_usaha_bersih +
+      laporanPendapatanLainResult.pendapatan_lain,
+    sisa_hasil_usaha_last_month:
+      laporanBebanOperasionalResult.hasil_usaha_bersih_last_month +
+      laporanPendapatanLainResult.pendapatan_lain_last_month,
+  };
 
   return {
     penjualan: laporanPenjualanResult,
     harga_pokok_penjualan: laporanHargaPokokPenjualanResult,
+    beban_operasional: laporanBebanOperasionalResult,
+    pendapatan_lain: laporanPendapatanLainResult,
+    sisa_hasil_usaha: laporanSisaHasilUsaha,
   };
 };
 

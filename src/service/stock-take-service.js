@@ -31,6 +31,7 @@ const createStockTake = async (request) => {
     },
     data: {
       jumlah: request.stok_akhir,
+      updated_at: generateDate(),
     },
   });
 

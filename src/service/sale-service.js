@@ -112,6 +112,7 @@ const createSale = async (request) => {
         },
         data: {
           jumlah: newStock, // Mengurangi stok produk
+          updated_at: generateDate(),
         },
       });
 
@@ -271,6 +272,7 @@ const removeSale = async (request) => {
         },
         data: {
           jumlah: newQty,
+          updated_at: generateDate(),
         },
       });
     }),

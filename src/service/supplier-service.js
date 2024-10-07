@@ -103,8 +103,22 @@ const removeSupplier = async (request) => {
 };
 
 const searchSupplier = async (request) => {
+  // Apabila request sama dengan {}, maka langsung balikkan semua data supplier
+  if (Object.keys(request).length === 0) {
+    const suppliers = await prismaClient.supplier.findMany();
+    return {
+      data_supplier: suppliers,
+      paging: {
+        page: 1,
+        total_item: suppliers.length,
+        total_page: 1,
+      },
+    };
+  }
+
   request = validate(searchSupplierValidation, request);
 
+  const skip = (request.page - 1) * request.size;
   const filters = [];
 
   // Jika ada nm_supplier, tambahkan filter
@@ -124,19 +138,28 @@ const searchSupplier = async (request) => {
   }));
 
   // Ambil semua data supplier dengan atau tanpa filter
-  const roles = await prismaClient.supplier.findMany({
-    where: filters.length > 0 ? { AND: filters } : undefined,
+  const suppliers = await prismaClient.supplier.findMany({
+    where: {
+      AND: filters,
+    },
+    take: request.size,
+    skip: skip,
     orderBy: orderBy,
   });
 
   // Hitung total data
-  const totalItems = roles.length;
+  const totalItems = await prismaClient.supplier.count({
+    where: {
+      AND: filters,
+    },
+  });
 
   return {
-    data_supplier: roles,
+    data_supplier: suppliers,
     paging: {
+      page: request.page,
       total_item: totalItems,
-      // Karena mengambil semua data, tidak ada konsep "page" atau "total_page"
+      total_page: Math.ceil(totalItems / request.size),
     },
   };
 };

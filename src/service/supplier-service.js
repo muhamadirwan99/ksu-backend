@@ -9,6 +9,7 @@ import {
   updateSupplierValidation,
 } from "../validation/supplier-validation.js";
 import { updateFields } from "../utils/update-fields.js";
+import { generateSupplierId } from "../utils/generate-supplier-id.js";
 
 const createSupplier = async (request) => {
   const supplier = validate(addSupplierValidation, request);
@@ -22,7 +23,7 @@ const createSupplier = async (request) => {
   if (countSupplier === 1) {
     throw new ResponseError("Supplier already exists");
   }
-
+  supplier.id_supplier = generateSupplierId();
   supplier.created_at = generateDate();
 
   return prismaClient.supplier.create({
@@ -104,12 +105,9 @@ const removeSupplier = async (request) => {
 const searchSupplier = async (request) => {
   request = validate(searchSupplierValidation, request);
 
-  // 1 ((page - 1) * size) = 0
-  // 2 ((page - 1) * size) = 10
-  const skip = (request.page - 1) * request.size;
-
   const filters = [];
 
+  // Jika ada nm_supplier, tambahkan filter
   if (request.nm_supplier) {
     filters.push({
       nm_supplier: {
@@ -125,27 +123,20 @@ const searchSupplier = async (request) => {
     [column]: sortOrder[index] === "desc" ? "desc" : "asc",
   }));
 
+  // Ambil semua data supplier dengan atau tanpa filter
   const roles = await prismaClient.supplier.findMany({
-    where: {
-      AND: filters,
-    },
-    take: request.size,
-    skip: skip,
+    where: filters.length > 0 ? { AND: filters } : undefined,
     orderBy: orderBy,
   });
 
-  const totalItems = await prismaClient.supplier.count({
-    where: {
-      AND: filters,
-    },
-  });
+  // Hitung total data
+  const totalItems = roles.length;
 
   return {
     data_supplier: roles,
     paging: {
-      page: request.page,
       total_item: totalItems,
-      total_page: Math.ceil(totalItems / request.size),
+      // Karena mengambil semua data, tidak ada konsep "page" atau "total_page"
     },
   };
 };

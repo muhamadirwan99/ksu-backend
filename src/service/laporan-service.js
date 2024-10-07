@@ -367,8 +367,6 @@ async function laporanBebanOperasional() {
     );
 
     //BELUM TAU DATA DARI MANA
-    const totalBebanKerugianPersediaan = 0;
-    const totalBebanKerugianPersediaanLast = 0;
     const totalPengeluaranLain = 0;
     const totalPengeluaranLainLast = 0;
 
@@ -383,7 +381,6 @@ async function laporanBebanOperasional() {
       totalBebanInventarisCurrent +
       totalBebanGedungCurrent +
       totalBebanPensiunCurrent +
-      totalBebanKerugianPersediaan +
       totalPengeluaranLain;
 
     const totalBebanOperasionalLast =
@@ -397,7 +394,6 @@ async function laporanBebanOperasional() {
       totalBebanInventarisLast +
       totalBebanGedungLast +
       totalBebanPensiunLast +
-      totalBebanKerugianPersediaanLast +
       totalPengeluaranLainLast;
 
     const hasilUsahaBersih = grossProfitCurrent - totalBebanOperasionalCurrent;
@@ -424,8 +420,6 @@ async function laporanBebanOperasional() {
       beban_gedung_last_month: totalBebanGedungLast,
       beban_pensiun: totalBebanPensiunCurrent,
       beban_pensiun_last_month: totalBebanPensiunLast,
-      beban_kerugian_persediaan: totalBebanKerugianPersediaan,
-      beban_kerugian_persediaan_last_month: totalBebanKerugianPersediaanLast,
       pengeluaran_lain: totalPengeluaranLain,
       pengeluaran_lain_last_month: totalPengeluaranLainLast,
       beban_operasional: totalBebanOperasionalCurrent,

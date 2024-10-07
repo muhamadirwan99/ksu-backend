@@ -1,7 +1,6 @@
 import Joi from "joi";
 
 const addSupplierValidation = Joi.object({
-  id_supplier: Joi.string().max(10).required(),
   nm_supplier: Joi.string().max(100).required(),
   nm_pemilik: Joi.string().max(100).required(),
   nm_pic: Joi.string().max(100).required(),
@@ -24,8 +23,8 @@ const updateSupplierValidation = Joi.object({
 });
 
 const searchSupplierValidation = Joi.object({
-  page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  page: Joi.number().min(1).positive().optional(),
+  size: Joi.number().min(1).positive().optional(),
   nm_supplier: Joi.string().optional(),
   sort_by: Joi.array().optional(),
   sort_order: Joi.array().optional(),

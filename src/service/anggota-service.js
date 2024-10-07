@@ -9,7 +9,7 @@ import {
   updateAnggotaValidation,
 } from "../validation/anggota-validation.js";
 import { updateFields } from "../utils/update-fields.js";
-import generateShortIdFromUUID from "../utils/generate-uuid.js";
+import { generateShortIdFromUUID } from "../utils/generate-uuid.js";
 
 const createAnggota = async (request) => {
   request = validate(addAnggotaValidation, request);

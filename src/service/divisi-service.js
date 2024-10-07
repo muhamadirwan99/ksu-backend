@@ -31,13 +31,13 @@ const createDivisi = async (request) => {
     },
   });
 
-  // Generate ID divisi baru dengan format 001, 002, 003, dll.
+  // Generate ID divisi baru dengan format 01, 02, 03, dll.
   let newIdDivisi;
   if (lastDivisi) {
     const lastIdNumber = parseInt(lastDivisi.id_divisi); // Ambil angka dari ID terakhir
-    newIdDivisi = String(lastIdNumber + 1).padStart(3, "0"); // Tambahkan 1 dan format jadi 3 digit
+    newIdDivisi = String(lastIdNumber + 1).padStart(2, "0"); // Tambahkan 1 dan format jadi 2 digit
   } else {
-    newIdDivisi = "001"; // Jika belum ada ID, mulai dari 001
+    newIdDivisi = "01"; // Jika belum ada ID, mulai dari 01
   }
 
   // Set id_divisi dan created_at

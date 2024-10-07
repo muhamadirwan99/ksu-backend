@@ -110,6 +110,14 @@ const searchProduct = async (request) => {
 
   const filters = [];
 
+  if (request.status_product) {
+    filters.push({
+      status_product: {
+        equals: request.status_product,
+      },
+    });
+  }
+
   if (request.nm_product) {
     filters.push({
       nm_product: {

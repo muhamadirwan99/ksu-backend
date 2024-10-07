@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/old-client"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL_LAMA")
+}
+
+model admin {
+  id       Int    @id @default(autoincrement())
+  bagian   Int
+  username String @db.VarChar(100)
+  password String @db.VarChar(100)
+  nama     String @db.VarChar(100)
+  type     String @default("0") @db.VarChar(100)
+  level    Int    @default(1)
+}
+
+model anggota {
+  id              Int       @id @default(autoincrement())
+  kode            String    @default("") @db.VarChar(100)
+  nama            String    @default("") @db.VarChar(100)
+  alamat          String    @db.Text
+  telp            String    @default("") @db.VarChar(100)
+  kredit_limit    Decimal   @default(0.00) @db.Decimal(16, 2)
+  kredit_pinjaman Decimal   @default(0.00) @db.Decimal(16, 2)
+  status          Int       @default(0)
+  created         DateTime? @default(now()) @db.DateTime(0)
+  modified        DateTime? @default(now()) @db.DateTime(0)
+}
+
+model anggota_kredit {
+  id           Int       @id @default(autoincrement())
+  id_anggota   Int       @default(0)
+  id_transaksi Int       @default(0)
+  ex_bukti     String    @default("") @db.VarChar(100)
+  tanggal      DateTime? @db.DateTime(0)
+  debet        Decimal   @default(0.00) @db.Decimal(16, 2)
+  kredit       Decimal   @default(0.00) @db.Decimal(16, 2)
+  keterangan   String    @db.Text
+}
+
+model bagian {
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+}
+
+model bank {
+  id    Int     @id @default(autoincrement())
+  kode  String  @db.VarChar(100)
+  nama  String  @db.VarChar(100)
+  saldo Decimal @db.Decimal(16, 2)
+}
+
+model bank_mutasi {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime @db.Date
+  id_bank    Int
+  debet      Decimal  @default(0.00) @db.Decimal(16, 2)
+  kredit     Decimal  @default(0.00) @db.Decimal(16, 2)
+  debet2     Decimal  @default(0.00) @db.Decimal(16, 2)
+  kredit2    Decimal  @default(0.00) @db.Decimal(16, 2)
+  adm        Decimal  @default(0.00) @db.Decimal(16, 2)
+  pajak      Decimal  @default(0.00) @db.Decimal(16, 2)
+  jasa       Decimal  @default(0.00) @db.Decimal(16, 2)
+  keterangan String   @db.Text
+}
+
+model bayar {
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+}
+
+model beban_operasional {
+  id         Int       @id @default(autoincrement())
+  tanggal    DateTime? @db.DateTime(0)
+  keterangan String    @db.Text
+  jumlah     Float     @default(0) @db.Float
+}
+
+model cash_in_out {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime @db.Date
+  jenis      Int
+  detail     Int      @default(0)
+  input      Decimal  @db.Decimal(16, 2)
+  output     Decimal  @db.Decimal(16, 2)
+  keterangan String   @db.Text
+}
+
+model cash_jenis {
+  id     Int    @id @default(autoincrement())
+  parent Int    @default(0)
+  nama   String @db.VarChar(100)
+  nilai  Int
+}
+
+model config {
+  id       Int       @id @default(autoincrement())
+  nama     String    @db.VarChar(100)
+  alamat   String    @db.Text
+  telp     String    @db.VarChar(100)
+  bulat    Int
+  versi    Int
+  shortcut Int
+  modified DateTime? @db.DateTime(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model configs {
+  deskripsi String @db.VarChar(100)
+  value     String @db.VarChar(100)
+
+  @@ignore
+}
+
+model dana {
+  id     Int     @id @default(autoincrement())
+  jenis  Int     @default(0)
+  kode   String  @db.VarChar(25)
+  nama   String  @db.VarChar(50)
+  jumlah Decimal @default(0.00) @db.Decimal(16, 2)
+}
+
+model dana_test {
+  id      Int      @id @default(autoincrement())
+  tanggal DateTime @db.DateTime(0)
+  nilai   Decimal  @db.Decimal(16, 2)
+  nilai2  Decimal  @db.Decimal(16, 2)
+}
+
+model divisi {
+  id       Int      @id @default(autoincrement())
+  jenis    Int      @default(0)
+  kode     String   @db.VarChar(100)
+  nama     String   @db.VarChar(100)
+  created  DateTime @default(now()) @db.DateTime(0)
+  modified DateTime @default(now()) @db.DateTime(0)
+}
+
+model estimasi {
+  id         Int       @id @default(autoincrement())
+  kode       String    @db.VarChar(100)
+  tanggal    DateTime? @db.DateTime(0)
+  jumlah     Float     @default(0) @db.Float
+  produk     Int       @default(0)
+  total_beli Decimal   @default(0.00) @db.Decimal(16, 2)
+  total_jual Decimal   @default(0.00) @db.Decimal(16, 2)
+  keterangan String    @db.Text
+  admin      Int       @default(0)
+  created    DateTime? @db.DateTime(0)
+  modified   DateTime? @db.DateTime(0)
+}
+
+model estimasi_item {
+  id          Int       @id @default(autoincrement())
+  tanggal     DateTime? @db.DateTime(0)
+  id_estimasi Int       @default(0)
+  id_produk   Int       @default(0)
+  id_supplier Int
+  harga_beli  Decimal   @default(0.00) @db.Decimal(16, 2)
+  harga_jual  Decimal   @default(0.00) @db.Decimal(16, 2)
+  jumlah      Float     @default(0) @db.Float
+}
+
+model inventaris {
+  id        Int       @id @default(autoincrement())
+  jenis     Int       @default(0)
+  nama      String    @db.VarChar(100)
+  tanggal   DateTime? @db.Date
+  nilai     Decimal   @default(0.00) @db.Decimal(16, 2)
+  persen    Int       @default(0)
+  sisa_2023 Decimal   @default(0.00) @db.Decimal(16, 2)
+  created   DateTime? @db.DateTime(0)
+  modified  DateTime? @db.DateTime(0)
+}
+
+model pelunasan_pembelian {
+  id           Int       @id @default(autoincrement())
+  id_supplier  Int       @default(0)
+  id_transaksi Int       @default(0)
+  tanggal      DateTime? @db.DateTime(0)
+  jumlah       Decimal   @default(0.00) @db.Decimal(16, 2)
+  keterangan   String    @db.Text
+}
+
+model pemusnahan {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime @db.Date
+  jumlah     Decimal  @default(0.00) @db.Decimal(16, 2)
+  jumlah_fix Decimal  @default(0.00) @db.Decimal(16, 2)
+  jangka     Int
+  keterangan String   @db.Text
+}
+
+model produk {
+  id         Int      @id @default(autoincrement())
+  divisi     Int      @default(0)
+  supplier   Int      @default(0)
+  kode       String   @db.VarChar(100)
+  nama       String   @db.VarChar(100)
+  harga_beli Decimal  @default(0.00) @db.Decimal(16, 2)
+  harga_jual Decimal  @default(0.00) @db.Decimal(16, 2)
+  jumlah     Float    @default(0) @db.Float
+  diskon     Int      @default(0)
+  keterangan String   @db.Text
+  status     Int      @default(0)
+  created    DateTime @default(now()) @db.DateTime(0)
+  modified   DateTime @default(now()) @db.DateTime(0)
+}
+
+model produk_harga {
+  id         Int       @id @default(autoincrement())
+  id_produk  Int
+  tanggal    DateTime? @default(now()) @db.DateTime(0)
+  harga_beli Float     @default(0) @db.Float
+  harga_jual Float     @default(0) @db.Float
+}
+
+model rapb {
+  no                      Int     @id @default(autoincrement())
+  tahun                   Int
+  hasil_usaha             Decimal @default(0.00) @db.Decimal(16, 2)
+  jasa_bank               Decimal @default(0.00) @db.Decimal(16, 2)
+  pendapatan_lain         Decimal @default(0.00) @db.Decimal(16, 2)
+  beban_gaji              Decimal @default(0.00) @db.Decimal(16, 2)
+  uang_makan              Decimal @default(0.00) @db.Decimal(16, 2)
+  thr_karyawan            Decimal @default(0.00) @db.Decimal(16, 2)
+  tunjangan_pangan        Decimal @default(0.00) @db.Decimal(16, 2)
+  beban_adm               Decimal @default(0.00) @db.Decimal(16, 2)
+  beban_perlengkapan      Decimal @default(0.00) @db.Decimal(16, 2)
+  tunjangan_kesehatan     Decimal @default(0.00) @db.Decimal(16, 2)
+  peny_inventaris         Decimal @default(0.00) @db.Decimal(16, 2)
+  peny_gedung             Decimal @default(0.00) @db.Decimal(16, 2)
+  pemeliharaan_inventaris Decimal @default(0.00) @db.Decimal(16, 2)
+  pemeliharaan_gedung     Decimal @default(0.00) @db.Decimal(16, 2)
+  beban_pensiun           Decimal @default(0.00) @db.Decimal(16, 2)
+  kerugian_persediaan     Decimal @default(0.00) @db.Decimal(16, 2)
+  sisa_hasil_usaha        Decimal @default(0.00) @db.Decimal(16, 2)
+}
+
+model saldo_toko {
+  id           Int       @id @default(autoincrement())
+  jenis        Int       @default(0)
+  id_transaksi Int       @default(0)
+  tanggal      DateTime? @db.Date
+  debet        Float     @default(0) @db.Float
+  kredit       Float     @default(0) @db.Float
+  saldo        Float     @default(0) @db.Float
+  keterangan   String    @db.Text
+}
+
+model shu_mutasi {
+  id         Int      @id @default(autoincrement())
+  tahun_shu  Int
+  tanggal    DateTime @db.Date
+  debet      Decimal  @db.Decimal(16, 2)
+  kredit     Decimal  @db.Decimal(16, 2)
+  keterangan String   @db.Text
+}
+
+model supplier {
+  id       Int      @id @default(autoincrement())
+  kode     String   @db.VarChar(100)
+  nama     String   @db.VarChar(100)
+  alamat   String   @db.Text
+  pemilik  String   @db.VarChar(100)
+  kontak   String   @db.VarChar(100)
+  kredit   Decimal  @default(0.00) @db.Decimal(16, 2)
+  created  DateTime @default(now()) @db.DateTime(0)
+  modified DateTime @default(now()) @db.DateTime(0)
+}
+
+model supplier_kredit {
+  id           Int       @id @default(autoincrement())
+  id_supplier  Int       @default(0)
+  id_transaksi Int       @default(0)
+  ex_bukti     String    @default("") @db.VarChar(100)
+  tanggal      DateTime? @db.DateTime(0)
+  debet        Decimal   @default(0.00) @db.Decimal(16, 2)
+  kredit       Decimal   @default(0.00) @db.Decimal(16, 2)
+  keterangan   String    @db.Text
+}
+
+model transaksi {
+  id            Int       @id @default(autoincrement())
+  kode          String    @db.VarChar(100)
+  kode_ex       String    @default("") @db.VarChar(100)
+  kode_2        String    @default("") @db.VarChar(100)
+  tanggal       DateTime? @db.DateTime(0)
+  jenis         Int       @default(0)
+  sumber        Int       @default(0)
+  jumlah        Float     @default(0) @db.Float
+  produk        Int       @default(0)
+  total_beli    Decimal   @default(0.00) @db.Decimal(16, 2)
+  total_jual    Decimal   @default(0.00) @db.Decimal(16, 2)
+  diskon_item   Float     @default(0) @db.Float
+  diskon_persen Int       @default(0)
+  diskon_total  Decimal   @default(0.00) @db.Decimal(16, 2)
+  bayar         Decimal   @default(0.00) @db.Decimal(16, 2)
+  kredit        Int       @default(1)
+  keterangan    String    @db.Text
+  anggota       Int       @default(0)
+  admin         Int       @default(0)
+  status        Int       @default(1)
+  created       DateTime? @db.DateTime(0)
+  modified      DateTime? @db.DateTime(0)
+}
+
+model transaksi_item {
+  id           Int       @id @default(autoincrement())
+  tanggal      DateTime? @db.DateTime(0)
+  jenis        Int       @default(0)
+  id_transaksi Int       @default(0)
+  id_produk    Int       @default(0)
+  harga_beli   Decimal   @default(0.00) @db.Decimal(16, 2)
+  harga_jual   Decimal   @default(0.00) @db.Decimal(16, 2)
+  jumlah       Float     @default(0) @db.Float
+  diskon       Int       @default(0)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model transaksi_jenis {
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+  tipe Int
+  fix  Int
+}
+
+model tujuan {
+  id   Int    @id @default(autoincrement())
+  nama String @db.VarChar(100)
+}
+
+model tutup_kasir {
+  id      Int      @id @default(autoincrement())
+  tanggal DateTime @db.DateTime(0)
+  shift   Int
+  kasir   Int
+  tunai   Decimal  @db.Decimal(16, 2)
+  bon     Decimal  @db.Decimal(16, 2)
+  struk   Decimal  @db.Decimal(16, 2)
+}
+
+model utang_sp {
+  id         Int      @id @default(autoincrement())
+  tanggal    DateTime @db.Date
+  debet      Decimal  @db.Decimal(16, 2)
+  kredit     Decimal  @db.Decimal(16, 2)
+  keterangan String   @db.Text
+}

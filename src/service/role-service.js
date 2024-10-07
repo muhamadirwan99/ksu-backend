@@ -139,6 +139,18 @@ const removeRole = async (request) => {
 };
 
 const searchRole = async (request) => {
+  if (Object.keys(request).length === 0) {
+    const roles = await prismaClient.role.findMany();
+    return {
+      data_roles: roles,
+      paging: {
+        page: 1,
+        total_item: roles.length,
+        total_page: 1,
+      },
+    };
+  }
+
   request = validate(searchRoleValidation, request);
 
   // 1 ((page - 1) * size) = 0

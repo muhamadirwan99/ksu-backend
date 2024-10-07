@@ -126,6 +126,17 @@ const removeDivisi = async (request) => {
 };
 
 const searchDivisi = async (request) => {
+  if (Object.keys(request).length === 0) {
+    const divisi = await prismaClient.divisi.findMany();
+    return {
+      data_divisi: divisi,
+      paging: {
+        page: 1,
+        total_item: divisi.length,
+        total_page: 1,
+      },
+    };
+  }
   request = validate(searchDivisiValidation, request);
 
   // 1 ((page - 1) * size) = 0

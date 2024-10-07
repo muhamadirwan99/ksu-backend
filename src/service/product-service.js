@@ -105,23 +105,23 @@ const removeProduct = async (request) => {
 
 const searchProduct = async (request) => {
   request = validate(searchProductValidation, request);
-
   const skip = (request.page - 1) * request.size;
 
   const filters = [];
-
-  if (request.status_product) {
-    filters.push({
-      status_product: {
-        equals: request.status_product,
-      },
-    });
-  }
 
   if (request.nm_product) {
     filters.push({
       nm_product: {
         contains: request.nm_product,
+      },
+    });
+  }
+
+  // Jika status_product ada dalam request, tambahkan filter, termasuk jika bernilai false
+  if (typeof request.status_product === "boolean") {
+    filters.push({
+      status_product: {
+        equals: request.status_product,
       },
     });
   }

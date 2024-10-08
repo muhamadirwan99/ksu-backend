@@ -1,24 +1,25 @@
-# Gunakan image Node versi yang sesuai
 FROM node:22-alpine
 
-# Buat direktori kerja di dalam container
+# Set working directory
 WORKDIR /app
 
-# Salin `package.json` dan `package-lock.json` (jika ada)
+# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Salin folder prisma ke dalam container
-COPY prisma ./prisma
-
-# Instal dependensi
+# Install dependencies
 RUN npm install
 
-# Salin seluruh kode aplikasi
+# Copy the rest of your application code
 COPY . .
 
-# Jalankan Prisma generate dan migrate secara eksplisit
-RUN npx prisma generate --schema=./prisma/schema.prisma
-RUN npx prisma migrate dev --schema=./prisma/schema.prisma --name init-migration
+# Run Prisma migration in production mode
+RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
 
-# Jalankan aplikasi menggunakan `nodemon` dalam mode
+# Generate Prisma Client
+RUN npx prisma generate --schema=./prisma/schema.prisma
+
+# Expose the application port
+EXPOSE 3000
+
+# Start the server
 CMD ["npm", "start"]

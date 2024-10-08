@@ -20,8 +20,5 @@ COPY . .
 RUN npx prisma generate --schema=./prisma/schema.prisma
 RUN npx prisma migrate dev --schema=./prisma/schema.prisma --name init-migration
 
-# Instal nodemon secara global (opsional jika ingin menggunakan `nodemon` dari global)
-RUN npm install -g nodemon
-
-# Jalankan aplikasi menggunakan `nodemon` dalam mode development
-CMD ["npm", "run", "dev"]
+# Jalankan aplikasi menggunakan `nodemon` dalam mode
+CMD ["npm", "start"]

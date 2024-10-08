@@ -6,18 +6,24 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
+# Copy the Prisma schema file and folder
+COPY prisma ./prisma
+
 # Install dependencies
 RUN npm install
 
 # Copy the rest of your application code
 COPY . .
 
-# Run Prisma migration in production mode
-RUN npx prisma migrate deploy --schema=./prisma/schema.prisma
+# Copy .env file
+COPY .env .env
 
 # Generate Prisma Client
-RUN npx prisma generate --schema=./prisma/schema.prisma
+# RUN npx prisma generate --schema=prisma/schema.prisma
 
+# Run Prisma migration
+# RUN npx prisma migrate dev --schema=./prisma/schema.prisma --name init-migration
+#    "seed": "node prisma\\seed.js"
 # Expose the application port
 EXPOSE 3000
 

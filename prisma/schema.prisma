@@ -71,7 +71,7 @@ model Anggota {
   alamat         String          @db.VarChar(255)
   no_wa          String          @db.VarChar(20)
   limit_pinjaman Decimal         @db.Decimal(10, 2)
-  pinjaman       Decimal         @db.Decimal(10, 2)
+  pinjaman       Decimal?         @db.Decimal(10, 2)
   hutang         Decimal?        @db.Decimal(10, 2)
   created_at     DateTime        @db.Timestamp(6)
   updated_at     DateTime?       @db.Timestamp(6)

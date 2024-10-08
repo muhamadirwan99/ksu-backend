@@ -19,5 +19,8 @@ COPY . .
 # Jalankan Prisma generate secara eksplisit
 RUN npx prisma generate --schema=./prisma/schema.prisma
 
+# Instal nodemon secara global (opsional jika ingin menggunakan `nodemon` dari global)
+RUN npm install -g nodemon
+
 # Jalankan aplikasi
 CMD ["npm", "start"]

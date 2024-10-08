@@ -6,7 +6,8 @@
   "scripts": {
     "postinstall": "prisma generate",
     "test": "jest -i",
-    "start": "nodemon src/main.js",
+    "start": "node src/main.js",
+    "dev": "nodemon src/main.js",
     "migrate": "node prisma/migrate.js",
     "build": "prisma generate && <actual-build-command>"
   },

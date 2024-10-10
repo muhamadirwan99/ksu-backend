@@ -12,10 +12,15 @@ const batchSize = 100; // Sesuaikan dengan jumlah batch yang Anda inginkan
 
 async function migrateData() {
   try {
-    // await migrateAnggota();
-    // await migrateDivisi();
-    // await migratesSupplier();
+    await migrateAnggota();
+    console.log("===================================");
+    await migrateDivisi();
+    console.log("===================================");
+    await migratesSupplier();
+    console.log("===================================");
     await migrateProducts();
+    console.log("===================================");
+    console.log("Migrasi data selesai.");
   } catch (error) {
     console.error("Error migrasi data:", error);
   } finally {

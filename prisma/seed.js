@@ -53,7 +53,7 @@ async function main() {
 
   await prismaClient.supplier.create({
     data: {
-      id_supplier: "SUP001",
+      id_supplier: "SUP9999",
       nm_supplier: "PT. ABC",
       nm_pic: "Santoso",
       nm_pemilik: "Budi Santoso",
@@ -70,7 +70,7 @@ async function main() {
       harga_beli: 1000,
       harga_jual: 5000,
       id_divisi: "001",
-      id_supplier: "SUP001",
+      id_supplier: "SUP9999",
       status_product: true,
       jumlah: 10,
       created_at: generateDate(),
@@ -88,7 +88,7 @@ async function main() {
     data: {
       id_pembelian: "PEM001",
       tg_pembelian: `${date}-${month}-${year}`,
-      id_supplier: "SUP001",
+      id_supplier: "SUP9999",
       nm_supplier: "PT. ABC",
       jumlah: 10,
       total_harga_beli: 10000,
@@ -139,6 +139,13 @@ async function main() {
         created_at: generateDate(),
       },
     ],
+  });
+
+  await prismaClient.counter.create({
+    data: {
+      name: "supplier",
+      value: 1,
+    },
   });
 
   await prismaClient.referenceJenisCashInOut.createMany({

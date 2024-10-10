@@ -308,6 +308,23 @@ async function getTotalCashInOutByDateRange(idDetail, startDate, endDate) {
   return parseFloat(result._sum.nominal) || 0;
 }
 
+async function getTotalPendapatanLain(startDate, endDate) {
+  const result = await prismaClient.cashInOut.aggregate({
+    where: {
+      id_jenis: 6,
+      created_at: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+    _sum: {
+      nominal: true,
+    },
+  });
+
+  return parseFloat(result._sum.nominal) || 0;
+}
+
 async function laporanBebanOperasional() {
   try {
     const [totalBebanGajiCurrent, totalBebanGajiLast] = await Promise.all([
@@ -359,16 +376,10 @@ async function laporanBebanOperasional() {
       getTotalCashInOutByDateRange(13, lastMonthStartDate, lastMonthEndDate),
     ]);
 
-    const [totalBebanPensiunCurrent, totalBebanPensiunLast] = await Promise.all(
-      [
-        getTotalCashInOutByDateRange(14, startDate, endDate),
-        getTotalCashInOutByDateRange(14, lastMonthStartDate, lastMonthEndDate),
-      ],
-    );
-
-    //BELUM TAU DATA DARI MANA
-    const totalPengeluaranLain = 0;
-    const totalPengeluaranLainLast = 0;
+    const [totalPengeluaranLain, totalPengeluaranLainLast] = await Promise.all([
+      getTotalPendapatanLain(startDate, endDate),
+      getTotalPendapatanLain(lastMonthStartDate, lastMonthEndDate),
+    ]);
 
     const totalBebanOperasionalCurrent =
       totalBebanGajiCurrent +
@@ -380,7 +391,6 @@ async function laporanBebanOperasional() {
       totalTunjanganKesehatanCurrent +
       totalBebanInventarisCurrent +
       totalBebanGedungCurrent +
-      totalBebanPensiunCurrent +
       totalPengeluaranLain;
 
     const totalBebanOperasionalLast =
@@ -393,7 +403,6 @@ async function laporanBebanOperasional() {
       totalTunjanganKesehatanLast +
       totalBebanInventarisLast +
       totalBebanGedungLast +
-      totalBebanPensiunLast +
       totalPengeluaranLainLast;
 
     const hasilUsahaBersih = grossProfitCurrent - totalBebanOperasionalCurrent;
@@ -414,12 +423,14 @@ async function laporanBebanOperasional() {
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       tunjangan_kesehatan: totalTunjanganKesehatanCurrent,
       tunjangan_kesehatan_last_month: totalTunjanganKesehatanLast,
-      beban_inventaris: totalBebanInventarisCurrent,
-      beban_inventaris_last_month: totalBebanInventarisLast,
-      beban_gedung: totalBebanGedungCurrent,
-      beban_gedung_last_month: totalBebanGedungLast,
-      beban_pensiun: totalBebanPensiunCurrent,
-      beban_pensiun_last_month: totalBebanPensiunLast,
+      beban_peny_inventaris: 0,
+      beban_peny_inventaris_last_month: 0,
+      beban_peny_gedung: 0,
+      beban_peny_gedung_last_month: 0,
+      pemeliharaan_inventaris: totalBebanInventarisCurrent,
+      pemeliharaan_inventaris_last_month: totalBebanInventarisLast,
+      pemeliharaan_gedung: totalBebanGedungCurrent,
+      pemeliharaan_gedung_last_month: totalBebanGedungLast,
       pengeluaran_lain: totalPengeluaranLain,
       pengeluaran_lain_last_month: totalPengeluaranLainLast,
       beban_operasional: totalBebanOperasionalCurrent,

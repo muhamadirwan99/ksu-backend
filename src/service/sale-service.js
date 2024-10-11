@@ -14,6 +14,12 @@ import { generateHutangAnggotaId } from "../utils/generate-hutang-anggota-id.js"
 const createSale = async (request) => {
   request = validate(addSaleValidation, request);
 
+  // Jika nm_anggota dan id_anggota tidak diisi, set default ke "Umum"
+  if (!request.nm_anggota && !request.id_anggota) {
+    request.nm_anggota = "UMUM";
+    request.id_anggota = "UMUM";
+  }
+
   const parseDate = parse(
     request.tg_penjualan,
     "dd-MM-yyyy, HH:mm",
@@ -34,6 +40,32 @@ const createSale = async (request) => {
   request.created_at = generateDate();
 
   const { details, ...requestWithoutDetails } = request;
+
+  await Promise.all(
+    request.details.map(async (detail) => {
+      // Cek apakah produk sudah ada di tabel product
+      let existingProduct = await prismaClient.product.findUnique({
+        where: {
+          id_product: detail.id_product,
+        },
+      });
+
+      // Jika produk tidak ada, lempar error
+      if (!existingProduct) {
+        throw new Error(
+          `Product with ID ${detail.id_product} does not exist. Please add the product first.`,
+        );
+      }
+
+      // Kurangi stok produk dengan jumlah penjualan
+      const newStock = existingProduct.jumlah - detail.jumlah;
+      if (newStock < 0) {
+        throw new Error(
+          `Not enough stock for product ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`,
+        );
+      }
+    }),
+  );
 
   const newSale = await prismaClient.penjualan.create({
     data: requestWithoutDetails,

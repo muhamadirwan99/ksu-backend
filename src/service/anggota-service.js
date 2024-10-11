@@ -103,6 +103,18 @@ const removeAnggota = async (request) => {
 };
 
 const searchAnggota = async (request) => {
+  // Apabila request sama dengan {}, maka langsung balikkan semua data anggota
+  if (Object.keys(request).length === 0) {
+    const anggota = await prismaClient.anggota.findMany();
+    return {
+      data_anggota: anggota,
+      paging: {
+        page: 1,
+        total_item: anggota.length,
+        total_page: 1,
+      },
+    };
+  }
   request = validate(searchAnggotaValidation, request);
 
   // 1 ((page - 1) * size) = 0
@@ -126,7 +138,7 @@ const searchAnggota = async (request) => {
     [column]: sortOrder[index] === "desc" ? "desc" : "asc",
   }));
 
-  const roles = await prismaClient.anggota.findMany({
+  const anggota = await prismaClient.anggota.findMany({
     where: {
       AND: filters,
     },
@@ -142,7 +154,7 @@ const searchAnggota = async (request) => {
   });
 
   return {
-    data_anggota: roles,
+    data_anggota: anggota,
     paging: {
       page: request.page,
       total_item: totalItems,

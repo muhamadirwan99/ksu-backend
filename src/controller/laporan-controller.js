@@ -1,5 +1,5 @@
 import { ResponseSuccess } from "../utils/response-success.js";
-import laporanService from "../service/laporan-service.js";
+import laporanService from "../service/laporan/laporan-service.js";
 
 const getLaporanHasilUsaha = async (req, res, next) => {
   try {

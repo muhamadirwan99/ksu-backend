@@ -147,6 +147,22 @@ async function laporanPenjualan() {
   };
 }
 
+async function getTotalRetur(startDate, endDate) {
+  const result = await prismaClient.retur.aggregate({
+    where: {
+      created_at: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+    _sum: {
+      total_nilai_beli: true,
+    },
+  });
+
+  return parseFloat(result._sum.total_nilai_beli) || 0;
+}
+
 async function laporanHargaPokokPenjualan() {
   // Dapatkan semua data produk yang tersedia pada tanggal 1
   const inventoryAtStart = await prismaClient.product.findMany({
@@ -241,8 +257,10 @@ async function laporanHargaPokokPenjualan() {
     totalSalesLast += parseFloat(sale.total_harga_beli);
   });
 
-  const returCurrent = 0;
-  const returLast = 0;
+  const [returCurrent, returLast] = await Promise.all([
+    getTotalRetur(startDate, endDate),
+    getTotalRetur(lastMonthStartDate, lastMonthEndDate),
+  ]);
 
   const netPurchaseCurrent =
     totalCurrentMonthCashPurchase +
@@ -274,6 +292,8 @@ async function laporanHargaPokokPenjualan() {
     pembelian_tunai_last_month: totalLastMonthCashPurchase,
     pembelian_kredit: totalCurrentMonthCreditPurchase,
     pembelian_kredit_last_month: totalLastMonthCreditPurchase,
+    retur: returCurrent,
+    retur_last_month: returLast,
     pembelian_bersih: netPurchaseCurrent,
     pembelian_bersih_last_month: netPurchaseLast,
     barang_siap_jual: readyToSellCurrent,
@@ -340,12 +360,6 @@ async function laporanBebanOperasional() {
       getTotalCashInOutByDateRange(7, lastMonthStartDate, lastMonthEndDate),
     ]);
 
-    const [totalTunjanganPanganCurrent, totalTunjanganPanganLast] =
-      await Promise.all([
-        getTotalCashInOutByDateRange(8, startDate, endDate),
-        getTotalCashInOutByDateRange(8, lastMonthStartDate, lastMonthEndDate),
-      ]);
-
     const [totalBebanAdmCurrent, totalBebanAdmLast] = await Promise.all([
       getTotalCashInOutByDateRange(9, startDate, endDate),
       getTotalCashInOutByDateRange(9, lastMonthStartDate, lastMonthEndDate),
@@ -355,12 +369,6 @@ async function laporanBebanOperasional() {
       await Promise.all([
         getTotalCashInOutByDateRange(10, startDate, endDate),
         getTotalCashInOutByDateRange(10, lastMonthStartDate, lastMonthEndDate),
-      ]);
-
-    const [totalTunjanganKesehatanCurrent, totalTunjanganKesehatanLast] =
-      await Promise.all([
-        getTotalCashInOutByDateRange(11, startDate, endDate),
-        getTotalCashInOutByDateRange(11, lastMonthStartDate, lastMonthEndDate),
       ]);
 
     const [totalBebanInventarisCurrent, totalBebanInventarisLast] =
@@ -383,10 +391,8 @@ async function laporanBebanOperasional() {
       totalBebanGajiCurrent +
       totalUangMakanCurrent +
       totalThrKaryawanCurrent +
-      totalTunjanganPanganCurrent +
       totalBebanAdmCurrent +
       totalBebanPerlengkapanCurrent +
-      totalTunjanganKesehatanCurrent +
       totalBebanInventarisCurrent +
       totalBebanGedungCurrent +
       totalPengeluaranLain;
@@ -395,10 +401,8 @@ async function laporanBebanOperasional() {
       totalBebanGajiLast +
       totalUangMakanLast +
       totalThrKaryawanLast +
-      totalTunjanganPanganLast +
       totalBebanAdmLast +
       totalBebanPerlengkapanLast +
-      totalTunjanganKesehatanLast +
       totalBebanInventarisLast +
       totalBebanGedungLast +
       totalPengeluaranLainLast;
@@ -413,14 +417,10 @@ async function laporanBebanOperasional() {
       uang_makan_last_month: totalUangMakanLast,
       thr_karyawan: totalThrKaryawanCurrent,
       thr_karyawan_last_month: totalThrKaryawanLast,
-      tunjangan_pangan: totalTunjanganPanganCurrent,
-      tunjangan_pangan_last_month: totalTunjanganPanganLast,
       beban_adm: totalBebanAdmCurrent,
       beban_adm_last_month: totalBebanAdmLast,
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
-      tunjangan_kesehatan: totalTunjanganKesehatanCurrent,
-      tunjangan_kesehatan_last_month: totalTunjanganKesehatanLast,
       beban_peny_inventaris: 0,
       beban_peny_inventaris_last_month: 0,
       beban_peny_gedung: 0,
@@ -431,8 +431,8 @@ async function laporanBebanOperasional() {
       pemeliharaan_gedung_last_month: totalBebanGedungLast,
       pengeluaran_lain: totalPengeluaranLain,
       pengeluaran_lain_last_month: totalPengeluaranLainLast,
-      beban_operasional: totalBebanOperasionalCurrent,
-      beban_operasional_last_month: totalBebanOperasionalLast,
+      total_beban_operasional: totalBebanOperasionalCurrent,
+      total_beban_operasional_last_month: totalBebanOperasionalLast,
       hasil_usaha_bersih: hasilUsahaBersih,
       hasil_usaha_bersih_last_month: hasilUsahaBersihLast,
     };
@@ -444,18 +444,6 @@ async function laporanBebanOperasional() {
 
 async function laporanPendapatanLain() {
   try {
-    const [totalPenarikanBank1Current, totalPenarikanBank1Last] =
-      await Promise.all([
-        getTotalCashInOutByDateRange(1, startDate, endDate),
-        getTotalCashInOutByDateRange(1, lastMonthStartDate, lastMonthEndDate),
-      ]);
-
-    const [totalPenarikanBank2Current, totalPenarikanBank2Last] =
-      await Promise.all([
-        getTotalCashInOutByDateRange(2, startDate, endDate),
-        getTotalCashInOutByDateRange(2, lastMonthStartDate, lastMonthEndDate),
-      ]);
-
     const [totalTenantCurrent, totalTenantLast] = await Promise.all([
       getTotalCashInOutByDateRange(3, startDate, endDate),
       getTotalCashInOutByDateRange(3, lastMonthStartDate, lastMonthEndDate),
@@ -466,25 +454,17 @@ async function laporanPendapatanLain() {
       getTotalCashInOutByDateRange(4, lastMonthStartDate, lastMonthEndDate),
     ]);
 
-    const totalPenarikanBankCurrent =
-      totalPenarikanBank1Current + totalPenarikanBank2Current;
-    const totalPenarikanBankLast =
-      totalPenarikanBank1Last + totalPenarikanBank2Last;
-
     const totalPendapatanLainCurrent =
-      totalPenarikanBankCurrent + totalTenantCurrent + totalLainLainCurrent;
-    const totalPendapatanLainLast =
-      totalPenarikanBankLast + totalTenantLast + totalLainLainLast;
+      totalTenantCurrent + totalLainLainCurrent;
+    const totalPendapatanLainLast = totalTenantLast + totalLainLainLast;
 
     return {
-      penarikan_bank: totalPenarikanBankCurrent,
-      penarikan_bank_last_month: totalPenarikanBankLast,
       tenant: totalTenantCurrent,
       tenant_last_month: totalTenantLast,
       lain_lain: totalLainLainCurrent,
       lain_lain_last_month: totalLainLainLast,
-      pendapatan_lain: totalPendapatanLainCurrent,
-      pendapatan_lain_last_month: totalPendapatanLainLast,
+      total_pendapatan_lain: totalPendapatanLainCurrent,
+      total_pendapatan_lain_last_month: totalPendapatanLainLast,
     };
   } catch (error) {
     console.error("Error in laporanBebanOperasional:", error);

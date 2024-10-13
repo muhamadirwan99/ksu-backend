@@ -5,7 +5,7 @@ const generatePurchaseId = async (tg_pembelian) => {
   const month = String(tg_pembelian.getMonth() + 1).padStart(2, "0");
   const day = String(tg_pembelian.getDate()).padStart(2, "0");
 
-  const datePrefix = `${year}${month}${day}`;
+  const datePrefix = `${day}${month}${year}`;
 
   let increment;
   let purchaseId;

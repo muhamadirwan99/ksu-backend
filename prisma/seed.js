@@ -43,85 +43,13 @@ async function main() {
     },
   });
 
-  await prismaClient.divisi.create({
-    data: {
-      id_divisi: "001",
-      nm_divisi: "PERLENGKAPAN BAYI & ANAK",
-      created_at: generateDate(),
-    },
-  });
-
-  await prismaClient.supplier.create({
-    data: {
-      id_supplier: "SUP9999",
-      nm_supplier: "PT. ABC",
-      nm_pic: "Santoso",
-      nm_pemilik: "Budi Santoso",
-      alamat: "Jl. ABC No. 123",
-      no_wa: "081234567890",
-      created_at: generateDate(),
-    },
-  });
-
-  await prismaClient.product.create({
-    data: {
-      id_product: "PRO001",
-      nm_product: "COTTON BUDS CINDERELA 100PCS",
-      harga_beli: 1000,
-      harga_jual: 5000,
-      id_divisi: "001",
-      id_supplier: "SUP9999",
-      status_product: true,
-      jumlah: 10,
-      created_at: generateDate(),
-    },
-  });
-
-  const dateNow = generateDate();
-
-  //mendapatkan data tanggal, bulan dan tahun dari dateNow
-  const date = dateNow.getDate();
-  const month = dateNow.getMonth() + 1;
-  const year = dateNow.getFullYear();
-
-  await prismaClient.pembelian.create({
-    data: {
-      id_pembelian: "PEM001",
-      tg_pembelian: `${date}-${month}-${year}`,
-      id_supplier: "SUP9999",
-      nm_supplier: "PT. ABC",
-      jumlah: 10,
-      total_harga_beli: 10000,
-      total_harga_jual: 50000,
-      jenis_pembayaran: "tunai",
-      created_at: generateDate(),
-    },
-  });
-
-  await prismaClient.detailPembelian.create({
-    data: {
-      id_pembelian: "PEM001",
-      id_product: "PRO001",
-      nm_divisi: "PERLENGKAPAN BAYI & ANAK",
-      nm_produk: "COTTON BUDS CINDERELA 100PCS",
-      harga_beli: 1000,
-      harga_jual: 5000,
-      jumlah: 10,
-      diskon: 0,
-      ppn: 0,
-      total_nilai_beli: 10000,
-      total_nilai_jual: 50000,
-      created_at: generateDate(),
-    },
-  });
-
   await prismaClient.anggota.create({
     data: {
-      id_anggota: "ABCD1234",
-      nm_anggota: "Budi",
-      alamat: "Jl. ABC No. 123",
-      no_wa: "081234567890",
-      limit_pinjaman: 20000000,
+      id_anggota: "UMUM",
+      nm_anggota: "UMUM",
+      alamat: "UMUM",
+      no_wa: "UMUM",
+      limit_pinjaman: 0,
       created_at: generateDate(),
     },
   });
@@ -325,6 +253,80 @@ async function main() {
         created_at: generateDate(),
       },
     ],
+  });
+}
+
+async function dummyData() {
+  await prismaClient.divisi.create({
+    data: {
+      id_divisi: "001",
+      nm_divisi: "PERLENGKAPAN BAYI & ANAK",
+      created_at: generateDate(),
+    },
+  });
+
+  await prismaClient.supplier.create({
+    data: {
+      id_supplier: "SUP9999",
+      nm_supplier: "PT. ABC",
+      nm_pic: "Santoso",
+      nm_pemilik: "Budi Santoso",
+      alamat: "Jl. ABC No. 123",
+      no_wa: "081234567890",
+      created_at: generateDate(),
+    },
+  });
+
+  await prismaClient.product.create({
+    data: {
+      id_product: "PRO001",
+      nm_product: "COTTON BUDS CINDERELA 100PCS",
+      harga_beli: 1000,
+      harga_jual: 5000,
+      id_divisi: "001",
+      id_supplier: "SUP9999",
+      status_product: true,
+      jumlah: 10,
+      created_at: generateDate(),
+    },
+  });
+
+  const dateNow = generateDate();
+
+  //mendapatkan data tanggal, bulan dan tahun dari dateNow
+  const date = dateNow.getDate();
+  const month = dateNow.getMonth() + 1;
+  const year = dateNow.getFullYear();
+
+  await prismaClient.pembelian.create({
+    data: {
+      id_pembelian: "PEM001",
+      tg_pembelian: `${date}-${month}-${year}`,
+      id_supplier: "SUP9999",
+      nm_supplier: "PT. ABC",
+      jumlah: 10,
+      total_harga_beli: 10000,
+      total_harga_jual: 50000,
+      jenis_pembayaran: "tunai",
+      created_at: generateDate(),
+    },
+  });
+
+  await prismaClient.detailPembelian.create({
+    data: {
+      id_pembelian: "PEM001",
+      id_product: "PRO001",
+      nm_divisi: "PERLENGKAPAN BAYI & ANAK",
+      nm_produk: "COTTON BUDS CINDERELA 100PCS",
+      harga_beli: 1000,
+      harga_jual: 5000,
+      jumlah: 10,
+      diskon: 0,
+      ppn: 0,
+      total_nilai_beli: 10000,
+      total_nilai_jual: 50000,
+      created_at: generateDate(),
+    },
   });
 }
 

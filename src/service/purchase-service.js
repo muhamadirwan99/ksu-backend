@@ -291,15 +291,19 @@ const removePurchase = async (request) => {
 
       const newQty = existingProduct.jumlah - detail.jumlah;
 
-      await prismaClient.product.update({
-        where: {
-          id_product: detail.id_product,
-          updated_at: generateDate(),
-        },
-        data: {
-          jumlah: newQty,
-        },
-      });
+      try {
+        await prismaClient.product.update({
+          where: {
+            id_product: detail.id_product,
+          },
+          data: {
+            jumlah: newQty,
+            updated_at: generateDate(),
+          },
+        });
+      } catch (e) {
+        throw new ResponseError(`Product ${detail.id_product} is not found`);
+      }
     }),
   );
 

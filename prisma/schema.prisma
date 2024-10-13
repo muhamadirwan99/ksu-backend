@@ -71,7 +71,7 @@ model Anggota {
   alamat         String          @db.VarChar(255)
   no_wa          String          @db.VarChar(20)
   limit_pinjaman Decimal         @db.Decimal(10, 2)
-  pinjaman       Decimal?         @db.Decimal(10, 2)
+  pinjaman       Decimal?        @db.Decimal(10, 2)
   hutang         Decimal?        @db.Decimal(10, 2)
   created_at     DateTime        @db.Timestamp(6)
   updated_at     DateTime?       @db.Timestamp(6)
@@ -104,6 +104,7 @@ model Supplier {
   HutangDagang  HutangDagang[]
   pembelian     Pembelian[]
   products      Product[]
+  Retur         Retur[]
 
   @@map("suppliers")
 }
@@ -125,6 +126,7 @@ model Product {
   divisi           Divisi            @relation(fields: [id_divisi], references: [id_divisi])
   supplier         Supplier          @relation(fields: [id_supplier], references: [id_supplier])
   StockTake        StockTake[]
+  DetailRetur      DetailRetur[]
 
   @@index([id_divisi], map: "products_id_divisi_fkey")
   @@index([id_supplier], map: "products_id_supplier_fkey")
@@ -194,20 +196,22 @@ model ReferenceDetailCashInOut {
 }
 
 model Pembelian {
-  id_pembelian     String            @id @db.VarChar(20)
-  tg_pembelian     String            @db.VarChar(20)
-  id_supplier      String            @db.VarChar(10)
-  nm_supplier      String            @db.VarChar(100)
+  id_pembelian     String    @id @db.VarChar(20)
+  tg_pembelian     String    @db.VarChar(20)
+  id_supplier      String    @db.VarChar(10)
+  nm_supplier      String    @db.VarChar(100)
   jumlah           Int
-  total_harga_beli Decimal           @db.Decimal(10, 2)
-  total_harga_jual Decimal           @db.Decimal(10, 2)
-  jenis_pembayaran String            @db.VarChar(100)
-  keterangan       String?           @db.VarChar(255)
-  created_at       DateTime          @db.Timestamp(6)
-  updated_at       DateTime?         @db.Timestamp(6)
-  DetailPembelian  DetailPembelian[]
-  HutangDagang     HutangDagang[]
-  supplier         Supplier          @relation(fields: [id_supplier], references: [id_supplier])
+  total_harga_beli Decimal   @db.Decimal(10, 2)
+  total_harga_jual Decimal   @db.Decimal(10, 2)
+  jenis_pembayaran String    @db.VarChar(100)
+  keterangan       String?   @db.VarChar(255)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  DetailPembelian DetailPembelian[]
+  HutangDagang    HutangDagang[]
+  Retur           Retur[]
+  supplier        Supplier          @relation(fields: [id_supplier], references: [id_supplier])
 
   @@index([id_supplier], map: "pembelian_id_supplier_fkey")
   @@map("pembelian")
@@ -302,7 +306,7 @@ model HutangDagang {
   nm_supplier      String    @db.VarChar(100)
   tg_hutang        String    @db.VarChar(20)
   nominal          Decimal   @db.Decimal(10, 2)
-  id_pembelian     String    @db.VarChar(20)
+  id_pembelian     String    @unique @db.VarChar(20)
   created_at       DateTime  @db.Timestamp(6)
   updated_at       DateTime? @db.Timestamp(6)
   pembelian        Pembelian @relation(fields: [id_pembelian], references: [id_pembelian])
@@ -334,8 +338,45 @@ model StockTake {
 }
 
 model Counter {
-  name  String  @id @db.VarChar(50)  // Nama counter, misalnya "supplier"
-  value Int     @default(0)          // Nilai counter, mulai dari 0
+  name  String @id @db.VarChar(50) // Nama counter, misalnya "supplier"
+  value Int    @default(0) // Nilai counter, mulai dari 0
 
-  @@map("counters")  // Nama tabel dalam database
+  @@map("counters") // Nama tabel dalam database
+}
+
+model Retur {
+  id_retur         String    @id @db.VarChar(20)
+  tg_retur         String    @db.VarChar(20)
+  id_pembelian     String    @db.VarChar(20)
+  id_supplier      String    @db.VarChar(10)
+  nm_supplier      String    @db.VarChar(100)
+  jumlah           Int
+  total_nilai_beli Decimal   @db.Decimal(10, 2)
+  keterangan       String?   @db.VarChar(255)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  DetailRetur DetailRetur[]
+  supplier    Supplier      @relation(fields: [id_supplier], references: [id_supplier])
+  pembelian   Pembelian     @relation(fields: [id_pembelian], references: [id_pembelian])
+
+  @@map("retur")
+}
+
+model DetailRetur {
+  id_detail_retur  Int       @id @default(autoincrement())
+  id_retur         String    @db.VarChar(20)
+  nm_divisi        String    @db.VarChar(100)
+  id_product       String    @db.VarChar(100)
+  nm_produk        String    @db.VarChar(100)
+  harga_beli       Decimal   @db.Decimal(10, 2)
+  jumlah           Int
+  total_nilai_beli Decimal   @db.Decimal(10, 2)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  retur   Retur   @relation(fields: [id_retur], references: [id_retur])
+  product Product @relation(fields: [id_product], references: [id_product])
+
+  @@map("detail_retur")
 }

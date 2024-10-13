@@ -1,13 +1,13 @@
 import { prismaClient } from "../application/database.js";
 import { monthlyIncomeValidation } from "../validation/dashboard-validation.js";
 import { validate } from "../validation/validation.js";
+import { generateDate } from "../utils/generate-date.js";
 
 const getDashboardIncome = async () => {
   // Mendapatkan offset zona waktu (dalam menit) dan mengonversinya ke milidetik
-  const timezoneOffset = 7 * 60 * 60 * 1000; // UTC+7 dalam milidetik
 
   // Mengatur waktu sekarang ke UTC+7
-  const today = new Date(new Date().getTime() + timezoneOffset);
+  const today = generateDate();
 
   // Mengatur awal dan akhir hari di zona waktu UTC+7
   const todayStart = new Date(
@@ -119,9 +119,18 @@ const getDashboardIncome = async () => {
   const totalIncomeYesterday =
     parseFloat(totalSaleYesterday) + parseFloat(totalCashInYesterday);
 
-  // Menghitung persentase kenaikan dari total income hari ini dan kemarin
-  const percentage =
-    ((totalIncomeToday - totalIncomeYesterday) / totalIncomeYesterday) * 100;
+  let percentage;
+
+  // Check if totalIncomeYesterday is zero to avoid division by zero
+  if (totalIncomeYesterday === 0) {
+    // If there was no income yesterday, but there's income today, consider it as a 100% increase
+    // Or you can use another logic based on your needs, like displaying "N/A"
+    percentage = totalIncomeToday > 0 ? 100 : 0;
+  } else {
+    // Calculate the percentage normally if totalIncomeYesterday is not zero
+    percentage =
+      ((totalIncomeToday - totalIncomeYesterday) / totalIncomeYesterday) * 100;
+  }
 
   return {
     total_income_today: totalIncomeToday,

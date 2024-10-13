@@ -57,6 +57,7 @@ const updateAnggota = async (request) => {
     "no_telp",
     "limit_pinjaman",
     "pinjaman",
+    "hutang",
   ];
 
   const totalAnggotaInDatabase = await prismaClient.anggota.count({

@@ -12,6 +12,7 @@ import saleRoute from "./routes/sale-route.js";
 import stockTakeRoute from "./routes/stock-take-route.js";
 import dashboardRoute from "./routes/dashboard-route.js";
 import laporanRoute from "./routes/laporan-route.js";
+import returRoute from "./routes/retur-route.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -28,5 +29,6 @@ saleRoute();
 stockTakeRoute();
 dashboardRoute();
 laporanRoute();
+returRoute();
 
 export { userRouter };

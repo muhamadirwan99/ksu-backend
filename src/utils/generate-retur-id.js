@@ -1,6 +1,6 @@
 import { prismaClient } from "../application/database.js";
 
-const generateHutangAnggotaId = async (tg_pembelian) => {
+const generateReturId = async (tg_pembelian) => {
   const year = tg_pembelian.getFullYear();
   const month = String(tg_pembelian.getMonth() + 1).padStart(2, "0");
   const day = String(tg_pembelian.getDate()).padStart(2, "0");
@@ -8,7 +8,7 @@ const generateHutangAnggotaId = async (tg_pembelian) => {
   const datePrefix = `${day}${month}${year}`;
 
   let increment;
-  let hutangAnggotaId;
+  let returId;
   let idExists = true;
   let countToday = 0;
 
@@ -16,12 +16,12 @@ const generateHutangAnggotaId = async (tg_pembelian) => {
   while (idExists) {
     countToday++;
     increment = String(countToday).padStart(3, "0");
-    hutangAnggotaId = `HA-${datePrefix}${increment}`;
+    returId = `RT-${datePrefix}${increment}`;
 
     // Cek apakah ID sudah ada di database
-    const existingPurchase = await prismaClient.hutangAnggota.findUnique({
+    const existingPurchase = await prismaClient.retur.findUnique({
       where: {
-        id_hutang_anggota: hutangAnggotaId,
+        id_retur: returId,
       },
     });
 
@@ -30,7 +30,7 @@ const generateHutangAnggotaId = async (tg_pembelian) => {
     }
   }
 
-  return hutangAnggotaId;
+  return returId;
 };
 
-export { generateHutangAnggotaId };
+export { generateReturId };

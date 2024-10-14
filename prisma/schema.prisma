@@ -380,3 +380,23 @@ model DetailRetur {
 
   @@map("detail_retur")
 }
+
+model PenyusutanAset {
+  id_aset               Int       @id @default(autoincrement())
+  jenis_aset            JenisAset
+  nilai_aset_awal       Decimal   @db.Decimal(10, 2)
+  persentase_penyusutan Decimal   @db.Decimal(5, 2)
+  nilai_penyusutan      Decimal   @db.Decimal(10, 2)
+  tahun                 Int
+  nilai_aset_akhir      Decimal   @db.Decimal(10, 2)
+  penyusutan_bulan      Decimal   @db.Decimal(10, 2)
+  created_at            DateTime  @db.Timestamp(6)
+  updated_at            DateTime? @db.Timestamp(6)
+
+  @@map("penyusutan_aset")
+}
+
+enum JenisAset {
+  inventaris
+  gedung
+}

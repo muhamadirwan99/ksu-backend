@@ -3,6 +3,10 @@ import { generateDate } from "../src/utils/generate-date.js";
 import bcrypt from "bcrypt";
 
 async function main() {
+  await cashInOut();
+}
+
+async function seedCommon() {
   await prismaClient.role.create({
     data: {
       id_role: "ROLE001",
@@ -54,6 +58,15 @@ async function main() {
     },
   });
 
+  await prismaClient.counter.create({
+    data: {
+      name: "supplier",
+      value: 1,
+    },
+  });
+}
+
+async function cashInOut() {
   await prismaClient.referenceCashInOut.createMany({
     data: [
       {
@@ -67,13 +80,6 @@ async function main() {
         created_at: generateDate(),
       },
     ],
-  });
-
-  await prismaClient.counter.create({
-    data: {
-      name: "supplier",
-      value: 1,
-    },
   });
 
   await prismaClient.referenceJenisCashInOut.createMany({
@@ -121,14 +127,14 @@ async function main() {
     data: [
       {
         id_detail: 1,
-        nm_detail: "Penarikan Bank 1",
+        nm_detail: "Penarikan dari Kas",
         id_cash: "1",
         id_jenis: 1,
         created_at: generateDate(),
       },
       {
         id_detail: 2,
-        nm_detail: "Penarikan Bank 2",
+        nm_detail: "Penarikan dari Bank",
         id_cash: "1",
         id_jenis: 1,
         created_at: generateDate(),
@@ -170,84 +176,70 @@ async function main() {
       },
       {
         id_detail: 8,
-        nm_detail: "Tunjangan Pangan",
-        id_cash: "2",
-        id_jenis: 3,
-        created_at: generateDate(),
-      },
-      {
-        id_detail: 9,
         nm_detail: "Beban Adm. & Umum",
         id_cash: "2",
         id_jenis: 3,
         created_at: generateDate(),
       },
       {
-        id_detail: 10,
+        id_detail: 9,
         nm_detail: "Beban Perlengkapan",
         id_cash: "2",
         id_jenis: 3,
         created_at: generateDate(),
       },
       {
-        id_detail: 11,
-        nm_detail: "Tunjangan Kesehatan",
-        id_cash: "2",
-        id_jenis: 3,
-        created_at: generateDate(),
-      },
-      {
-        id_detail: 12,
+        id_detail: 10,
         nm_detail: "Pemeliharaan Inventaris",
         id_cash: "2",
         id_jenis: 3,
         created_at: generateDate(),
       },
       {
-        id_detail: 13,
+        id_detail: 11,
         nm_detail: "Pemeliharaan Gedung",
         id_cash: "2",
         id_jenis: 3,
         created_at: generateDate(),
       },
       {
-        id_detail: 14,
-        nm_detail: "Beban Pensiun Karyawan",
-        id_cash: "2",
-        id_jenis: 3,
-        created_at: generateDate(),
-      },
-      {
-        id_detail: 15,
+        id_detail: 12,
         nm_detail: "Tagihan Listrik",
         id_cash: "2",
         id_jenis: 4,
         created_at: generateDate(),
       },
       {
-        id_detail: 16,
-        nm_detail: "Utang Simpan Pinjam",
+        id_detail: 13,
+        nm_detail: "Honor Pengawas",
         id_cash: "2",
         id_jenis: 4,
         created_at: generateDate(),
       },
       {
-        id_detail: 17,
+        id_detail: 14,
+        nm_detail: "Honor Pengurus",
+        id_cash: "2",
+        id_jenis: 4,
+        created_at: generateDate(),
+      },
+      {
+        id_detail: 15,
         nm_detail: "Lain-lain",
         id_cash: "2",
         id_jenis: 4,
         created_at: generateDate(),
       },
       {
-        id_detail: 18,
-        nm_detail: "Transfer ke Bank 1",
+        id_detail: 16,
+        nm_detail: "Transfer ke Kas",
         id_cash: "2",
         id_jenis: 5,
         created_at: generateDate(),
       },
       {
-        id_detail: 19,
-        nm_detail: "Transfer ke Bank 2",
+        id_detail: 17,
+        nm_detail: "Transfer ke Bank",
         id_cash: "2",
         id_jenis: 5,
         created_at: generateDate(),

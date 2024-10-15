@@ -361,28 +361,28 @@ async function laporanBebanOperasional() {
     ]);
 
     const [totalBebanAdmCurrent, totalBebanAdmLast] = await Promise.all([
-      getTotalCashInOutByDateRange(9, startDate, endDate),
-      getTotalCashInOutByDateRange(9, lastMonthStartDate, lastMonthEndDate),
+      getTotalCashInOutByDateRange(8, startDate, endDate),
+      getTotalCashInOutByDateRange(8, lastMonthStartDate, lastMonthEndDate),
     ]);
 
     const [totalBebanPerlengkapanCurrent, totalBebanPerlengkapanLast] =
       await Promise.all([
-        getTotalCashInOutByDateRange(10, startDate, endDate),
-        getTotalCashInOutByDateRange(10, lastMonthStartDate, lastMonthEndDate),
+        getTotalCashInOutByDateRange(9, startDate, endDate),
+        getTotalCashInOutByDateRange(9, lastMonthStartDate, lastMonthEndDate),
       ]);
 
     const [
       totalPemeliharaanInventarisCurrent,
       totalPemeliharaanInventarisLast,
     ] = await Promise.all([
-      getTotalCashInOutByDateRange(12, startDate, endDate),
-      getTotalCashInOutByDateRange(12, lastMonthStartDate, lastMonthEndDate),
+      getTotalCashInOutByDateRange(10, startDate, endDate),
+      getTotalCashInOutByDateRange(10, lastMonthStartDate, lastMonthEndDate),
     ]);
 
     const [totalPemeliharaanGedungCurrent, totalPemeliharaanGedungLast] =
       await Promise.all([
-        getTotalCashInOutByDateRange(13, startDate, endDate),
-        getTotalCashInOutByDateRange(13, lastMonthStartDate, lastMonthEndDate),
+        getTotalCashInOutByDateRange(11, startDate, endDate),
+        getTotalCashInOutByDateRange(11, lastMonthStartDate, lastMonthEndDate),
       ]);
 
     const [totalPengeluaranLain, totalPengeluaranLainLast] = await Promise.all([

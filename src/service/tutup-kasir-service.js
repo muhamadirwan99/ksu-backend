@@ -203,11 +203,14 @@ const updateTutupKasir = async (request, idRole) => {
   // Jika id role = ROLE002 (Kasir), maka hanya boleh update uang tunai
 
   if (idRole === "ROLE002") {
-    if (request.nama_kasir || request.username || request.sesi) {
-      throw new ResponseError("Kasir hanya dapat mengubah uang_tunai", {});
+    if (request.nama_kasir || request.username) {
+      throw new ResponseError(
+        "Kasir hanya dapat mengubah uang_tunai dan sesi",
+        {},
+      );
     }
 
-    fieldTutupKasir = ["uang_tunai"];
+    fieldTutupKasir = ["uang_tunai", "sesi"];
   }
 
   const totalTutupKasirInDatabase = await prismaClient.tutupKasir.count({

@@ -18,16 +18,17 @@ model ResponseLog {
 }
 
 model User {
-  username   String      @id @db.VarChar(100)
-  password   String      @db.VarChar(100)
-  name       String      @db.VarChar(100)
-  token      String?     @db.VarChar(255)
-  id_role    String      @db.VarChar(10)
-  created_at DateTime    @db.Timestamp(6)
-  updated_at DateTime?   @db.Timestamp(6)
+  username   String       @id @db.VarChar(100)
+  password   String       @db.VarChar(100)
+  name       String       @db.VarChar(100)
+  token      String?      @db.VarChar(255)
+  id_role    String       @db.VarChar(10)
+  created_at DateTime     @db.Timestamp(6)
+  updated_at DateTime?    @db.Timestamp(6)
   Penjualan  Penjualan[]
   StockTake  StockTake[]
-  role       Role        @relation(fields: [id_role], references: [id_role])
+  role       Role         @relation(fields: [id_role], references: [id_role])
+  TutupKasir TutupKasir[]
 
   @@index([id_role], map: "users_id_role_fkey")
   @@map("users")
@@ -399,4 +400,26 @@ model PenyusutanAset {
 enum JenisAset {
   inventaris
   gedung
+}
+
+model TutupKasir {
+  id_tutup_kasir   Int       @id @default(autoincrement())
+  tg_tutup_kasir   String    @db.VarChar(20)
+  shift            String    @db.VarChar(20)
+  nama_kasir       String    @db.VarChar(100)
+  username         String    @db.VarChar(100)
+  tunai            Decimal   @db.Decimal(10, 2)
+  qris             Decimal   @db.Decimal(10, 2)
+  kredit           Decimal   @db.Decimal(10, 2)
+  total            Decimal   @db.Decimal(10, 2)
+  uang_tunai       Decimal   @db.Decimal(10, 2)
+  total_nilai_jual Decimal   @db.Decimal(10, 2)
+  total_nilai_beli Decimal   @db.Decimal(10, 2)
+  total_keuntungan Decimal   @db.Decimal(10, 2)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  user User @relation(fields: [username], references: [username])
+
+  @@map("tutup_kasir")
 }

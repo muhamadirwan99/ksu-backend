@@ -1,9 +1,10 @@
 import { prismaClient } from "../src/application/database.js";
 import { generateDate } from "../src/utils/generate-date.js";
+import bcrypt from "bcrypt";
 
 async function main() {
   await seedCommon();
-  // await cashInOut();
+  await cashInOut();
 }
 
 async function seedCommon() {
@@ -66,33 +67,33 @@ async function seedCommon() {
     ],
   });
 
-  // await prismaClient.user.create({
-  //   data: {
-  //     username: "admin",
-  //     password: await bcrypt.hash("rahasia", 10),
-  //     name: "admin",
-  //     id_role: "ROLE001",
-  //     created_at: generateDate(),
-  //   },
-  // });
-  //
-  // await prismaClient.anggota.create({
-  //   data: {
-  //     id_anggota: "UMUM",
-  //     nm_anggota: "UMUM",
-  //     alamat: "UMUM",
-  //     no_wa: "UMUM",
-  //     limit_pinjaman: 0,
-  //     created_at: generateDate(),
-  //   },
-  // });
-  //
-  // await prismaClient.counter.create({
-  //   data: {
-  //     name: "supplier",
-  //     value: 1,
-  //   },
-  // });
+  await prismaClient.user.create({
+    data: {
+      username: "admin",
+      password: await bcrypt.hash("rahasia", 10),
+      name: "admin",
+      id_role: "ROLE001",
+      created_at: generateDate(),
+    },
+  });
+
+  await prismaClient.anggota.create({
+    data: {
+      id_anggota: "UMUM",
+      nm_anggota: "UMUM",
+      alamat: "UMUM",
+      no_wa: "UMUM",
+      limit_pinjaman: 0,
+      created_at: generateDate(),
+    },
+  });
+
+  await prismaClient.counter.create({
+    data: {
+      name: "supplier",
+      value: 1,
+    },
+  });
 }
 
 async function cashInOut() {

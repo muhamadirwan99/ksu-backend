@@ -1,69 +1,98 @@
 import { prismaClient } from "../src/application/database.js";
 import { generateDate } from "../src/utils/generate-date.js";
-import bcrypt from "bcrypt";
 
 async function main() {
-  await cashInOut();
+  await seedCommon();
+  // await cashInOut();
 }
 
 async function seedCommon() {
-  await prismaClient.role.create({
-    data: {
-      id_role: "ROLE001",
-      role_name: "admin",
-      sts_anggota: true,
-      sts_pembayaran_pinjaman: true,
-      sts_kartu_piutang: true,
-      sts_supplier: true,
-      sts_divisi: true,
-      sts_produk: true,
-      sts_pembelian: true,
-      sts_penjualan: true,
-      sts_retur: true,
-      sts_pembayaran_hutang: true,
-      sts_estimasi: true,
-      sts_stocktake_harian: true,
-      sts_stock_opname: true,
-      sts_cash_in_cash_out: true,
-      sts_cash_movement: true,
-      sts_user: true,
-      sts_role: true,
-      sts_cetak_label: true,
-      sts_cetak_barcode: true,
-      sts_awal_akhir_hari: true,
-      sts_dashboard: true,
-      sts_laporan: true,
-      created_at: generateDate(),
-    },
+  await prismaClient.role.createMany({
+    data: [
+      {
+        id_role: "ROLE001",
+        role_name: "admin",
+        sts_anggota: true,
+        sts_pembayaran_pinjaman: true,
+        sts_kartu_piutang: true,
+        sts_supplier: true,
+        sts_divisi: true,
+        sts_produk: true,
+        sts_pembelian: true,
+        sts_penjualan: true,
+        sts_retur: true,
+        sts_pembayaran_hutang: true,
+        sts_estimasi: true,
+        sts_stocktake_harian: true,
+        sts_stock_opname: true,
+        sts_cash_in_cash_out: true,
+        sts_cash_movement: true,
+        sts_user: true,
+        sts_role: true,
+        sts_cetak_label: true,
+        sts_cetak_barcode: true,
+        sts_awal_akhir_hari: true,
+        sts_dashboard: true,
+        sts_laporan: true,
+        created_at: generateDate(),
+      },
+      {
+        id_role: "ROLE002",
+        role_name: "kasir",
+        sts_anggota: true,
+        sts_pembayaran_pinjaman: true,
+        sts_kartu_piutang: true,
+        sts_supplier: false,
+        sts_divisi: false,
+        sts_produk: false,
+        sts_pembelian: false,
+        sts_penjualan: true,
+        sts_retur: false,
+        sts_pembayaran_hutang: false,
+        sts_estimasi: false,
+        sts_stocktake_harian: false,
+        sts_stock_opname: true,
+        sts_cash_in_cash_out: false,
+        sts_cash_movement: false,
+        sts_user: false,
+        sts_role: false,
+        sts_cetak_label: false,
+        sts_cetak_barcode: false,
+        sts_awal_akhir_hari: true,
+        sts_dashboard: true,
+        sts_laporan: false,
+        created_at: generateDate(),
+      },
+    ],
   });
 
-  await prismaClient.user.create({
-    data: {
-      username: "admin",
-      password: await bcrypt.hash("rahasia", 10),
-      name: "admin",
-      id_role: "ROLE001",
-      created_at: generateDate(),
-    },
-  });
-
-  await prismaClient.anggota.create({
-    data: {
-      id_anggota: "UMUM",
-      nm_anggota: "UMUM",
-      alamat: "UMUM",
-      no_wa: "UMUM",
-      limit_pinjaman: 0,
-      created_at: generateDate(),
-    },
-  });
-
-  await prismaClient.counter.create({
-    data: {
-      name: "supplier",
-      value: 1,
-    },
-  });
+  // await prismaClient.user.create({
+  //   data: {
+  //     username: "admin",
+  //     password: await bcrypt.hash("rahasia", 10),
+  //     name: "admin",
+  //     id_role: "ROLE001",
+  //     created_at: generateDate(),
+  //   },
+  // });
+  //
+  // await prismaClient.anggota.create({
+  //   data: {
+  //     id_anggota: "UMUM",
+  //     nm_anggota: "UMUM",
+  //     alamat: "UMUM",
+  //     no_wa: "UMUM",
+  //     limit_pinjaman: 0,
+  //     created_at: generateDate(),
+  //   },
+  // });
+  //
+  // await prismaClient.counter.create({
+  //   data: {
+  //     name: "supplier",
+  //     value: 1,
+  //   },
+  // });
 }
 
 async function cashInOut() {

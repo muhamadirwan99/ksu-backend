@@ -56,6 +56,14 @@ const createSale = async (request) => {
           `Product with ID ${detail.id_product} does not exist. Please add the product first.`,
         );
       }
+
+      // Kurangi stok produk dengan jumlah penjualan
+      const newStock = existingProduct.jumlah - detail.jumlah;
+      if (newStock < 0) {
+        throw new Error(
+          `Not enough stock for product ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`,
+        );
+      }
     }),
   );
 

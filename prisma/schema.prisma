@@ -94,19 +94,20 @@ model Divisi {
 }
 
 model Supplier {
-  id_supplier   String         @id @db.VarChar(10)
-  nm_supplier   String         @db.VarChar(100)
-  nm_pemilik    String         @db.VarChar(100)
-  nm_pic        String         @db.VarChar(100)
-  no_wa         String         @db.VarChar(20)
-  alamat        String         @db.VarChar(255)
-  hutang_dagang Decimal?       @db.Decimal(10, 2)
-  created_at    DateTime       @db.Timestamp(6)
-  updated_at    DateTime?      @db.Timestamp(6)
-  HutangDagang  HutangDagang[]
-  pembelian     Pembelian[]
-  products      Product[]
-  Retur         Retur[]
+  id_supplier         String                @id @db.VarChar(10)
+  nm_supplier         String                @db.VarChar(100)
+  nm_pemilik          String                @db.VarChar(100)
+  nm_pic              String                @db.VarChar(100)
+  no_wa               String                @db.VarChar(20)
+  alamat              String                @db.VarChar(255)
+  hutang_dagang       Decimal?              @db.Decimal(10, 2)
+  created_at          DateTime              @db.Timestamp(6)
+  updated_at          DateTime?             @db.Timestamp(6)
+  HutangDagang        HutangDagang[]
+  pembelian           Pembelian[]
+  products            Product[]
+  Retur               Retur[]
+  HistoryHutangDagang HistoryHutangDagang[]
 
   @@map("suppliers")
 }
@@ -210,10 +211,11 @@ model Pembelian {
   created_at       DateTime  @db.Timestamp(6)
   updated_at       DateTime? @db.Timestamp(6)
 
-  DetailPembelian DetailPembelian[]
-  HutangDagang    HutangDagang[]
-  Retur           Retur[]
-  supplier        Supplier          @relation(fields: [id_supplier], references: [id_supplier])
+  DetailPembelian     DetailPembelian[]
+  HutangDagang        HutangDagang[]
+  Retur               Retur[]
+  supplier            Supplier              @relation(fields: [id_supplier], references: [id_supplier])
+  HistoryHutangDagang HistoryHutangDagang[]
 
   @@index([id_supplier], map: "pembelian_id_supplier_fkey")
   @@map("pembelian")
@@ -442,4 +444,22 @@ model HistoryHutangAnggota {
   @@index([id_anggota], map: "hutang_anggota_id_anggota_fkey")
   @@index([id_penjualan], map: "hutang_anggota_id_penjualan_fkey")
   @@map("history_hutang_anggota")
+}
+
+model HistoryHutangDagang {
+  id_history_hutang_dagang String    @id @db.VarChar(20)
+  id_supplier              String    @db.VarChar(8)
+  nm_supplier              String    @db.VarChar(100)
+  tg_bayar_hutang          String    @db.VarChar(20)
+  nominal                  Decimal   @db.Decimal(10, 2)
+  keterangan               String?   @db.VarChar(255)
+  id_pembelian             String    @db.VarChar(20)
+  created_at               DateTime  @db.Timestamp(6)
+  updated_at               DateTime? @db.Timestamp(6)
+  pembelian                Pembelian @relation(fields: [id_pembelian], references: [id_pembelian])
+  supplier                 Supplier  @relation(fields: [id_supplier], references: [id_supplier])
+
+  @@index([id_pembelian], map: "hutang_dagang_id_pembelian_fkey")
+  @@index([id_supplier], map: "hutang_dagang_id_supplier_fkey")
+  @@map("history_hutang_dagang")
 }

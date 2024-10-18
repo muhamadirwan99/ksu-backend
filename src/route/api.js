@@ -14,6 +14,7 @@ import dashboardRoute from "./routes/dashboard-route.js";
 import laporanRoute from "./routes/laporan-route.js";
 import returRoute from "./routes/retur-route.js";
 import tutupKasirRoute from "./routes/tutup-kasir-route.js";
+import hutangAnggotaRoute from "./routes/hutang-anggota.route.js";
 
 const userRouter = new express.Router();
 userRouter.use(authMiddleware);
@@ -32,5 +33,6 @@ dashboardRoute();
 laporanRoute();
 returRoute();
 tutupKasirRoute();
+hutangAnggotaRoute();
 
 export { userRouter };

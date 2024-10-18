@@ -42,6 +42,14 @@ const createRetur = async (request) => {
           `Product with ID ${detail.id_product} does not exist. Please add the retur first.`,
         );
       }
+
+      // Kurangi stok produk dengan jumlah retur
+      const newStock = existingProduct.jumlah - detail.jumlah;
+      if (newStock < 0) {
+        throw new Error(
+          `Not enough stock for retur ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`,
+        );
+      }
     }),
   );
 

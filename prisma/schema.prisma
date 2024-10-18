@@ -67,17 +67,18 @@ model Role {
 }
 
 model Anggota {
-  id_anggota     String          @id @db.VarChar(8)
-  nm_anggota     String          @db.VarChar(100)
-  alamat         String          @db.VarChar(255)
-  no_wa          String          @db.VarChar(20)
-  limit_pinjaman Decimal         @db.Decimal(10, 2)
-  pinjaman       Decimal?        @db.Decimal(10, 2)
-  hutang         Decimal?        @db.Decimal(10, 2)
-  created_at     DateTime        @db.Timestamp(6)
-  updated_at     DateTime?       @db.Timestamp(6)
-  HutangAnggota  HutangAnggota[]
-  Penjualan      Penjualan[]
+  id_anggota           String                 @id @db.VarChar(8)
+  nm_anggota           String                 @db.VarChar(100)
+  alamat               String                 @db.VarChar(255)
+  no_wa                String                 @db.VarChar(20)
+  limit_pinjaman       Decimal                @db.Decimal(10, 2)
+  pinjaman             Decimal?               @db.Decimal(10, 2)
+  hutang               Decimal?               @db.Decimal(10, 2)
+  created_at           DateTime               @db.Timestamp(6)
+  updated_at           DateTime?              @db.Timestamp(6)
+  HutangAnggota        HutangAnggota[]
+  Penjualan            Penjualan[]
+  HistoryHutangAnggota HistoryHutangAnggota[]
 
   @@map("anggota")
 }
@@ -242,22 +243,23 @@ model DetailPembelian {
 }
 
 model Penjualan {
-  id_penjualan     String            @id @db.VarChar(20)
-  tg_penjualan     String            @db.VarChar(20)
-  jumlah           Int
-  total_nilai_beli Decimal           @db.Decimal(10, 2)
-  total_nilai_jual Decimal           @db.Decimal(10, 2)
-  id_anggota       String            @db.VarChar(8)
-  nm_anggota       String            @db.VarChar(100)
-  jenis_pembayaran String            @db.VarChar(100)
-  keterangan       String?           @db.VarChar(255)
-  username         String            @db.VarChar(100)
-  created_at       DateTime          @db.Timestamp(6)
-  updated_at       DateTime?         @db.Timestamp(6)
-  DetailPenjualan  DetailPenjualan[]
-  HutangAnggota    HutangAnggota[]
-  anggota          Anggota           @relation(fields: [id_anggota], references: [id_anggota])
-  user             User              @relation(fields: [username], references: [username])
+  id_penjualan         String                 @id @db.VarChar(20)
+  tg_penjualan         String                 @db.VarChar(20)
+  jumlah               Int
+  total_nilai_beli     Decimal                @db.Decimal(10, 2)
+  total_nilai_jual     Decimal                @db.Decimal(10, 2)
+  id_anggota           String                 @db.VarChar(8)
+  nm_anggota           String                 @db.VarChar(100)
+  jenis_pembayaran     String                 @db.VarChar(100)
+  keterangan           String?                @db.VarChar(255)
+  username             String                 @db.VarChar(100)
+  created_at           DateTime               @db.Timestamp(6)
+  updated_at           DateTime?              @db.Timestamp(6)
+  DetailPenjualan      DetailPenjualan[]
+  HutangAnggota        HutangAnggota[]
+  anggota              Anggota                @relation(fields: [id_anggota], references: [id_anggota])
+  user                 User                   @relation(fields: [username], references: [username])
+  HistoryHutangAnggota HistoryHutangAnggota[]
 
   @@index([id_anggota], map: "penjualan_id_anggota_fkey")
   @@index([username], map: "penjualan_username_fkey")
@@ -422,4 +424,22 @@ model TutupKasir {
   user User @relation(fields: [username], references: [username])
 
   @@map("tutup_kasir")
+}
+
+model HistoryHutangAnggota {
+  id_history_hutang_anggota String    @id @db.VarChar(20)
+  id_anggota                String    @db.VarChar(8)
+  nm_anggota                String    @db.VarChar(100)
+  tg_bayar_hutang           String    @db.VarChar(20)
+  nominal                   Decimal   @db.Decimal(10, 2)
+  keterangan                String?   @db.VarChar(255)
+  id_penjualan              String    @db.VarChar(20)
+  created_at                DateTime  @db.Timestamp(6)
+  updated_at                DateTime? @db.Timestamp(6)
+  anggota                   Anggota   @relation(fields: [id_anggota], references: [id_anggota])
+  penjualan                 Penjualan @relation(fields: [id_penjualan], references: [id_penjualan])
+
+  @@index([id_anggota], map: "hutang_anggota_id_anggota_fkey")
+  @@index([id_penjualan], map: "hutang_anggota_id_penjualan_fkey")
+  @@map("history_hutang_anggota")
 }

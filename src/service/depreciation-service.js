@@ -2,7 +2,7 @@ import { prismaClient } from "../application/database.js";
 import { generateDate } from "../utils/generate-date.js";
 
 const calculateDepreciation = async (year) => {
-  year = 2025; // Hardcoded to 2025 for the sake of the example
+  // year = 2025; // Hardcoded to 2025 for the sake of the example
   const previousYear = year - 1;
 
   // Check if there's a record for the previous year's depreciation
@@ -23,13 +23,13 @@ const calculateDepreciation = async (year) => {
   // If no record exists for the previous year, use the 2024 default values
   const bebanPenyusutanInventaris = lastYearInventaris
     ? parseFloat(lastYearInventaris.nilai_aset_akhir)
-    : 2325000; // Default for 2024
+    : 2395506; // Default for 2024
 
   const persenBerkurangInventaris = 2.94 / 100; // Persentase berkurang inventaris
 
   const bebanPenyusutanGedung = lastYearGedung
     ? parseFloat(lastYearGedung.nilai_aset_akhir)
-    : 5233152; // Default for 2024
+    : 4701052; // Default for 2024
 
   const persenBertambahGedung = 11.32 / 100; // Persentase bertambah gedung
 

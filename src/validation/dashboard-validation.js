@@ -5,4 +5,8 @@ const monthlyIncomeValidation = Joi.object({
   year: Joi.string().max(5).required(),
 });
 
-export { monthlyIncomeValidation };
+const yearlyIncomeValidation = Joi.object({
+  year: Joi.string().max(5).required(),
+});
+
+export { monthlyIncomeValidation, yearlyIncomeValidation };

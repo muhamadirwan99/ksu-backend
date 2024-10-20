@@ -13,7 +13,20 @@ const getLaporanHasilUsaha = async (req, res, next) => {
     next(e);
   }
 };
+const getLaporanRealisasiPendapatan = async (req, res, next) => {
+  try {
+    const result = await laporanService.getLaporanRealisasiPendapatan(req.body);
+    const responses = new ResponseSuccess(
+      "Laporan realisasi pendapatan successfully registered",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
 
 export default {
   getLaporanHasilUsaha,
+  getLaporanRealisasiPendapatan,
 };

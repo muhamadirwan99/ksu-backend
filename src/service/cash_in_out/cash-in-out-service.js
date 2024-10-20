@@ -9,6 +9,7 @@ import {
   updateCashInOutValidation,
 } from "../../validation/cash-in-out-validation.js";
 import { updateFields } from "../../utils/update-fields.js";
+import { parse } from "date-fns";
 
 const createCashInOut = async (request) => {
   // Validasi input
@@ -29,6 +30,13 @@ const createCashInOut = async (request) => {
   }
 
   request.id_cash_in_out = newIdCashInOut;
+
+  // ubah request.tg_transaksi ke format date
+  request.tg_transaksi = parse(
+    request.tg_transaksi,
+    "dd-MM-yyyy, HH:mm",
+    new Date(),
+  );
 
   request.created_at = generateDate();
 

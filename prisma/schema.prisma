@@ -138,7 +138,7 @@ model Product {
 
 model CashInOut {
   id_cash_in_out String                   @id @db.VarChar(3)
-  tg_transaksi   String                   @db.VarChar(20)
+  tg_transaksi   DateTime                 @db.Timestamp(6)
   id_cash        String                   @db.VarChar(10)
   id_jenis       Int
   id_detail      Int

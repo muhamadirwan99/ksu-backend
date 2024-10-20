@@ -1,5 +1,8 @@
 import { validate } from "../../validation/validation.js";
-import { monthlyIncomeValidation } from "../../validation/dashboard-validation.js";
+import {
+  monthlyIncomeValidation,
+  yearlyIncomeValidation,
+} from "../../validation/dashboard-validation.js";
 import {
   getDate,
   laporanBebanOperasional,
@@ -7,6 +10,10 @@ import {
   laporanPendapatanLain,
   laporanPenjualan,
 } from "./lap-hasil-usaha.js";
+import {
+  laporanPendapatan,
+  laporanPengeluaran,
+} from "./lap-realisasi-pendapatan.js";
 
 const getLaporanHasilUsaha = async (request) => {
   request = validate(monthlyIncomeValidation, request);
@@ -34,6 +41,39 @@ const getLaporanHasilUsaha = async (request) => {
   };
 };
 
+const getLaporanRealisasiPendapatan = async (request) => {
+  request = validate(yearlyIncomeValidation, request);
+
+  const laporanPendapatanResult = await laporanPendapatan(request.year);
+  const laporanPengeluaranResult = await laporanPengeluaran(request.year);
+
+  const sisaHasilUsaha =
+    laporanPendapatanResult.total_pendapatan_per_bulan.data.map(
+      (pendapatan, index) => ({
+        bulan: pendapatan.bulan,
+        sisa_hasil_usaha:
+          pendapatan.total_pendapatan -
+          laporanPengeluaranResult.total_pengeluaraan_per_bulan.data[index]
+            .total_pengeluaran,
+      }),
+    );
+
+  const totalSisaHasilUsaha = sisaHasilUsaha.reduce(
+    (acc, curr) => acc + curr.sisa_hasil_usaha,
+    0,
+  );
+
+  return {
+    pendapatan: laporanPendapatanResult,
+    pengeluaran: laporanPengeluaranResult,
+    sisa_hasil_usaha: {
+      jumlah: totalSisaHasilUsaha,
+      data: sisaHasilUsaha,
+    },
+  };
+};
+
 export default {
   getLaporanHasilUsaha,
+  getLaporanRealisasiPendapatan,
 };

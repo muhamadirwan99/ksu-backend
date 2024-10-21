@@ -109,6 +109,14 @@ const searchProduct = async (request) => {
 
   const filters = [];
 
+  if (request.id_supplier) {
+    filters.push({
+      id_supplier: {
+        contains: request.id_supplier,
+      },
+    });
+  }
+
   if (request.nm_product) {
     filters.push({
       nm_product: {

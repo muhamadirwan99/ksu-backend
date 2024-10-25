@@ -121,6 +121,7 @@ const createTutupKasir = async (request) => {
     data: {
       tg_tutup_kasir: request.tg_tutup_kasir,
       shift: request.shift,
+      nama_kasir: request.nama_kasir,
       username: request.username,
       tunai: request.tunai,
       qris: request.qris,

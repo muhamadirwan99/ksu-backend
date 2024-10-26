@@ -104,6 +104,19 @@ const removeProduct = async (request) => {
 };
 
 const searchProduct = async (request) => {
+  // Apabila request sama dengan {}, maka langsung balikkan semua data supplier
+  if (Object.keys(request).length === 0) {
+    const products = await prismaClient.product.findMany();
+    return {
+      data_product: products,
+      paging: {
+        page: 1,
+        total_item: products.length,
+        total_page: 1,
+      },
+    };
+  }
+
   request = validate(searchProductValidation, request);
   const skip = (request.page - 1) * request.size;
 

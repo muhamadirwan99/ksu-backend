@@ -13,6 +13,7 @@ const getLaporanHasilUsaha = async (req, res, next) => {
     next(e);
   }
 };
+
 const getLaporanRealisasiPendapatan = async (req, res, next) => {
   try {
     const result = await laporanService.getLaporanRealisasiPendapatan(req.body);
@@ -26,7 +27,21 @@ const getLaporanRealisasiPendapatan = async (req, res, next) => {
   }
 };
 
+const getLaporanNeracaLajur = async (req, res, next) => {
+  try {
+    const result = await laporanService.getLaporanNeracaLajur(req.body);
+    const responses = new ResponseSuccess(
+      "Laporan neraca lajur successfully registered",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export default {
   getLaporanHasilUsaha,
   getLaporanRealisasiPendapatan,
+  getLaporanNeracaLajur,
 };

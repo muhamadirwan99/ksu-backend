@@ -14,6 +14,7 @@ import {
   laporanPendapatan,
   laporanPengeluaran,
 } from "./lap-realisasi-pendapatan.js";
+import { laporanNeracaLajur } from "./lap-neraca-lajur.js";
 
 const getLaporanHasilUsaha = async (request) => {
   request = validate(monthlyIncomeValidation, request);
@@ -73,7 +74,19 @@ const getLaporanRealisasiPendapatan = async (request) => {
   };
 };
 
+const getLaporanNeracaLajur = async (request) => {
+  request = validate(monthlyIncomeValidation, request);
+
+  const laporanNeracaLajurResult = await laporanNeracaLajur(
+    request.month,
+    request.year,
+  );
+
+  return laporanNeracaLajurResult;
+};
+
 export default {
   getLaporanHasilUsaha,
   getLaporanRealisasiPendapatan,
+  getLaporanNeracaLajur,
 };

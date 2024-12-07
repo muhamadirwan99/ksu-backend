@@ -475,7 +475,7 @@ async function laporanBebanOperasional() {
     };
   } catch (error) {
     console.error("Error in laporanBebanOperasional:", error);
-    throw new Error("Failed to retrieve operational expenses report.");
+    throw new Error(`Failed to retrieve operational expenses report. ${error}`);
   }
 }
 
@@ -515,4 +515,5 @@ export {
   laporanHargaPokokPenjualan,
   laporanBebanOperasional,
   laporanPendapatanLain,
+  getTotalCashInOutByDateRange,
 };

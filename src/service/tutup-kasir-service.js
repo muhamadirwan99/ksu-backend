@@ -1,6 +1,7 @@
 import { prismaClient } from "../application/database.js";
 import {
   createTutupKasirValidation,
+  getIdTutupKasirValidation,
   getListTutupKasirValidation,
   getTotalPenjualanValidation,
   updateTutupKasirValidation,
@@ -237,9 +238,30 @@ const updateTutupKasir = async (request, idRole) => {
   });
 };
 
+const removeTutupKasir = async (request) => {
+  request = validate(getIdTutupKasirValidation, request);
+
+  const totalInDatabase = await prismaClient.tutupKasir.count({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+  });
+
+  if (totalInDatabase !== 1) {
+    throw new ResponseError("id_tutup_kasir is not found", {});
+  }
+
+  return prismaClient.tutupKasir.delete({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+  });
+};
+
 export default {
   getTotalPenjualan,
   createTutupKasir,
   getListTutupKasir,
   updateTutupKasir,
+  removeTutupKasir,
 };

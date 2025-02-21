@@ -19,6 +19,10 @@ const getTotalPenjualanRoute = () => {
     "/api/tutup-kasir/update-tutup-kasir",
     tutupKasirController.updateTutupKasir,
   );
+  userRouter.post(
+    "/api/tutup-kasir/remove-tutup-kasir",
+    tutupKasirController.removeTutupKasir,
+  );
 };
 
 export default getTotalPenjualanRoute;

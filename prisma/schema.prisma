@@ -464,14 +464,28 @@ model HistoryHutangDagang {
   @@map("history_hutang_dagang")
 }
 
-model Neraca {
-  id_neraca    Int       @id @default(autoincrement())
-  nama_uraian  String    @db.VarChar(100)
-  akhir_debit  Decimal   @db.Decimal(10, 2)
-  akhir_kredit Decimal   @db.Decimal(10, 2)
-  bulan_tahun  DateTime  @db.Timestamp(6)
-  created_at   DateTime  @db.Timestamp(6)
-  updated_at   DateTime? @db.Timestamp(6)
+model AkunNeraca {
+  id_akun    Int      @id @default(autoincrement())
+  nama_akun  String   @unique @db.VarChar(100)
+  created_at DateTime @db.Timestamp(6)
 
+  neraca Neraca[]
+
+  @@map("akun_neraca")
+}
+
+model Neraca {
+  id_neraca   Int       @id @default(autoincrement())
+  akun_id     Int
+  bulan_tahun DateTime  @db.Date
+  debit       Decimal   @db.Decimal(20, 2)
+  kredit      Decimal   @db.Decimal(20, 2)
+  created_at  DateTime  @db.Timestamp(6)
+  updated_at  DateTime? @db.Timestamp(6)
+
+  akun AkunNeraca @relation(fields: [akun_id], references: [id_akun])
+
+  @@unique([akun_id, bulan_tahun]) // Mencegah duplikasi per akun per bulan
+  @@index([bulan_tahun]) // Mempercepat query berdasarkan bulan
   @@map("neraca")
 }

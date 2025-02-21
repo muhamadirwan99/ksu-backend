@@ -1,183 +1,27 @@
-import { prismaClient } from "../../application/database.js";
-import { getTotalCashInOutByDateRange } from "./lap-hasil-usaha.js";
+import {
+  bebanAdmUmum,
+  bebanGaji,
+  bebanPenyusutanInventaris,
+  bebanPerlengkapanToko,
+  thrKaryawan,
+  uangMakan,
+} from "./neraca/account-neraca-lajur.js";
+import { setYearMonth } from "./neraca/count-neraca-lajur.js";
 
-async function getNeracaPercobaan(
-  neracaAwalDebit,
-  neracaAwalKredit,
-  neracaMutasiDebit,
-  neracaMutasiKredit,
-) {
-  const debit = neracaAwalDebit + neracaMutasiDebit;
-  const kredit = neracaAwalKredit + neracaMutasiKredit;
+async function laporanNeracaLajur(month, year) {
+  setYearMonth(year, month);
 
-  return {
-    debit: debit,
-    kredit: kredit,
-  };
-}
-
-async function getNeracaSaldo(
-  kdNeracaSaldo,
-  neracaPercobaanDebit,
-  neracaPercobaanKredit,
-) {
-  switch (kdNeracaSaldo) {
-    case 1:
-      return {
-        debit: neracaPercobaanDebit - neracaPercobaanKredit,
-        kredit: 0,
-      };
-    case 2:
-      return {
-        debit: 0,
-        kredit: neracaPercobaanKredit - neracaPercobaanDebit,
-      };
-    default:
-      return {
-        debit: 0,
-        kredit: 0,
-      };
-  }
-}
-
-async function getNeracaAwalKas(namaUraian, startOfMonth, endOfMonth) {
-  let result = await prismaClient.neraca.findFirst({
-    where: {
-      nama_uraian: namaUraian,
-      bulan_tahun: {
-        gte: startOfMonth, // >= awal bulan sebelumnya
-        lte: endOfMonth, // <= akhir bulan sebelumnya
-      },
-    },
-    select: {
-      akhir_debit: true,
-      akhir_kredit: true,
-    },
-  });
-
-  return {
-    akhir_debit: parseFloat(result.akhir_debit) || 0,
-    akhir_kredit: parseFloat(result.akhir_kredit) || 0,
-  };
-}
-
-async function kas(bulan, tahun) {
-  // Ambil data akhir_debit dan akhir_kredit dari tabel neraca bulan lalu format datetime berdasarkan bulan_tahun apabila nama_uraian == "kas" dan bulan sekarang januari maka ambil desember dari tahun lalu
-  bulan = bulan - 1;
-  if (bulan === 0) {
-    bulan = 12;
-    tahun = tahun - 1;
-  }
-
-  const startOfMonth = new Date(tahun, bulan - 1, 1, 0, 0, 0); // Awal bulan sebelumnya
-  const endOfMonth = new Date(tahun, bulan, 0, 23, 59, 59); // Akhir bulan sebelumnya
-
-  const neracaAwalKas = await getNeracaAwalKas("kas", startOfMonth, endOfMonth);
-
-  const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-    getTotalCashInOutByDateRange(16, startOfMonth, endOfMonth),
-    getTotalCashInOutByDateRange(1, startOfMonth, endOfMonth),
-  ]);
-
-  const neracaPercobaan = await getNeracaPercobaan(
-    neracaAwalKas.akhir_debit,
-    neracaAwalKas.akhir_kredit,
-    neracaMutasiDebit,
-    neracaMutasiKredit,
-  );
-
-  const neracaSaldo = await getNeracaSaldo(
-    1,
-    neracaPercobaan.debit,
-    neracaPercobaan.kredit,
-  );
-
-  const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
-  };
-
-  return {
-    neraca_awal: {
-      debit: neracaAwalKas.akhir_debit,
-      kredit: neracaAwalKas.akhir_kredit,
-    },
-    neraca_mutasi: {
-      debit: neracaMutasiDebit,
-      kredit: neracaMutasiKredit,
-    },
-    neraca_percobaan: neracaPercobaan,
-    neraca_saldo: neracaSaldo,
-    hasil_usaha: {
-      debit: 0,
-      kredit: 0,
-    },
-    neraca_akhir: neracaAkhir,
-  };
-}
-
-async function bankBri(bulan, tahun) {
-  // Ambil data akhir_debit dan akhir_kredit dari tabel neraca bulan lalu format datetime berdasarkan bulan_tahun apabila nama_uraian == "kas" dan bulan sekarang januari maka ambil desember dari tahun lalu
-  bulan = bulan - 1;
-  if (bulan === 0) {
-    bulan = 12;
-    tahun = tahun - 1;
-  }
-
-  const startOfMonth = new Date(tahun, bulan - 1, 1, 0, 0, 0); // Awal bulan sebelumnya
-  const endOfMonth = new Date(tahun, bulan, 0, 23, 59, 59); // Akhir bulan sebelumnya
-
-  const neracaAwalKas = await getNeracaAwalKas("kas", startOfMonth, endOfMonth);
-
-  const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-    getTotalCashInOutByDateRange(16, startOfMonth, endOfMonth),
-    getTotalCashInOutByDateRange(1, startOfMonth, endOfMonth),
-  ]);
-
-  const neracaPercobaan = await getNeracaPercobaan(
-    neracaAwalKas.akhir_debit,
-    neracaAwalKas.akhir_kredit,
-    neracaMutasiDebit,
-    neracaMutasiKredit,
-  );
-
-  const neracaSaldo = await getNeracaSaldo(
-    1,
-    neracaPercobaan.debit,
-    neracaPercobaan.kredit,
-  );
-
-  const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
-  };
-
-  return {
-    neraca_awal: {
-      debit: neracaAwalKas.akhir_debit,
-      kredit: neracaAwalKas.akhir_kredit,
-    },
-    neraca_mutasi: {
-      debit: neracaMutasiDebit,
-      kredit: neracaMutasiKredit,
-    },
-    neraca_percobaan: neracaPercobaan,
-    neraca_saldo: neracaSaldo,
-    hasil_usaha: {
-      debit: 0,
-      kredit: 0,
-    },
-    neraca_akhir: neracaAkhir,
-  };
-}
-
-async function laporanNeracaLajur(bulan, tahun) {
-  const kasResult = await kas(bulan, tahun);
-  const bankBriResult = await bankBri(bulan, tahun);
+  // const kasResult = await kas();
+  const bebanGajiResult = await bebanGaji();
+  const uangMakanResult = await uangMakan();
+  const thrResult = await thrKaryawan();
+  const bebanAdmUmumResult = await bebanAdmUmum();
+  const bebanPerlengkapanResult = await bebanPerlengkapanToko();
+  const bebanPenyusutanInventarisResult = await bebanPenyusutanInventaris();
 
   return {
     data_neraca: {
-      kas: kasResult,
+      kas: dummyData,
       bank_bri: dummyData,
       piutang_dagang: dummyData,
       persediaan: dummyData,
@@ -202,12 +46,12 @@ async function laporanNeracaLajur(bulan, tahun) {
       pembelian_tunai: dummyData,
       pembelian_kredit: dummyData,
       retur_pembelian: dummyData,
-      beban_gaji: dummyData,
-      uang_makan: dummyData,
-      thr_karyawan: dummyData,
-      beban_adm_umum: dummyData,
-      beban_perlengkapan: dummyData,
-      beban_penyusutan_inventaris: dummyData,
+      beban_gaji: bebanGajiResult,
+      uang_makan: uangMakanResult,
+      thr_karyawan: thrResult,
+      beban_adm_umum: bebanAdmUmumResult,
+      beban_perlengkapan: bebanPerlengkapanResult,
+      beban_penyusutan_inventaris: bebanPenyusutanInventarisResult,
       beban_penyusutan_gedung: dummyData,
       pemeliharaan_inventaris: dummyData,
       pemeliharaan_gedung: dummyData,

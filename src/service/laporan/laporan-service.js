@@ -77,12 +77,7 @@ const getLaporanRealisasiPendapatan = async (request) => {
 const getLaporanNeracaLajur = async (request) => {
   request = validate(monthlyIncomeValidation, request);
 
-  const laporanNeracaLajurResult = await laporanNeracaLajur(
-    request.month,
-    request.year,
-  );
-
-  return laporanNeracaLajurResult;
+  return await laporanNeracaLajur(request.month, request.year);
 };
 
 export default {

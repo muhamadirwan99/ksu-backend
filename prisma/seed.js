@@ -3,8 +3,150 @@ import { generateDate } from "../src/utils/generate-date.js";
 import bcrypt from "bcrypt";
 
 async function main() {
-  await seedCommon();
-  await cashInOut();
+  // await seedCommon();
+  // await cashInOut();
+  // await seedAkunNeraca();
+  const date = new Date("2024-12-01");
+  await initDataNeracaAwal(date);
+}
+
+async function seedAkunNeraca() {
+  const akunNeraca = [
+    "KAS",
+    "BANK BRI",
+    "PIUTANG DAGANG",
+    "PERSEDIAAN",
+    "PENGHAPUSAN PERSEDIAAN",
+    "INVENTARIS",
+    "AKUM. PENY. INVENTARIS",
+    "GEDUNG",
+    "AKUM. PENY. GEDUNG",
+    "UTANG DAGANG",
+    "UTANG DARI PIHAK KETIGA",
+    "UTANG DARI SP",
+    "MODAL TIDAK TETAP (R/C)",
+    "MODAL DISETOR",
+    "USAHA LAIN-LAIN TOKO",
+    "MODAL UNIT TOKO",
+    "SHU TH. 2023",
+    "SHU TH. 2024",
+    "SHU TH. 2025",
+    "PENJUALAN TUNAI",
+    "PENJUALAN KREDIT",
+    "PENJUALAN QRIS",
+    "HARGA POKOK PENJUALAN",
+    "RETUR PENJUALAN",
+    "PENDAPATAN SEWA",
+    "PENDAPATAN LAIN-LAIN",
+    "PEMBELIAN TUNAI",
+    "PEMBELIAN KREDIT",
+    "HARGA POKOK PEMBELIAN",
+    "RETUR PEMBELIAN",
+    "BEBAN GAJI",
+    "UANG MAKAN",
+    "THR KARYAWAN",
+    "BEBAN ADM. & UMUM",
+    "BEBAN PERLENGKAPAN TOKO",
+    "BEBAN PENY. INVENTARIS",
+    "BEBAN PENY. GEDUNG",
+    "PEMELIHARAAN INVENTARIS",
+    "PEMELIHARAAN GEDUNG",
+    "BEBAN PENSIUN KARYAWAN",
+    "PENGELUARAN LAIN-LAIN",
+    "BEBAN KERUGIAN PERSEDIAAN",
+    "HONOR PENGURUS",
+    "HONOR PENGAWAS",
+    "PENGELUARAN PUSAT LAIN",
+  ];
+
+  const dataToInsert = akunNeraca.map((item) => ({
+    nama_akun: item,
+    created_at: generateDate(),
+  }));
+
+  await prismaClient.akunNeraca.createMany({
+    data: dataToInsert,
+    skipDuplicates: true, // Menghindari duplikasi jika ada data yang sama
+  });
+}
+
+async function initDataNeracaAwal(date) {
+  const neracaData = [
+    neracaModel(1, 31975065, 0),
+    neracaModel(2, 4117026, 0),
+    neracaModel(3, 12763734, 0),
+    neracaModel(4, 48767331, 0),
+    neracaModel(5, 96683115, 0),
+    neracaModel(6, 149185956, 0),
+    neracaModel(7, 0, 141242206),
+    neracaModel(8, 154878130, 0),
+    neracaModel(9, 0, 98898847),
+    neracaModel(10, 0, 12655213),
+    neracaModel(11, 0, 53205769),
+    neracaModel(12, 0, 43318438),
+    neracaModel(13, 0, 28000000),
+    neracaModel(14, 0, 11313276),
+    neracaModel(15, 0, 73073118),
+    neracaModel(16, 0, 0),
+    neracaModel(17, 0, 27946033),
+    neracaModel(18, 0, 27401537),
+    neracaModel(19, 18684080, 0),
+    neracaModel(20, 0, 0),
+    neracaModel(21, 0, 0),
+    neracaModel(22, 0, 0),
+    neracaModel(23, 0, 0),
+    neracaModel(24, 0, 0),
+    neracaModel(25, 0, 0),
+    neracaModel(26, 0, 0),
+    neracaModel(27, 0, 0),
+    neracaModel(28, 0, 0),
+    neracaModel(29, 0, 0),
+    neracaModel(30, 0, 0),
+    neracaModel(31, 0, 0),
+    neracaModel(32, 0, 0),
+    neracaModel(33, 0, 0),
+    neracaModel(34, 0, 0),
+    neracaModel(35, 0, 0),
+    neracaModel(36, 0, 0),
+    neracaModel(37, 0, 0),
+    neracaModel(38, 0, 0),
+    neracaModel(39, 0, 0),
+    neracaModel(40, 0, 0),
+    neracaModel(41, 0, 0),
+    neracaModel(42, 0, 0),
+    neracaModel(43, 0, 0),
+    neracaModel(44, 0, 0),
+    neracaModel(45, 0, 0),
+    neracaModel(46, 0, 0),
+    neracaModel(47, 0, 0),
+    neracaModel(48, 0, 0),
+    neracaModel(49, 0, 0),
+    neracaModel(50, 0, 0),
+  ];
+
+  const dataToInsert = neracaData.map((item) => ({
+    akun_id: item.akun_id,
+    debit: item.debit,
+    kredit: item.kredit,
+    bulan_tahun: date,
+    created_at: generateDate(),
+  }));
+
+  await prismaClient.neraca.createMany({
+    data: dataToInsert,
+    skipDuplicates: true, // Menghindari duplikasi jika ada data yang sama
+  });
+
+  console.log("Data neraca berhasil dimasukkan!");
+}
+
+function neracaModel(akunId, debit, akhirKredit) {
+  return {
+    akun_id: akunId,
+    debit: debit,
+    kredit: akhirKredit,
+    created_at: generateDate(),
+  };
 }
 
 async function seedCommon() {

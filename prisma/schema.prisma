@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL_BARU")
+  url      = env("DATABASE_URL_NEW")
 }
 
 model ResponseLog {
@@ -462,16 +462,4 @@ model HistoryHutangDagang {
   @@index([id_pembelian], map: "hutang_dagang_id_pembelian_fkey")
   @@index([id_supplier], map: "hutang_dagang_id_supplier_fkey")
   @@map("history_hutang_dagang")
-}
-
-model Neraca {
-  id_neraca    Int       @id @default(autoincrement())
-  nama_uraian  String    @db.VarChar(100)
-  akhir_debit  Decimal   @db.Decimal(10, 2)
-  akhir_kredit Decimal   @db.Decimal(10, 2)
-  bulan_tahun  DateTime  @db.Timestamp(6)
-  created_at   DateTime  @db.Timestamp(6)
-  updated_at   DateTime? @db.Timestamp(6)
-
-  @@map("neraca")
 }

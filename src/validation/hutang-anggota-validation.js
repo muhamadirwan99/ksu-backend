@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 const pembayaranHutangAnggotaValidation = Joi.object({
-  id_hutang_anggota: Joi.string().max(100).required(),
+  id_anggota: Joi.string().max(8).optional(),
   nominal_bayar: Joi.number().required(),
   tg_bayar: Joi.string().max(100).required(),
   keterangan: Joi.string().max(255).optional(),

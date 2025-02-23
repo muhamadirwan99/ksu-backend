@@ -298,7 +298,7 @@ async function bebanPerlengkapanToko() {
 }
 
 async function bebanPenyusutanInventaris() {
-  const neracaAwalKas = await getNeracaAwalKas("BEBAN PERLENGKAPAN TOKO");
+  const neracaAwalKas = await getNeracaAwalKas("BEBAN PENY. INVENTARIS");
 
   const akumPenyusutanInventaris = await getNeracaAwalKas(
     "AKUM. PENY. INVENTARIS",
@@ -351,11 +351,9 @@ async function bebanPenyusutanInventaris() {
 }
 
 async function bebanPenyusutanGedung() {
-  const neracaAwalKas = await getNeracaAwalKas("BEBAN PERLENGKAPAN TOKO");
+  const neracaAwalKas = await getNeracaAwalKas("BEBAN PENY. GEDUNG");
 
-  const akumPenyusutanInventaris = await getNeracaAwalKas(
-    "AKUM. PENY. INVENTARIS",
-  );
+  const akumPenyusutanGedung = await getNeracaAwalKas("AKUM. PENY. GEDUNG");
 
   const bebanPenyusutanInventaris = await prismaClient.penyusutanAset.findFirst(
     {
@@ -371,7 +369,7 @@ async function bebanPenyusutanGedung() {
 
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     parseFloat(bebanPenyusutanInventaris.penyusutan_bulan) || 0,
-    parseFloat(akumPenyusutanInventaris.akhir_kredit) || 0,
+    parseFloat(akumPenyusutanGedung.akhir_kredit) || 0,
   ]);
 
   const neracaPercobaan = await getNeracaPercobaan(

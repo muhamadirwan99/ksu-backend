@@ -12,83 +12,90 @@ import { parse } from "date-fns";
 
 const pembayaranHutangAnggota = async (request) => {
   request = validate(pembayaranHutangAnggotaValidation, request);
-
   request.nominal_bayar = parseInt(request.nominal_bayar);
 
-  // Validasi id_hutang_anggota
-  const hutangAnggota = await prismaClient.hutangAnggota.findUnique({
-    where: {
-      id_hutang_anggota: request.id_hutang_anggota,
-    },
+  // Ambil semua hutang anggota yang belum lunas
+  const hutangAnggotaList = await prismaClient.hutangAnggota.findMany({
+    where: { id_anggota: request.id_anggota },
+    orderBy: { nominal: "asc" },
   });
 
-  if (!hutangAnggota) {
-    throw new ResponseError("Hutang Anggota is not found");
+  if (hutangAnggotaList.length === 0) {
+    throw new ResponseError("Hutang anggota tidak ditemukan.");
   }
 
-  hutangAnggota.nominal = parseInt(hutangAnggota.nominal);
+  // Hitung total hutang anggota
+  const totalHutang = hutangAnggotaList.reduce(
+    (sum, hutang) => sum + parseInt(hutang.nominal),
+    0,
+  );
 
-  // Validasi jumlah_pembayaran
-  if (request.nominal_bayar > hutangAnggota.nominal) {
-    throw new ResponseError("Jumlah Pembayaran is greater than Sisa Hutang");
+  // Cek apakah nominal bayar lebih besar dari total hutang
+  if (request.nominal_bayar > totalHutang) {
+    throw new ResponseError(
+      "Nominal pembayaran melebihi total hutang anggota.",
+    );
   }
 
-  // Update data hutang_anggota apabila hutang anggota telah lunas hapus data hutang anggota
-  if (request.nominal_bayar === hutangAnggota.nominal) {
-    await prismaClient.hutangAnggota.delete({
-      where: {
-        id_hutang_anggota: request.id_hutang_anggota,
-      },
-    });
-  } else {
-    await prismaClient.hutangAnggota.update({
-      where: {
-        id_hutang_anggota: request.id_hutang_anggota,
-      },
+  let sisaBayar = request.nominal_bayar;
+
+  for (const hutangAnggota of hutangAnggotaList) {
+    if (sisaBayar <= 0) break;
+
+    const nominalHutang = parseInt(hutangAnggota.nominal);
+    let nominalDibayar = 0;
+
+    if (sisaBayar >= nominalHutang) {
+      // Hutang lunas
+      await prismaClient.hutangAnggota.delete({
+        where: { id_hutang_anggota: hutangAnggota.id_hutang_anggota },
+      });
+      nominalDibayar = nominalHutang;
+      sisaBayar -= nominalHutang;
+    } else {
+      // Kurangi nominal hutang yang belum lunas
+      await prismaClient.hutangAnggota.update({
+        where: { id_hutang_anggota: hutangAnggota.id_hutang_anggota },
+        data: {
+          nominal: nominalHutang - sisaBayar,
+          updated_at: generateDate(),
+        },
+      });
+      nominalDibayar = sisaBayar;
+      sisaBayar = 0;
+    }
+
+    // Simpan riwayat pembayaran
+    const parseDate = parse(request.tg_bayar, "dd-MM-yyyy", new Date());
+    if (isNaN(parseDate)) {
+      throw new Error("Format tanggal tidak valid. Gunakan format dd-MM-yyyy.");
+    }
+
+    await prismaClient.historyHutangAnggota.create({
       data: {
-        nominal: hutangAnggota.nominal - request.nominal_bayar,
-        updated_at: generateDate(),
-      },
+        id_history_hutang_anggota:
+          await generateBayarHutangAnggotaId(parseDate),
+        id_anggota: hutangAnggota.id_anggota,
+        nm_anggota: hutangAnggota.nm_anggota,
+        tg_bayar_hutang: request.tg_bayar,
+        nominal: nominalDibayar, // Simpan nominal yang dibayarkan
+        keterangan: request.keterangan,
+        id_penjualan: hutangAnggota.id_penjualan,
+        created_at: generateDate(),
+      }, // Simpan satu per satu
     });
   }
 
-  // Update hutang di table anggota
+  // Update total hutang anggota
   const anggota = await prismaClient.anggota.findUnique({
-    where: {
-      id_anggota: hutangAnggota.id_anggota,
-    },
+    where: { id_anggota: request.id_anggota },
   });
 
-  const hutang = parseInt(anggota.hutang) - request.nominal_bayar;
-
-  await prismaClient.anggota.update({
-    where: {
-      id_anggota: hutangAnggota.id_anggota,
-    },
+  return prismaClient.anggota.update({
+    where: { id_anggota: request.id_anggota },
     data: {
-      hutang: hutang,
+      hutang: parseInt(anggota.hutang) - request.nominal_bayar,
       updated_at: generateDate(),
-    },
-  });
-
-  const parseDate = parse(request.tg_bayar, "dd-MM-yyyy", new Date());
-
-  // Validasi apakah tanggal berhasil diparse
-  if (isNaN(parseDate)) {
-    throw new Error("Invalid date format. Please use dd-MM-yyyy format.");
-  }
-
-  // Insert data history hutang anggota
-  return prismaClient.historyHutangAnggota.create({
-    data: {
-      id_history_hutang_anggota: await generateBayarHutangAnggotaId(parseDate),
-      id_anggota: hutangAnggota.id_anggota,
-      nm_anggota: hutangAnggota.nm_anggota,
-      tg_bayar_hutang: request.tg_bayar,
-      nominal: request.nominal_bayar,
-      keterangan: request.keterangan,
-      id_penjualan: hutangAnggota.id_penjualan,
-      created_at: generateDate(),
     },
   });
 };

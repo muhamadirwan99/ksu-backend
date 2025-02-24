@@ -66,6 +66,18 @@ const removeTutupKasir = async (req, res, next) => {
     next(e);
   }
 };
+const refreshTutupKasir = async (req, res, next) => {
+  try {
+    const result = await tutupKasirService.refreshTutupKasir(req.body);
+    const responses = new ResponseSuccess(
+      "Tutup kasir successfully refreshed",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
 
 export default {
   getTotalPenjualan,
@@ -73,4 +85,5 @@ export default {
   getListTutupKasir,
   updateTutupKasir,
   removeTutupKasir,
+  refreshTutupKasir,
 };

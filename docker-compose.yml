@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: ksu-backend
-    restart: always
+    restart: unless-stopped
     environment:
       DATABASE_URL_NEW: mysql://root:Ksu123321@@192.168.1.200:3306/ksu?allowPublicKeyRetrieval=true
       JWT_SECRET_KEY: ksu_koperasi

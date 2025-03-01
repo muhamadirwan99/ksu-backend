@@ -35,9 +35,14 @@ const getListTutupKasirValidation = Joi.object({
   sort_order: Joi.array().optional(),
 });
 
+const getIdTutupKasirValidation = Joi.object({
+  id_tutup_kasir: Joi.number().required(),
+});
+
 export {
   getTotalPenjualanValidation,
   createTutupKasirValidation,
   getListTutupKasirValidation,
   updateTutupKasirValidation,
+  getIdTutupKasirValidation,
 };

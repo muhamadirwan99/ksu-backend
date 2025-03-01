@@ -1,5 +1,6 @@
 # Use Node.js 22-alpine as the base image
-FROM node:22-alpine
+# FROM node:22-alpine
+FROM node:20
 
 # Set the working directory
 WORKDIR /app
@@ -23,7 +24,7 @@ COPY .env .env
 RUN npx prisma generate --schema=prisma/schema.prisma
 
 # Run Prisma migration with a timestamped name for the migration
-RUN TIMESTAMP=$(date +%Y%m%d%H%M%S) && npx prisma migrate dev --schema=./prisma/schema.prisma --name ${TIMESTAMP}-auto-migration
+# RUN TIMESTAMP=$(date +%Y%m%d%H%M%S) && npx prisma migrate dev --schema=./prisma/schema.prisma --name ${TIMESTAMP}-auto-migration
 
 # Expose the application port
 EXPOSE 3000

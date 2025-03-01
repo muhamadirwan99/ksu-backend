@@ -1,6 +1,7 @@
 import { prismaClient } from "../application/database.js";
 import {
   createTutupKasirValidation,
+  getIdTutupKasirValidation,
   getListTutupKasirValidation,
   getTotalPenjualanValidation,
   updateTutupKasirValidation,
@@ -57,7 +58,11 @@ const getTotalPenjualan = async (request) => {
 
   tg_tutup_kasir = request.tg_tutup_kasir;
 
-  const [tanggal] = tg_tutup_kasir.split(", ");
+  //tg_tutup_kasir tambah 1 menit dengan format 24-02-2025, 07:39
+  const [tanggal, waktu] = tg_tutup_kasir.split(", ");
+  const [jam, menit] = waktu.split(":");
+  const menitSebelum = parseInt(menit) + 1;
+  tg_tutup_kasir = `${tanggal}, ${jam}:${menitSebelum}`;
 
   // Cek apakah sudah ada tutup kasir untuk hari ini
   const kasirHariIni = await prismaClient.tutupKasir.findFirst({
@@ -237,9 +242,144 @@ const updateTutupKasir = async (request, idRole) => {
   });
 };
 
+const removeTutupKasir = async (request) => {
+  request = validate(getIdTutupKasirValidation, request);
+
+  const totalInDatabase = await prismaClient.tutupKasir.count({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+  });
+
+  if (totalInDatabase !== 1) {
+    throw new ResponseError("id_tutup_kasir is not found", {});
+  }
+
+  return prismaClient.tutupKasir.delete({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+  });
+};
+
+//refresh
+async function dataRefreshPenjualan(
+  jenis_pembayaran,
+  startDate,
+  tg_tutup_kasir,
+) {
+  const result = await prismaClient.penjualan.aggregate({
+    where: {
+      tg_penjualan: {
+        gte: startDate, // Waktu mulai
+        lt: tg_tutup_kasir, // Waktu hingga
+      },
+      jenis_pembayaran: jenis_pembayaran,
+    },
+    _sum: {
+      total_nilai_jual: true,
+    },
+  });
+
+  return parseFloat(result._sum.total_nilai_jual) || 0;
+}
+
+async function dataRefreshKeuntungan(startDate, tg_tutup_kasir) {
+  const result = await prismaClient.penjualan.aggregate({
+    where: {
+      tg_penjualan: {
+        gte: startDate, // Waktu mulai
+        lt: tg_tutup_kasir, // Waktu hingga
+      },
+    },
+    _sum: {
+      total_nilai_jual: true,
+      total_nilai_beli: true,
+    },
+  });
+
+  return {
+    total_nilai_jual: parseFloat(result._sum.total_nilai_jual) || 0,
+    total_nilai_beli: parseFloat(result._sum.total_nilai_beli) || 0,
+    total_keuntungan:
+      parseFloat(result._sum.total_nilai_jual) -
+        parseFloat(result._sum.total_nilai_beli) || 0,
+  };
+}
+
+const refreshTutupKasir = async (request) => {
+  request = validate(getIdTutupKasirValidation, request);
+
+  // Ambil data tutup kasir berdasarkan id_tutup_kasir
+  const tutupKasir = await prismaClient.tutupKasir.findFirst({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+  });
+
+  if (!tutupKasir) {
+    throw new ResponseError("Tutup kasir tidak ditemukan.");
+  }
+
+  const [tanggal] = tutupKasir.tg_tutup_kasir.split(", ");
+
+  let startDateRefresh;
+
+  if (tutupKasir.shift === "PAGI") {
+    // Jika belum ada yang tutup kasir, shift pagi
+    startDateRefresh = `${tanggal}, 00:00`; // Awal hari
+  } else {
+    // Jika sudah ada yang tutup kasir, shift siang
+    startDateRefresh = tutupKasir.tg_tutup_kasir; // Waktu dari tutup kasir shift pagi
+  }
+
+  // Dapatkan total nilai penjualan tunai
+  const penjualanTunai = await dataRefreshPenjualan(
+    "tunai",
+    startDateRefresh,
+    tutupKasir.tg_tutup_kasir,
+  );
+  const penjualanQris = await dataRefreshPenjualan(
+    "qris",
+    startDateRefresh,
+    tutupKasir.tg_tutup_kasir,
+  );
+  const penjualanKredit = await dataRefreshPenjualan(
+    "kredit",
+    startDateRefresh,
+    tutupKasir.tg_tutup_kasir,
+  );
+
+  // Hitung total penjualan
+  const totalPenjualan = penjualanTunai + penjualanQris + penjualanKredit;
+
+  const keuntungan = await dataRefreshKeuntungan(
+    startDateRefresh,
+    tutupKasir.tg_tutup_kasir,
+  );
+
+  return prismaClient.tutupKasir.update({
+    where: {
+      id_tutup_kasir: request.id_tutup_kasir,
+    },
+    data: {
+      tunai: penjualanTunai,
+      qris: penjualanQris,
+      kredit: penjualanKredit,
+      total: totalPenjualan,
+      total_nilai_jual: keuntungan.total_nilai_jual,
+      total_nilai_beli: keuntungan.total_nilai_beli,
+      total_keuntungan: keuntungan.total_keuntungan,
+      updated_at: generateDate(),
+    },
+  });
+};
+
 export default {
   getTotalPenjualan,
   createTutupKasir,
   getListTutupKasir,
   updateTutupKasir,
+  removeTutupKasir,
+  refreshTutupKasir,
 };

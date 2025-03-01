@@ -9,20 +9,18 @@ function getDate(request) {
   // Mendapatkan data bulan dan tahun dari request
   const month = request.month;
   const year = request.year;
-  const timezoneOffset = 7 * 60 * 60 * 1000; // UTC+7 dalam milidetik
 
-  // Tanggal awal bulan ini dalam zona waktu lokal
-  startDate = new Date(Date.UTC(year, month - 1, 1) - timezoneOffset);
-  endDate = new Date(Date.UTC(year, month, 1) - timezoneOffset);
+  // Tanggal awal dan akhir bulan ini dalam UTC
+  startDate = new Date(Date.UTC(year, month - 1, 1));
+  endDate = new Date(Date.UTC(year, month, 1)); // Awal bulan berikutnya
 
-  // Jika bulan adalah Januari (1), bulan sebelumnya harus Desember tahun lalu
   if (month === 1) {
-    // Bulan sebelumnya adalah Desember tahun sebelumnya
-    lastMonthStartDate = new Date(Date.UTC(year - 1, 11, 1)); // Desember tahun lalu
-    lastMonthEndDate = new Date(Date.UTC(year, 0, 1)); // Awal Januari tahun ini (bulan 0 adalah Januari)
+    // Jika bulan Januari, bulan sebelumnya adalah Desember tahun lalu
+    lastMonthStartDate = new Date(Date.UTC(year - 1, 11, 1)); // 1 Desember tahun lalu
+    lastMonthEndDate = new Date(Date.UTC(year, 0, 1)); // 1 Januari tahun ini
   } else {
     // Bulan sebelumnya masih dalam tahun yang sama
-    lastMonthStartDate = new Date(Date.UTC(year, month - 2, 1)); // Bulan sebelumnya
+    lastMonthStartDate = new Date(Date.UTC(year, month - 2, 1)); // Awal bulan sebelumnya
     lastMonthEndDate = new Date(Date.UTC(year, month - 1, 1)); // Awal bulan ini
   }
 }

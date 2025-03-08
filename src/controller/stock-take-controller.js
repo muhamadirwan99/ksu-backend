@@ -5,7 +5,7 @@ const createStockTake = async (req, res, next) => {
   try {
     const result = await stockTakeService.createStockTake(req.body);
     const responses = new ResponseSuccess(
-      "Stock take successfully registered",
+      "Stock opname successfully registered",
       result,
     ).getResponse();
     res.status(200).json(responses);
@@ -18,7 +18,20 @@ const getStockTakeList = async (req, res, next) => {
   try {
     const result = await stockTakeService.searchStockTake(req.body);
     const responses = new ResponseSuccess(
-      "Success get stock take list",
+      "Success get history stock opname",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
+const rekonStockTake = async (req, res, next) => {
+  try {
+    const result = await stockTakeService.rekonStockTake(req.body);
+    const responses = new ResponseSuccess(
+      "Success rekon stock take",
       result,
     ).getResponse();
     res.status(200).json(responses);
@@ -30,4 +43,5 @@ const getStockTakeList = async (req, res, next) => {
 export default {
   createStockTake,
   getStockTakeList,
+  rekonStockTake,
 };

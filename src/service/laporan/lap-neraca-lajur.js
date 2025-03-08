@@ -1,8 +1,12 @@
 import {
   bebanAdmUmum,
   bebanGaji,
+  bebanPenyusutanGedung,
   bebanPenyusutanInventaris,
   bebanPerlengkapanToko,
+  pemeliharaanGedung,
+  pemeliharaanInventaris,
+  pengeluaranLainLain,
   thrKaryawan,
   uangMakan,
 } from "./neraca/account-neraca-lajur.js";
@@ -18,6 +22,10 @@ async function laporanNeracaLajur(month, year) {
   const bebanAdmUmumResult = await bebanAdmUmum();
   const bebanPerlengkapanResult = await bebanPerlengkapanToko();
   const bebanPenyusutanInventarisResult = await bebanPenyusutanInventaris();
+  const bebanPenyusutanGedungResult = await bebanPenyusutanGedung();
+  const pemeliharaanInventarisResult = await pemeliharaanInventaris();
+  const pemeliharaanGedungResult = await pemeliharaanGedung();
+  const pengeluaranLainLainResult = await pengeluaranLainLain();
 
   return {
     data_neraca: {
@@ -52,10 +60,10 @@ async function laporanNeracaLajur(month, year) {
       beban_adm_umum: bebanAdmUmumResult,
       beban_perlengkapan: bebanPerlengkapanResult,
       beban_penyusutan_inventaris: bebanPenyusutanInventarisResult,
-      beban_penyusutan_gedung: dummyData,
-      pemeliharaan_inventaris: dummyData,
-      pemeliharaan_gedung: dummyData,
-      pengeluaran_lain: dummyData,
+      beban_penyusutan_gedung: bebanPenyusutanGedungResult,
+      pemeliharaan_inventaris: pemeliharaanInventarisResult,
+      pemeliharaan_gedung: pemeliharaanGedungResult,
+      pengeluaran_lain: pengeluaranLainLainResult,
       pengeluaran_pusat_lain: dummyData,
     },
     total_neraca: {

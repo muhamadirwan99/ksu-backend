@@ -13,9 +13,20 @@ const addStockTakeValidation = Joi.object({
 const searchStockTakeValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
   size: Joi.number().min(1).positive().max(1000).default(10),
+  is_selisih: Joi.boolean().optional(),
   nm_product: Joi.string().max(100).optional(),
   sort_by: Joi.array().optional(),
   sort_order: Joi.array().optional(),
 });
 
-export { addStockTakeValidation, searchStockTakeValidation };
+const rekonStockTakeValidation = Joi.object({
+  page: Joi.number().min(1).positive().default(1),
+  size: Joi.number().min(1).positive().max(1000).default(10),
+  is_selisih: Joi.boolean().optional(),
+});
+
+export {
+  addStockTakeValidation,
+  searchStockTakeValidation,
+  rekonStockTakeValidation,
+};

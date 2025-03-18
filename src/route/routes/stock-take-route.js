@@ -4,12 +4,16 @@ import stockTakeHarianController from "../../controller/stock-take-controller.js
 const stockTakeRoute = () => {
   // Role API
   userRouter.post(
-    "/api/stocktake/create-stocktake",
+    "/api/stock/create-stock-opname",
     stockTakeHarianController.createStockTake,
   );
   userRouter.post(
-    "/api/stocktake/list-stocktakes",
+    "/api/stock/history-stock-opname",
     stockTakeHarianController.getStockTakeList,
+  );
+  userRouter.post(
+    "/api/stock/list-stock-take",
+    stockTakeHarianController.rekonStockTake,
   );
 };
 

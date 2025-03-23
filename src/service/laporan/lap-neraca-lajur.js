@@ -10,6 +10,7 @@ import {
   pemeliharaanGedung,
   pemeliharaanInventaris,
   pengeluaranLainLain,
+  persediaan,
   piutangDagang,
   thrKaryawan,
   uangMakan,
@@ -24,6 +25,7 @@ async function laporanNeracaLajur(month, year) {
   const bankBriResult = await bankBri();
   const bankBniResult = await bankBni();
   const piutangDagangResult = await piutangDagang();
+  const persediaanResult = await persediaan();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -41,7 +43,7 @@ async function laporanNeracaLajur(month, year) {
       bank_bri: bankBriResult,
       bank_bni: bankBniResult,
       piutang_dagang: piutangDagangResult,
-      persediaan: dummyData,
+      persediaan: persediaanResult,
       penghapusan_persediaan: dummyData,
       inventaris: dummyData,
       akumulasi_penyusutan_inventaris: dummyData,

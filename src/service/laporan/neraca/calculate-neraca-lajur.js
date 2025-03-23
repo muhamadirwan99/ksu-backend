@@ -108,11 +108,11 @@ function getDate(year, month) {
   endDate = new Date(Date.UTC(year, month, 1)); // Awal bulan berikutnya
 }
 
-async function getTotalRetur(startDate, endDate) {
+async function getTotalRetur(jenisPembayaran, startDate, endDate) {
   // Cari semua pembelian dengan jenis pembayaran tunai
   const pembelianTunai = await prismaClient.pembelian.findMany({
     where: {
-      jenis_pembayaran: "tunai",
+      jenis_pembayaran: jenisPembayaran,
     },
     select: {
       id_pembelian: true,

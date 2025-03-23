@@ -100,7 +100,7 @@ async function kas() {
   });
 
   //Mendapatkan data retur
-  const totalRetur = await getTotalRetur(startDate, endDate);
+  const totalRetur = await getTotalRetur("tunai", startDate, endDate);
 
   //Mendapatkan data dari cash in out
   const pendapatanLain = await getTotalCashInOutByDateRange(
@@ -251,12 +251,101 @@ async function piutangDagang() {
   const neracaAwalKas = await getNeracaAwalKas("PIUTANG DAGANG");
 
   let neracaMutasiDebit = 0;
-  const currentMonthQrisSales = await getCurrentMonthSale("kredit");
-  currentMonthQrisSales.forEach((purchase) => {
+  const currentMonthKreditSales = await getCurrentMonthSale("kredit");
+  currentMonthKreditSales.forEach((purchase) => {
     neracaMutasiDebit += parseFloat(purchase.total_nilai_jual);
   });
 
   const neracaMutasiKredit = 0; //belum ada data
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function persediaan() {
+  const neracaAwalKas = await getNeracaAwalKas("PERSEDIAAN");
+
+  //NERACA MUTASI DEBIT
+  let totalPembelian = 0;
+  const currentMonthCashPurchases = await getCurrentMonthPurchase("tunai");
+  const currentMonthCreditPurchases = await getCurrentMonthPurchase("kredit");
+
+  currentMonthCashPurchases.forEach((purchase) => {
+    totalPembelian += parseFloat(purchase.total_nilai_beli);
+  });
+  currentMonthCreditPurchases.forEach((purchase) => {
+    totalPembelian += parseFloat(purchase.total_nilai_beli);
+  });
+
+  let totalReturPenjualan = 0;
+
+  const neracaMutasiDebit = await Promise.all([
+    totalPembelian,
+    totalReturPenjualan,
+  ]).then((result) => {
+    return result.reduce((acc, curr) => acc + curr, 0);
+  });
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  let totalPenjualan = 0;
+  const currentMonthCashSales = await getCurrentMonthSale("tunai");
+  const currentMonthQrisSales = await getCurrentMonthSale("qris");
+  const currentMonthCreditSales = await getCurrentMonthSale("kredit");
+
+  currentMonthCashSales.forEach((purchase) => {
+    totalPenjualan += parseFloat(purchase.total_nilai_beli);
+  });
+  currentMonthQrisSales.forEach((purchase) => {
+    totalPenjualan += parseFloat(purchase.total_nilai_beli);
+  });
+  currentMonthCreditSales.forEach((purchase) => {
+    totalPenjualan += parseFloat(purchase.total_nilai_beli);
+  });
+
+  //Jumlahkan total retur tunai dan kredit di variable total retur
+  let totalReturPembelian = await getTotalRetur("tunai", startDate, endDate);
+
+  totalReturPembelian += await getTotalRetur("kredit", startDate, endDate);
+
+  const neracaMutasiKredit = await Promise.all([
+    totalPenjualan,
+    totalReturPembelian,
+  ]).then((result) => {
+    return result.reduce((acc, curr) => acc + curr, 0);
+  });
+  //END NERACA MUTASI KREDIT
 
   const neracaPercobaan = await getNeracaPercobaan(
     neracaAwalKas.akhir_debit,
@@ -769,6 +858,7 @@ export {
   bankBri,
   bankBni,
   piutangDagang,
+  persediaan,
   bebanGaji,
   uangMakan,
   thrKaryawan,

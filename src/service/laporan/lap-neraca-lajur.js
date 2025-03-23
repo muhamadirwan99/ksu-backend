@@ -10,6 +10,7 @@ import {
   pemeliharaanGedung,
   pemeliharaanInventaris,
   pengeluaranLainLain,
+  piutangDagang,
   thrKaryawan,
   uangMakan,
 } from "./neraca/account-neraca-lajur.js";
@@ -22,6 +23,7 @@ async function laporanNeracaLajur(month, year) {
   const kasResult = await kas();
   const bankBriResult = await bankBri();
   const bankBniResult = await bankBni();
+  const piutangDagangResult = await piutangDagang();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -38,7 +40,7 @@ async function laporanNeracaLajur(month, year) {
       kas: kasResult,
       bank_bri: bankBriResult,
       bank_bni: bankBniResult,
-      piutang_dagang: dummyData,
+      piutang_dagang: piutangDagangResult,
       persediaan: dummyData,
       penghapusan_persediaan: dummyData,
       inventaris: dummyData,

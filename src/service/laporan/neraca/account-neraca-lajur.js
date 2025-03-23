@@ -247,6 +247,52 @@ async function bankBni() {
   );
 }
 
+async function piutangDagang() {
+  const neracaAwalKas = await getNeracaAwalKas("PIUTANG DAGANG");
+
+  let neracaMutasiDebit = 0;
+  const currentMonthQrisSales = await getCurrentMonthSale("kredit");
+  currentMonthQrisSales.forEach((purchase) => {
+    neracaMutasiDebit += parseFloat(purchase.total_nilai_jual);
+  });
+
+  const neracaMutasiKredit = 0; //belum ada data
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -722,6 +768,7 @@ export {
   kas,
   bankBri,
   bankBni,
+  piutangDagang,
   bebanGaji,
   uangMakan,
   thrKaryawan,

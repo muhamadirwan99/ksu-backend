@@ -5,6 +5,7 @@ function createNeracaModel(
   neracaMutasiKredit,
   neracaPercobaan,
   neracaSaldo,
+  hasilUsaha,
   neracaAkhir,
 ) {
   return {
@@ -18,10 +19,7 @@ function createNeracaModel(
     },
     neraca_percobaan: neracaPercobaan,
     neraca_saldo: neracaSaldo,
-    hasil_usaha: {
-      debit: 0,
-      kredit: 0,
-    },
+    hasil_usaha: hasilUsaha,
     neraca_akhir: neracaAkhir,
   };
 }

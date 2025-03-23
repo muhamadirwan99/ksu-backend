@@ -1,67 +1,128 @@
 import {
+  endDate,
+  getCurrentMonthPurchase,
+  getCurrentMonthSale,
   getNeracaAwalKas,
   getNeracaPercobaan,
   getNeracaSaldo,
+  getTotalRetur,
   newYear,
-} from "./count-neraca-lajur.js";
+  startDate,
+} from "./calculate-neraca-lajur.js";
 import { createNeracaModel } from "./neraca-lajur-model.js";
 import { prismaClient } from "../../../application/database.js";
 import { getTotalCashInOutByDateRange } from "../lap-hasil-usaha.js";
 
-// async function kas() {
-//
-//
-//   const neracaAwalKas = await getNeracaAwalKas("KAS", new Date(newYear, 0, 1), new Date(newYear + 1, 0, 1));
-//
-//   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-//     getTotalCashInOutByDateRange(16, new Date(newYear, 0, 1), new Date(newYear + 1, 0, 1)),
-//     getTotalCashInOutByDateRange(1, new Date(newYear, 0, 1), new Date(newYear + 1, 0, 1)),
-//   ]);
-//
-//   const neracaPercobaan = await getNeracaPercobaan(
-//     neracaAwalKas.akhir_debit,
-//     neracaAwalKas.akhir_kredit,
-//     neracaMutasiDebit,
-//     neracaMutasiKredit,
-//   );
-//
-//   const neracaSaldo = await getNeracaSaldo(
-//     1,
-//     neracaPercobaan.debit,
-//     neracaPercobaan.kredit,
-//   );
-//
-//   const neracaAkhir = {
-//     debit: 0,
-//     kredit: 0,
-//   };
-//
-//   return createNeracaModel(
-//     neracaAwalKas.akhir_debit,
-//     neracaAwalKas.akhir_kredit,
-//     neracaMutasiDebit,
-//     neracaMutasiKredit,
-//     neracaPercobaan,
-//     neracaSaldo,
-//     neracaAkhir,
-//   );
-// }
+async function kas() {
+  const neracaAwalKas = await getNeracaAwalKas("KAS");
 
-async function bankBri() {
-  const neracaAwalKas = await getNeracaAwalKas("BANK BRI");
+  //NERACA MUTASI KREDIT
+  //Mendapatkan data pembelian (harga beli)
+  let totalCurrentMonthPurchase = 0;
+  const currentMonthCashPurchases = await getCurrentMonthPurchase("tunai");
 
-  const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-    getTotalCashInOutByDateRange(
-      16,
-      new Date(newYear, 0, 1),
-      new Date(newYear + 1, 0, 1),
-    ),
-    getTotalCashInOutByDateRange(
-      1,
-      new Date(newYear, 0, 1),
-      new Date(newYear + 1, 0, 1),
-    ),
-  ]);
+  currentMonthCashPurchases.forEach((purchase) => {
+    totalCurrentMonthPurchase += parseFloat(purchase.total_harga_beli);
+  });
+
+  //Mendapatkan data dari cash in out
+  const bebanGaji = await getTotalCashInOutByDateRange(5, startDate, endDate);
+  const uangMakan = await getTotalCashInOutByDateRange(6, startDate, endDate);
+  const thrKaryawan = await getTotalCashInOutByDateRange(7, startDate, endDate);
+  const bebanAdmUmum = await getTotalCashInOutByDateRange(
+    8,
+    startDate,
+    endDate,
+  );
+  const bebanPerlengkapanToko = await getTotalCashInOutByDateRange(
+    9,
+    startDate,
+    endDate,
+  );
+  const pemInventaris = await getTotalCashInOutByDateRange(
+    10,
+    startDate,
+    endDate,
+  );
+  const pemGedung = await getTotalCashInOutByDateRange(11, startDate, endDate);
+  const pengeluaranLain = await getTotalCashInOutByDateRange(
+    15,
+    startDate,
+    endDate,
+  );
+  const honorPengurus = await getTotalCashInOutByDateRange(
+    14,
+    startDate,
+    endDate,
+  );
+  const honorPengawas = await getTotalCashInOutByDateRange(
+    13,
+    startDate,
+    endDate,
+  );
+  const bayarUtangPihakKetiga = await getTotalCashInOutByDateRange(
+    18,
+    startDate,
+    endDate,
+  );
+
+  const tagihanListrik = await getTotalCashInOutByDateRange(
+    12,
+    startDate,
+    endDate,
+  );
+
+  const neracaMutasiKredit = await Promise.all([
+    bebanGaji,
+    uangMakan,
+    thrKaryawan,
+    bebanAdmUmum,
+    bebanPerlengkapanToko,
+    pemInventaris,
+    pemGedung,
+    pengeluaranLain,
+    honorPengurus,
+    honorPengawas,
+    bayarUtangPihakKetiga,
+    tagihanListrik,
+  ]).then((result) => {
+    return result.reduce((acc, curr) => acc + curr, 0);
+  });
+  //END NERACA MUTASI KREDIT
+
+  //NERACA MUTASI DEBIT
+  //Mendapatkan data penjualan (harga beli)
+  let totalCurrentMonthSale = 0;
+  const currentMonthCashSales = await getCurrentMonthSale("tunai");
+
+  currentMonthCashSales.forEach((purchase) => {
+    totalCurrentMonthSale += parseFloat(purchase.total_nilai_jual);
+  });
+
+  //Mendapatkan data retur
+  const totalRetur = await getTotalRetur(startDate, endDate);
+
+  //Mendapatkan data dari cash in out
+  const pendapatanLain = await getTotalCashInOutByDateRange(
+    4,
+    startDate,
+    endDate,
+  );
+  const utangPihakKetiga = await getTotalCashInOutByDateRange(
+    19,
+    startDate,
+    endDate,
+  );
+
+  const neracaMutasiDebit = await Promise.all([
+    totalCurrentMonthSale,
+    totalRetur,
+    pendapatanLain,
+    utangPihakKetiga,
+  ]).then((result) => {
+    return result.reduce((acc, curr) => acc + curr, 0);
+  });
+  //END NERACA MUTASI DEBIT
 
   const neracaPercobaan = await getNeracaPercobaan(
     neracaAwalKas.akhir_debit,
@@ -76,6 +137,11 @@ async function bankBri() {
     neracaPercobaan.kredit,
   );
 
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
   const neracaAkhir = {
     debit: 0,
     kredit: 0,
@@ -88,6 +154,95 @@ async function bankBri() {
     neracaMutasiKredit,
     neracaPercobaan,
     neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function bankBri() {
+  const neracaAwalKas = await getNeracaAwalKas("BANK BRI");
+
+  let neracaMutasiDebit = 0;
+  const currentMonthQrisSales = await getCurrentMonthSale("qris");
+  currentMonthQrisSales.forEach((purchase) => {
+    neracaMutasiDebit += parseFloat(purchase.total_nilai_jual);
+  });
+
+  const neracaMutasiKredit = 0;
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function bankBni() {
+  const neracaAwalKas = await getNeracaAwalKas("BANK BNI");
+
+  let neracaMutasiDebit = 0;
+
+  const neracaMutasiKredit = 0;
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
     neracaAkhir,
   );
 }
@@ -564,6 +719,9 @@ async function honorPengurus() {
 }
 
 export {
+  kas,
+  bankBri,
+  bankBni,
   bebanGaji,
   uangMakan,
   thrKaryawan,

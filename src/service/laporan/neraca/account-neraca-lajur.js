@@ -352,7 +352,6 @@ async function utangDariSP() {
 
 async function penjualanTunai() {
   return generateNeraca({
-    akun: "PENJUALAN TUNAI",
     includeHasilUsaha: true,
     getDebit: async () => 0,
     getKredit: async () => {
@@ -367,7 +366,6 @@ async function penjualanTunai() {
 
 async function penjualanQris() {
   return generateNeraca({
-    akun: "PENJUALAN QRIS",
     includeHasilUsaha: true,
     getDebit: async () => 0,
     getKredit: async () => {
@@ -382,7 +380,6 @@ async function penjualanQris() {
 
 async function penjualanKredit() {
   return generateNeraca({
-    akun: "PENJUALAN KREDIT",
     includeHasilUsaha: true,
     getDebit: async () => 0,
     getKredit: async () => {
@@ -397,7 +394,6 @@ async function penjualanKredit() {
 
 async function hargaPokokPenjualan() {
   return generateNeraca({
-    akun: "HARGA POKOK PENJUALAN",
     includeHasilUsaha: true,
     getDebit: async () => {
       const [cashSales, qrisSales, kreditSales] = await Promise.all([
@@ -412,6 +408,22 @@ async function hargaPokokPenjualan() {
         0,
       );
     },
+    getKredit: async () => 0,
+  });
+}
+
+async function returPenjualan() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => 0,
+    getKredit: async () => 0,
+  });
+}
+
+async function pendapatanSewa() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => 0,
     getKredit: async () => 0,
   });
 }
@@ -928,6 +940,8 @@ export {
   penjualanQris,
   penjualanKredit,
   hargaPokokPenjualan,
+  returPenjualan,
+  pendapatanSewa,
   bebanGaji,
   uangMakan,
   thrKaryawan,

@@ -17,52 +17,43 @@ async function getNeracaPercobaan(
   };
 }
 
-async function getNeracaSaldo(
-  kdNeracaSaldo,
-  neracaPercobaanDebit,
-  neracaPercobaanKredit,
-) {
-  switch (kdNeracaSaldo) {
-    case 1:
-      return {
-        debit: neracaPercobaanDebit - neracaPercobaanKredit,
-        kredit: 0,
-      };
-    case 2:
-      return {
-        debit: 0,
-        kredit: neracaPercobaanKredit - neracaPercobaanDebit,
-      };
-    default:
-      return {
-        debit: 0,
-        kredit: 0,
-      };
+async function getNeracaSaldo(neracaPercobaanDebit, neracaPercobaanKredit) {
+  if (neracaPercobaanDebit === 0 && neracaPercobaanKredit === 0) {
+    return {
+      debit: 0,
+      kredit: 0,
+    };
   }
+  return {
+    debit:
+      neracaPercobaanDebit - neracaPercobaanKredit > 0
+        ? neracaPercobaanDebit - neracaPercobaanKredit
+        : 0,
+    kredit:
+      neracaPercobaanKredit - neracaPercobaanDebit > 0
+        ? neracaPercobaanKredit - neracaPercobaanDebit
+        : 0,
+  };
 }
 
-async function getHasilUsaha(
-  kdHasilUsaha,
-  neracaSaldoDebit,
-  neracaSaldoKredit,
-) {
-  switch (kdHasilUsaha) {
-    case 1:
-      return {
-        debit: neracaSaldoDebit - neracaSaldoKredit,
-        kredit: 0,
-      };
-    case 2:
-      return {
-        debit: 0,
-        kredit: neracaSaldoKredit - neracaSaldoDebit,
-      };
-    default:
-      return {
-        debit: 0,
-        kredit: 0,
-      };
+async function getHasilUsaha(neracaSaldoDebit, neracaSaldoKredit) {
+  if (neracaSaldoDebit === 0 && neracaSaldoKredit === 0) {
+    return {
+      debit: 0,
+      kredit: 0,
+    };
   }
+
+  return {
+    debit:
+      neracaSaldoDebit - neracaSaldoKredit > 0
+        ? neracaSaldoDebit - neracaSaldoKredit
+        : 0,
+    kredit:
+      neracaSaldoKredit - neracaSaldoDebit > 0
+        ? neracaSaldoKredit - neracaSaldoDebit
+        : 0,
+  };
 }
 
 async function getNeracaAwalKas(namaUraian) {

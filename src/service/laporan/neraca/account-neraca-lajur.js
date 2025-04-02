@@ -2,6 +2,7 @@ import {
   endDate,
   getCurrentMonthPurchase,
   getCurrentMonthSale,
+  getHasilUsaha,
   getNeracaAwalKas,
   getNeracaPercobaan,
   getNeracaSaldo,
@@ -1117,10 +1118,65 @@ async function utangDariSP() {
   );
 }
 
-async function bebanGaji() {
+async function penjualanTunai() {
   const neracaAwalKas = {
+    akhir_debit: 0,
+    akhir_kredit: 0,
+  };
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  let totalPenjualan = 0;
+  const currentMonthCashSales = await getCurrentMonthSale("tunai");
+
+  currentMonthCashSales.forEach((purchase) => {
+    totalPenjualan += parseFloat(purchase.total_nilai_beli);
+  });
+  const neracaMutasiKredit = totalPenjualan;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = await getHasilUsaha(
+    2,
+    neracaSaldo.debit,
+    neracaSaldo.kredit,
+  );
+
+  const neracaAkhir = {
     debit: 0,
     kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function bebanGaji() {
+  const neracaAwalKas = {
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
 
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
@@ -1163,8 +1219,8 @@ async function bebanGaji() {
 
 async function uangMakan() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     0,
@@ -1206,8 +1262,8 @@ async function uangMakan() {
 
 async function thrKaryawan() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     0,
@@ -1249,8 +1305,8 @@ async function thrKaryawan() {
 
 async function bebanAdmUmum() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     0,
@@ -1292,8 +1348,8 @@ async function bebanAdmUmum() {
 
 async function bebanPerlengkapanToko() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     0,
@@ -1335,8 +1391,8 @@ async function bebanPerlengkapanToko() {
 
 async function bebanPenyusutanInventaris() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
 
   const akumPenyusutanInventaris = await getNeracaAwalKas(
@@ -1391,8 +1447,8 @@ async function bebanPenyusutanInventaris() {
 
 async function bebanPenyusutanGedung() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
 
   const akumPenyusutanGedung = await getNeracaAwalKas("AKUM. PENY. GEDUNG");
@@ -1443,8 +1499,8 @@ async function bebanPenyusutanGedung() {
 
 async function pemeliharaanInventaris() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     getTotalCashInOutByDateRange(
@@ -1486,8 +1542,8 @@ async function pemeliharaanInventaris() {
 
 async function pemeliharaanGedung() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
     getTotalCashInOutByDateRange(
@@ -1529,8 +1585,8 @@ async function pemeliharaanGedung() {
 
 async function pengeluaranLainLain() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
 
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
@@ -1573,8 +1629,8 @@ async function pengeluaranLainLain() {
 
 async function honorPengurus() {
   const neracaAwalKas = {
-    debit: 0,
-    kredit: 0,
+    akhir_debit: 0,
+    akhir_kredit: 0,
   };
 
   const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
@@ -1636,6 +1692,7 @@ export {
   utangDagang,
   utangPihakKetiga,
   utangDariSP,
+  penjualanTunai,
   bebanGaji,
   uangMakan,
   thrKaryawan,

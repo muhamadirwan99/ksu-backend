@@ -41,6 +41,30 @@ async function getNeracaSaldo(
   }
 }
 
+async function getHasilUsaha(
+  kdHasilUsaha,
+  neracaSaldoDebit,
+  neracaSaldoKredit,
+) {
+  switch (kdHasilUsaha) {
+    case 1:
+      return {
+        debit: neracaSaldoDebit - neracaSaldoKredit,
+        kredit: 0,
+      };
+    case 2:
+      return {
+        debit: 0,
+        kredit: neracaSaldoKredit - neracaSaldoDebit,
+      };
+    default:
+      return {
+        debit: 0,
+        kredit: 0,
+      };
+  }
+}
+
 async function getNeracaAwalKas(namaUraian) {
   let result = await prismaClient.neraca.findFirst({
     where: {
@@ -147,6 +171,7 @@ export {
   getCurrentMonthPurchase,
   getDate,
   getTotalRetur,
+  getHasilUsaha,
   yearMonth,
   newYear,
   startDate,

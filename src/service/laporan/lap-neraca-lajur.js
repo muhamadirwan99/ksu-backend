@@ -11,6 +11,7 @@ import {
   gedung,
   inventaris,
   kas,
+  modalTidakTetap,
   pemeliharaanGedung,
   pemeliharaanInventaris,
   pengeluaranLainLain,
@@ -36,6 +37,7 @@ async function laporanNeracaLajur(month, year) {
   const akumPenyInventarisResult = await akumPenyInventaris();
   const gedungResult = await gedung();
   const akumPenyGedungResult = await akumPenyGedung();
+  const modalTidakTetapResult = await modalTidakTetap();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -59,16 +61,16 @@ async function laporanNeracaLajur(month, year) {
       akumulasi_penyusutan_inventaris: akumPenyInventarisResult,
       gedung: gedungResult,
       akumulasi_penyusutan_gedung: akumPenyGedungResult,
-      utang_dagang: dummyData,
-      utang_dari_pihak_ketiga: dummyData,
-      utang_dari_sp: dummyData,
-      modal_tidak_tetap: dummyData,
+      modal_tidak_tetap: modalTidakTetapResult,
       modal_disetor: dummyData,
       usaha_lain_toko: dummyData,
       modal_unit_toko: dummyData,
       shu_th_2023: dummyData,
       shu_th_2024: dummyData,
       shu_th_2025: dummyData,
+      utang_dagang: dummyData,
+      utang_dari_pihak_ketiga: dummyData,
+      utang_dari_sp: dummyData,
       penjualan_tunai: dummyData,
       penjualan_kredit: dummyData,
       penjualan_qris: dummyData,
@@ -89,12 +91,10 @@ async function laporanNeracaLajur(month, year) {
       beban_penyusutan_gedung: bebanPenyusutanGedungResult,
       pemeliharaan_inventaris: pemeliharaanInventarisResult,
       pemeliharaan_gedung: pemeliharaanGedungResult,
-      beban_pensiun_karyawan: dummyData,
       pengeluaran_lain: pengeluaranLainLainResult,
       beban_kerugian_persediaan: dummyData,
       honor_pengurus: dummyData,
       honor_pengawas: dummyData,
-      pengeluaran_pusat_lain: dummyData,
     },
     total_neraca: {
       total_neraca_awal: {

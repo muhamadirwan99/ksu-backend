@@ -638,6 +638,57 @@ async function akumPenyGedung() {
   );
 }
 
+async function modalTidakTetap() {
+  const neracaAwalKas = await getNeracaAwalKas("MODAL TIDAK TETAP (R/C)");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = await getTotalCashInOutByDateRange(
+    12,
+    startDate,
+    endDate,
+  );
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -1120,6 +1171,7 @@ export {
   akumPenyInventaris,
   gedung,
   akumPenyGedung,
+  modalTidakTetap,
   bebanGaji,
   uangMakan,
   thrKaryawan,

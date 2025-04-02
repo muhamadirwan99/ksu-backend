@@ -6,8 +6,8 @@ async function main() {
   // await seedCommon();
   // await cashInOut();
   // await seedAkunNeraca();
-  // const date = new Date("2024-12-01");
-  // await initDataNeracaAwal(date);
+  const date = new Date("2024-12");
+  await initDataNeracaAwal(date);
 }
 
 async function seedAkunNeraca() {
@@ -32,30 +32,6 @@ async function seedAkunNeraca() {
     "UTANG DAGANG",
     "UTANG DARI PIHAK KETIGA",
     "UTANG DARI SP",
-    "PENJUALAN TUNAI",
-    "PENJUALAN QRIS",
-    "PENJUALAN KREDIT",
-    "HARGA POKOK PENJUALAN",
-    "RETUR PENJUALAN",
-    "PENDAPATAN SEWA",
-    "PENDAPATAN LAIN-LAIN",
-    "PEMBELIAN TUNAI",
-    "PEMBELIAN KREDIT",
-    "HARGA POKOK PEMBELIAN",
-    "RETUR PEMBELIAN",
-    "BEBAN GAJI",
-    "UANG MAKAN",
-    "THR KARYAWAN",
-    "BEBAN ADM. & UMUM",
-    "BEBAN PERLENGKAPAN TOKO",
-    "BEBAN PENY. INVENTARIS",
-    "BEBAN PENY. GEDUNG",
-    "PEMELIHARAAN INVENTARIS",
-    "PEMELIHARAAN GEDUNG",
-    "PENGELUARAN LAIN-LAIN",
-    "BEBAN KERUGIAN PERSEDIAAN",
-    "HONOR PENGURUS",
-    "HONOR PENGAWAS",
   ];
 
   const dataToInsert = akunNeraca.map((item) => ({
@@ -93,30 +69,6 @@ async function initDataNeracaAwal(date) {
     neracaModel(18, 0, 27946033),
     neracaModel(19, 0, 27401537),
     neracaModel(20, 0, 18684080),
-    neracaModel(21, 0, 0),
-    neracaModel(22, 0, 0),
-    neracaModel(23, 0, 0),
-    neracaModel(24, 0, 0),
-    neracaModel(25, 0, 0),
-    neracaModel(26, 0, 0),
-    neracaModel(27, 0, 0),
-    neracaModel(28, 0, 0),
-    neracaModel(29, 0, 0),
-    neracaModel(30, 0, 0),
-    neracaModel(31, 0, 0),
-    neracaModel(32, 0, 0),
-    neracaModel(33, 0, 0),
-    neracaModel(34, 0, 0),
-    neracaModel(35, 0, 0),
-    neracaModel(36, 0, 0),
-    neracaModel(37, 0, 0),
-    neracaModel(38, 0, 0),
-    neracaModel(39, 0, 0),
-    neracaModel(40, 0, 0),
-    neracaModel(41, 0, 0),
-    neracaModel(42, 0, 0),
-    neracaModel(43, 0, 0),
-    neracaModel(44, 0, 0),
   ];
 
   const dataToInsert = neracaData.map((item) => ({

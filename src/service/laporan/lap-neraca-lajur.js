@@ -18,6 +18,8 @@ import {
   pemeliharaanInventaris,
   pengeluaranLainLain,
   penghapusanPersediaan,
+  penjualanKredit,
+  penjualanQris,
   penjualanTunai,
   persediaan,
   piutangDagang,
@@ -153,6 +155,8 @@ async function laporanNeracaLajur(month, year) {
   // Sisanya (beban2 dan dummy) tetap sama
   const [
     penjualanTunaiResult,
+    penjualanQrisResult,
+    penjualanKreditResult,
     bebanGajiResult,
     uangMakanResult,
     thrResult,
@@ -165,6 +169,8 @@ async function laporanNeracaLajur(month, year) {
     pengeluaranLainLainResult,
   ] = await Promise.all([
     penjualanTunai(),
+    penjualanQris(),
+    penjualanKredit(),
     bebanGaji(),
     uangMakan(),
     thrKaryawan(),
@@ -200,8 +206,8 @@ async function laporanNeracaLajur(month, year) {
       utang_dari_pihak_ketiga: utangPihakKetigaResult,
       utang_dari_sp: utangDariSPResult,
       penjualan_tunai: penjualanTunaiResult,
-      penjualan_kredit: dummyData,
-      penjualan_qris: dummyData,
+      penjualan_qris: penjualanQrisResult,
+      penjualan_kredit: penjualanKreditResult,
       harga_pokok_penjualan: dummyData,
       retur_penjualan: dummyData,
       pendapatan_sewa: dummyData,

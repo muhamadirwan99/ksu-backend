@@ -363,6 +363,20 @@ async function cashInOut() {
         id_jenis: 5,
         created_at: generateDate(),
       },
+      {
+        id_detail: 18,
+        nm_detail: "Pembayaran Hutang Pihak ke 3",
+        id_cash: "2",
+        id_jenis: 6,
+        created_at: generateDate(),
+      },
+      {
+        id_detail: 19,
+        nm_detail: "Hutang Pihak ke 3",
+        id_cash: "1",
+        id_jenis: 2,
+        created_at: generateDate(),
+      },
     ],
   });
 }

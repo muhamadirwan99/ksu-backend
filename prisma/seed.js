@@ -6,8 +6,8 @@ async function main() {
   // await seedCommon();
   // await cashInOut();
   // await seedAkunNeraca();
-  const date = new Date("2024-12-01");
-  await initDataNeracaAwal(date);
+  // const date = new Date("2024-12-01");
+  // await initDataNeracaAwal(date);
 }
 
 async function seedAkunNeraca() {

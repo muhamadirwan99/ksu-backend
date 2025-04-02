@@ -382,6 +382,52 @@ async function persediaan() {
   );
 }
 
+async function penghapusanPersediaan() {
+  const neracaAwalKas = await getNeracaAwalKas("PENGHAPUSAN PERSEDIAAN");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 1000000;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -859,6 +905,7 @@ export {
   bankBni,
   piutangDagang,
   persediaan,
+  penghapusanPersediaan,
   bebanGaji,
   uangMakan,
   thrKaryawan,

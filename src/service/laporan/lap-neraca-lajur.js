@@ -7,6 +7,7 @@ import {
   bebanPenyusutanGedung,
   bebanPenyusutanInventaris,
   bebanPerlengkapanToko,
+  gedung,
   inventaris,
   kas,
   pemeliharaanGedung,
@@ -32,6 +33,7 @@ async function laporanNeracaLajur(month, year) {
   const penghapusanPersediaanResult = await penghapusanPersediaan();
   const inventarisResult = await inventaris();
   const akumPenyInventarisResult = await akumPenyInventaris();
+  const gedungResult = await gedung();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -53,7 +55,7 @@ async function laporanNeracaLajur(month, year) {
       penghapusan_persediaan: penghapusanPersediaanResult,
       inventaris: inventarisResult,
       akumulasi_penyusutan_inventaris: akumPenyInventarisResult,
-      gedung: dummyData,
+      gedung: gedungResult,
       akumulasi_penyusutan_gedung: dummyData,
       utang_dagang: dummyData,
       utang_dari_pihak_ketiga: dummyData,

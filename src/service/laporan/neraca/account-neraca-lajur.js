@@ -533,6 +533,52 @@ async function akumPenyInventaris() {
   );
 }
 
+async function gedung() {
+  const neracaAwalKas = await getNeracaAwalKas("GEDUNG");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -1013,6 +1059,7 @@ export {
   penghapusanPersediaan,
   inventaris,
   akumPenyInventaris,
+  gedung,
   bebanGaji,
   uangMakan,
   thrKaryawan,

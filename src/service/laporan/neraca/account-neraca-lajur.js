@@ -579,6 +579,65 @@ async function gedung() {
   );
 }
 
+async function akumPenyGedung() {
+  const neracaAwalKas = await getNeracaAwalKas("AKUM. PENY. GEDUNG");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const bebanPenyusutanInventaris = await prismaClient.penyusutanAset.findFirst(
+    {
+      where: {
+        jenis_aset: "gedung",
+        tahun: newYear,
+      },
+      select: {
+        penyusutan_bulan: true,
+      },
+    },
+  );
+
+  const neracaMutasiKredit =
+    parseFloat(bebanPenyusutanInventaris.penyusutan_bulan) || 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -1060,6 +1119,7 @@ export {
   inventaris,
   akumPenyInventaris,
   gedung,
+  akumPenyGedung,
   bebanGaji,
   uangMakan,
   thrKaryawan,

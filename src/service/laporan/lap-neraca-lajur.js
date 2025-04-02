@@ -11,15 +11,21 @@ import {
   gedung,
   inventaris,
   kas,
+  modalDisetor,
   modalTidakTetap,
+  modalUnitToko,
   pemeliharaanGedung,
   pemeliharaanInventaris,
   pengeluaranLainLain,
   penghapusanPersediaan,
   persediaan,
   piutangDagang,
+  shuTh2023,
+  shuTh2024,
+  shuTh2025,
   thrKaryawan,
   uangMakan,
+  usahaLainLainToko,
 } from "./neraca/account-neraca-lajur.js";
 import { getDate, setYearMonth } from "./neraca/calculate-neraca-lajur.js";
 
@@ -38,6 +44,12 @@ async function laporanNeracaLajur(month, year) {
   const gedungResult = await gedung();
   const akumPenyGedungResult = await akumPenyGedung();
   const modalTidakTetapResult = await modalTidakTetap();
+  const modalDisetorResult = await modalDisetor();
+  const usahaLainLainTokoResult = await usahaLainLainToko();
+  const modalUnitTokoResult = await modalUnitToko();
+  const shuTh2023Result = await shuTh2023();
+  const shuTh2024Result = await shuTh2024();
+  const shuTh2025Result = await shuTh2025();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -62,12 +74,12 @@ async function laporanNeracaLajur(month, year) {
       gedung: gedungResult,
       akumulasi_penyusutan_gedung: akumPenyGedungResult,
       modal_tidak_tetap: modalTidakTetapResult,
-      modal_disetor: dummyData,
-      usaha_lain_toko: dummyData,
-      modal_unit_toko: dummyData,
-      shu_th_2023: dummyData,
-      shu_th_2024: dummyData,
-      shu_th_2025: dummyData,
+      modal_disetor: modalDisetorResult,
+      usaha_lain_toko: usahaLainLainTokoResult,
+      modal_unit_toko: modalUnitTokoResult,
+      shu_th_2023: shuTh2023Result,
+      shu_th_2024: shuTh2024Result,
+      shu_th_2025: shuTh2025Result,
       utang_dagang: dummyData,
       utang_dari_pihak_ketiga: dummyData,
       utang_dari_sp: dummyData,

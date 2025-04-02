@@ -650,7 +650,282 @@ async function modalTidakTetap() {
   //END NERACA MUTASI DEBIT
 
   //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
 
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function modalDisetor() {
+  const neracaAwalKas = await getNeracaAwalKas("MODAL DISETOR");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function usahaLainLainToko() {
+  const neracaAwalKas = await getNeracaAwalKas("USAHA LAIN-LAIN TOKO");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function modalUnitToko() {
+  const neracaAwalKas = await getNeracaAwalKas("MODAL UNIT TOKO");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function shuTh2023() {
+  const neracaAwalKas = await getNeracaAwalKas("SHU TH. 2023");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function shuTh2024() {
+  const neracaAwalKas = await getNeracaAwalKas("SHU TH. 2024");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function shuTh2025() {
+  const neracaAwalKas = await getNeracaAwalKas("SHU TH. 2025");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
   const neracaMutasiKredit = 0;
   //END NERACA MUTASI KREDIT
 
@@ -1172,6 +1447,12 @@ export {
   gedung,
   akumPenyGedung,
   modalTidakTetap,
+  modalDisetor,
+  usahaLainLainToko,
+  modalUnitToko,
+  shuTh2023,
+  shuTh2024,
+  shuTh2025,
   bebanGaji,
   uangMakan,
   thrKaryawan,

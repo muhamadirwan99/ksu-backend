@@ -964,6 +964,59 @@ async function shuTh2025() {
   );
 }
 
+async function utangDagang() {
+  const neracaAwalKas = await getNeracaAwalKas("UTANG DAGANG");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = await getTotalRetur("kredit", startDate, endDate);
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  let totalPembelian = 0;
+  const currentMonthCreditPurchases = await getCurrentMonthPurchase("kredit");
+
+  currentMonthCreditPurchases.forEach((purchase) => {
+    totalPembelian += parseFloat(purchase.total_nilai_beli);
+  });
+
+  const neracaMutasiKredit = totalPembelian;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    2,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 async function bebanGaji() {
   const neracaAwalKas = await getNeracaAwalKas("BEBAN GAJI");
 
@@ -1453,6 +1506,7 @@ export {
   shuTh2023,
   shuTh2024,
   shuTh2025,
+  utangDagang,
   bebanGaji,
   uangMakan,
   thrKaryawan,

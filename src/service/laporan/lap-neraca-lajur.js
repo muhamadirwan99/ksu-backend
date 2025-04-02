@@ -26,6 +26,7 @@ import {
   thrKaryawan,
   uangMakan,
   usahaLainLainToko,
+  utangDagang,
 } from "./neraca/account-neraca-lajur.js";
 import { getDate, setYearMonth } from "./neraca/calculate-neraca-lajur.js";
 
@@ -50,6 +51,7 @@ async function laporanNeracaLajur(month, year) {
   const shuTh2023Result = await shuTh2023();
   const shuTh2024Result = await shuTh2024();
   const shuTh2025Result = await shuTh2025();
+  const utangDagangResult = await utangDagang();
   const bebanGajiResult = await bebanGaji();
   const uangMakanResult = await uangMakan();
   const thrResult = await thrKaryawan();
@@ -80,7 +82,7 @@ async function laporanNeracaLajur(month, year) {
       shu_th_2023: shuTh2023Result,
       shu_th_2024: shuTh2024Result,
       shu_th_2025: shuTh2025Result,
-      utang_dagang: dummyData,
+      utang_dagang: utangDagangResult,
       utang_dari_pihak_ketiga: dummyData,
       utang_dari_sp: dummyData,
       penjualan_tunai: dummyData,

@@ -143,8 +143,8 @@ async function kas() {
   };
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -189,8 +189,8 @@ async function bankBri() {
   };
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -231,8 +231,8 @@ async function bankBni() {
   };
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -277,8 +277,8 @@ async function piutangDagang() {
   };
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -366,8 +366,8 @@ async function persediaan() {
   };
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -412,8 +412,54 @@ async function penghapusanPersediaan() {
   };
 
   const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
+async function inventaris() {
+  const neracaAwalKas = await getNeracaAwalKas("INVENTARIS");
+
+  //NERACA MUTASI DEBIT
+  const neracaMutasiDebit = 0;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  const neracaMutasiKredit = 0;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    1,
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = {
     debit: 0,
     kredit: 0,
+  };
+
+  const neracaAkhir = {
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -454,8 +500,8 @@ async function bebanGaji() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -495,8 +541,8 @@ async function uangMakan() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -536,8 +582,8 @@ async function thrKaryawan() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -577,8 +623,8 @@ async function bebanAdmUmum() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -618,8 +664,8 @@ async function bebanPerlengkapanToko() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -671,8 +717,8 @@ async function bebanPenyusutanInventaris() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -720,8 +766,8 @@ async function bebanPenyusutanGedung() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -761,8 +807,8 @@ async function pemeliharaanInventaris() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -802,8 +848,8 @@ async function pemeliharaanGedung() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -843,8 +889,8 @@ async function pengeluaranLainLain() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -884,8 +930,8 @@ async function honorPengurus() {
   );
 
   const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaSaldo.debit,
+    kredit: neracaSaldo.kredit,
   };
 
   return createNeracaModel(
@@ -906,6 +952,7 @@ export {
   piutangDagang,
   persediaan,
   penghapusanPersediaan,
+  inventaris,
   bebanGaji,
   uangMakan,
   thrKaryawan,

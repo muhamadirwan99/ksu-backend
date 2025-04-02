@@ -133,7 +133,6 @@ async function kas() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -179,7 +178,6 @@ async function bankBri() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -221,7 +219,6 @@ async function bankBni() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -267,7 +264,6 @@ async function piutangDagang() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -365,7 +361,6 @@ async function persediaan() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -411,7 +406,6 @@ async function penghapusanPersediaan() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -457,7 +451,6 @@ async function inventaris() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -516,7 +509,6 @@ async function akumPenyInventaris() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -562,7 +554,6 @@ async function gedung() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -621,7 +612,6 @@ async function akumPenyGedung() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -671,7 +661,6 @@ async function modalTidakTetap() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -717,7 +706,6 @@ async function modalDisetor() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -763,7 +751,6 @@ async function usahaLainLainToko() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -809,7 +796,6 @@ async function modalUnitToko() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -855,7 +841,6 @@ async function shuTh2023() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -901,7 +886,6 @@ async function shuTh2024() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -947,7 +931,6 @@ async function shuTh2025() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1000,7 +983,6 @@ async function utangDagang() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1054,7 +1036,6 @@ async function utangPihakKetiga() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1100,7 +1081,6 @@ async function utangDariSP() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1154,16 +1134,11 @@ async function penjualanTunai() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
 
-  const hasilUsaha = await getHasilUsaha(
-    2,
-    neracaSaldo.debit,
-    neracaSaldo.kredit,
-  );
+  const hasilUsaha = await getHasilUsaha(neracaSaldo.debit, neracaSaldo.kredit);
 
   const neracaAkhir = {
     debit: 0,
@@ -1209,16 +1184,11 @@ async function penjualanQris() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
 
-  const hasilUsaha = await getHasilUsaha(
-    2,
-    neracaSaldo.debit,
-    neracaSaldo.kredit,
-  );
+  const hasilUsaha = await getHasilUsaha(neracaSaldo.debit, neracaSaldo.kredit);
 
   const neracaAkhir = {
     debit: 0,
@@ -1264,16 +1234,86 @@ async function penjualanKredit() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    2,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
 
-  const hasilUsaha = await getHasilUsaha(
-    2,
-    neracaSaldo.debit,
-    neracaSaldo.kredit,
+  const hasilUsaha = await getHasilUsaha(neracaSaldo.debit, neracaSaldo.kredit);
+
+  const neracaAkhir = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
   );
+}
+
+async function hargaPokokPenjualan() {
+  const neracaAwalKas = {
+    akhir_debit: 0,
+    akhir_kredit: 0,
+  };
+  //NERACA MUTASI DEBIT
+  let totalPenjualan = 0;
+  const [
+    currentMonthCashSales,
+    currentMonthQrisSales,
+    currentMonthCreditSales,
+  ] = await Promise.all([
+    getCurrentMonthSale("tunai"),
+    getCurrentMonthSale("qris"),
+    getCurrentMonthSale("kredit"),
+  ]);
+
+  currentMonthCashSales.forEach((sale) => {
+    totalPenjualan += parseFloat(sale.total_nilai_beli);
+  });
+
+  currentMonthQrisSales.forEach((sale) => {
+    totalPenjualan += parseFloat(sale.total_nilai_beli);
+  });
+
+  currentMonthCreditSales.forEach((sale) => {
+    totalPenjualan += parseFloat(sale.total_nilai_beli);
+  });
+
+  const neracaMutasiDebit = totalPenjualan;
+  //END NERACA MUTASI DEBIT
+
+  //NERACA MUTASI KREDIT
+  let totalRetur = 0;
+  const [returTunai, returQris, returKredit] = await Promise.all([
+    getTotalRetur("tunai", startDate, endDate),
+    getTotalRetur("qris", startDate, endDate),
+    getTotalRetur("kredit", startDate, endDate),
+  ]);
+  totalRetur = returTunai + returQris + returKredit;
+
+  const neracaMutasiKredit = totalRetur;
+  //END NERACA MUTASI KREDIT
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = await getHasilUsaha(neracaSaldo.debit, neracaSaldo.kredit);
 
   const neracaAkhir = {
     debit: 0,
@@ -1315,7 +1355,6 @@ async function bebanGaji() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1358,7 +1397,6 @@ async function uangMakan() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1401,7 +1439,6 @@ async function thrKaryawan() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1444,7 +1481,6 @@ async function bebanAdmUmum() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1487,7 +1523,6 @@ async function bebanPerlengkapanToko() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1543,7 +1578,6 @@ async function bebanPenyusutanInventaris() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1595,7 +1629,6 @@ async function bebanPenyusutanGedung() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1638,7 +1671,6 @@ async function pemeliharaanInventaris() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1681,7 +1713,6 @@ async function pemeliharaanGedung() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1725,7 +1756,6 @@ async function pengeluaranLainLain() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1769,7 +1799,6 @@ async function honorPengurus() {
   );
 
   const neracaSaldo = await getNeracaSaldo(
-    1,
     neracaPercobaan.debit,
     neracaPercobaan.kredit,
   );
@@ -1814,6 +1843,7 @@ export {
   penjualanTunai,
   penjualanQris,
   penjualanKredit,
+  hargaPokokPenjualan,
   bebanGaji,
   uangMakan,
   thrKaryawan,

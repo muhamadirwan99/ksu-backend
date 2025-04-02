@@ -1,4 +1,5 @@
 import { prismaClient } from "../../../application/database.js";
+import { createNeracaModel } from "./neraca-lajur-model.js";
 
 let startDate, endDate;
 
@@ -153,7 +154,57 @@ async function getTotalRetur(jenisPembayaran, startDate, endDate) {
   return parseFloat(resultRetur._sum.total_nilai_beli) || 0;
 }
 
+async function generateNeraca({
+  akun,
+  getDebit = async () => 0,
+  getKredit = async () => 0,
+  includeHasilUsaha = false,
+  includeNeracaAwal = false,
+}) {
+  const neracaAwalKas = includeNeracaAwal
+    ? await getNeracaAwalKas(akun)
+    : { akhir_debit: 0, akhir_kredit: 0 };
+
+  const neracaMutasiDebit = await getDebit();
+  const neracaMutasiKredit = await getKredit();
+
+  const neracaPercobaan = await getNeracaPercobaan(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+  );
+
+  const neracaSaldo = await getNeracaSaldo(
+    neracaPercobaan.debit,
+    neracaPercobaan.kredit,
+  );
+
+  const hasilUsaha = includeHasilUsaha
+    ? await getHasilUsaha(neracaSaldo.debit, neracaSaldo.kredit)
+    : { debit: 0, kredit: 0 };
+
+  const neracaAkhir = includeNeracaAwal
+    ? {
+        debit: neracaSaldo.debit,
+        kredit: neracaSaldo.kredit,
+      }
+    : { debit: 0, kredit: 0 };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    neracaMutasiDebit,
+    neracaMutasiKredit,
+    neracaPercobaan,
+    neracaSaldo,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 export {
+  generateNeraca,
   getNeracaPercobaan,
   getNeracaSaldo,
   getNeracaAwalKas,

@@ -442,6 +442,34 @@ async function pendapatanLainLain() {
   });
 }
 
+async function pembelianTunai() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => {
+      const purchases = await getCurrentMonthPurchase("tunai");
+      return purchases.reduce(
+        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        0,
+      );
+    },
+    getKredit: async () => 0,
+  });
+}
+
+async function pembelianKredit() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => {
+      const purchases = await getCurrentMonthPurchase("kredit");
+      return purchases.reduce(
+        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        0,
+      );
+    },
+    getKredit: async () => 0,
+  });
+}
+
 async function bebanGaji() {
   const neracaAwalKas = {
     akhir_debit: 0,
@@ -957,6 +985,8 @@ export {
   returPenjualan,
   pendapatanSewa,
   pendapatanLainLain,
+  pembelianTunai,
+  pembelianKredit,
   bebanGaji,
   uangMakan,
   thrKaryawan,

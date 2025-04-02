@@ -428,6 +428,20 @@ async function pendapatanSewa() {
   });
 }
 
+async function pendapatanLainLain() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => 0,
+    getKredit: async () => {
+      return await getTotalCashInOutByDateRange(
+        CASH_OUT_CODES.PENDAPATAN_LAIN_LAIN,
+        startDate,
+        endDate,
+      );
+    },
+  });
+}
+
 async function bebanGaji() {
   const neracaAwalKas = {
     akhir_debit: 0,
@@ -942,6 +956,7 @@ export {
   hargaPokokPenjualan,
   returPenjualan,
   pendapatanSewa,
+  pendapatanLainLain,
   bebanGaji,
   uangMakan,
   thrKaryawan,

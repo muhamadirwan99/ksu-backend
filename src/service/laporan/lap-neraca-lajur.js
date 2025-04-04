@@ -216,71 +216,87 @@ async function laporanNeracaLajur(month, year) {
     honorPengawas(),
   ]);
 
+  const data_neraca = {
+    kas: kasResult,
+    bank_bri: bankBriResult,
+    bank_bni: bankBniResult,
+    piutang_dagang: piutangDagangResult,
+    persediaan: persediaanResult,
+    penghapusan_persediaan: penghapusanPersediaanResult,
+    inventaris: inventarisResult,
+    akumulasi_penyusutan_inventaris: akumPenyInventarisResult,
+    gedung: gedungResult,
+    akumulasi_penyusutan_gedung: akumPenyGedungResult,
+    modal_tidak_tetap: modalTidakTetapResult,
+    modal_disetor: modalDisetorResult,
+    usaha_lain_toko: usahaLainLainTokoResult,
+    modal_unit_toko: modalUnitTokoResult,
+    shu_th_2023: shuTh2023Result,
+    shu_th_2024: shuTh2024Result,
+    shu_th_2025: shuTh2025Result,
+    utang_dagang: utangDagangResult,
+    utang_dari_pihak_ketiga: utangPihakKetigaResult,
+    utang_dari_sp: utangDariSPResult,
+    penjualan_tunai: penjualanTunaiResult,
+    penjualan_qris: penjualanQrisResult,
+    penjualan_kredit: penjualanKreditResult,
+    harga_pokok_penjualan: hargaPokokPenjualanResult,
+    retur_penjualan: returPenjualanResult,
+    pendapatan_sewa: pendapatanSewaResult,
+    pendapatan_lain: pendapatanLainLainResult,
+    pembelian_tunai: pembelianTunaiResult,
+    pembelian_kredit: pembelianKreditResult,
+    harga_pokok_pembelian: hargaPokokPembelianResult,
+    retur_pembelian: returPembelianResult,
+    beban_gaji: bebanGajiResult,
+    uang_makan: uangMakanResult,
+    thr_karyawan: thrResult,
+    beban_adm_umum: bebanAdmUmumResult,
+    beban_perlengkapan_toko: bebanPerlengkapanResult,
+    beban_penyusutan_inventaris: bebanPenyusutanInventarisResult,
+    beban_penyusutan_gedung: bebanPenyusutanGedungResult,
+    pemeliharaan_inventaris: pemeliharaanInventarisResult,
+    pemeliharaan_gedung: pemeliharaanGedungResult,
+    pengeluaran_lain: pengeluaranLainLainResult,
+    beban_kerugian_persediaan: bebanKerugianPersediaanResult,
+    honor_pengurus: honorPengurusResult,
+    honor_pengawas: honorPengawasResult,
+  };
+
+  // Total semua dari data_neraca
+  const total_neraca = {
+    total_neraca_awal: { debit: 0, kredit: 0 },
+    total_neraca_mutasi: { debit: 0, kredit: 0 },
+    total_neraca_percobaan: { debit: 0, kredit: 0 },
+    total_neraca_saldo: { debit: 0, kredit: 0 },
+    total_hasil_usaha: { debit: 0, kredit: 0 },
+    total_neraca_akhir: { debit: 0, kredit: 0 },
+  };
+
+  for (const item of Object.values(data_neraca)) {
+    total_neraca.total_neraca_awal.debit += item.neraca_awal.debit;
+    total_neraca.total_neraca_awal.kredit += item.neraca_awal.kredit;
+
+    total_neraca.total_neraca_mutasi.debit += item.neraca_mutasi.debit;
+    total_neraca.total_neraca_mutasi.kredit += item.neraca_mutasi.kredit;
+
+    total_neraca.total_neraca_percobaan.debit += item.neraca_percobaan.debit;
+    total_neraca.total_neraca_percobaan.kredit += item.neraca_percobaan.kredit;
+
+    total_neraca.total_neraca_saldo.debit += item.neraca_saldo.debit;
+    total_neraca.total_neraca_saldo.kredit += item.neraca_saldo.kredit;
+
+    total_neraca.total_hasil_usaha.debit += item.hasil_usaha.debit;
+    total_neraca.total_hasil_usaha.kredit += item.hasil_usaha.kredit;
+
+    total_neraca.total_neraca_akhir.debit += item.neraca_akhir.debit;
+    total_neraca.total_neraca_akhir.kredit += item.neraca_akhir.kredit;
+  }
+
   return {
-    data_neraca: {
-      kas: kasResult,
-      bank_bri: bankBriResult,
-      bank_bni: bankBniResult,
-      piutang_dagang: piutangDagangResult,
-      persediaan: persediaanResult,
-      penghapusan_persediaan: penghapusanPersediaanResult,
-      inventaris: inventarisResult,
-      akumulasi_penyusutan_inventaris: akumPenyInventarisResult,
-      gedung: gedungResult,
-      akumulasi_penyusutan_gedung: akumPenyGedungResult,
-      modal_tidak_tetap: modalTidakTetapResult,
-      modal_disetor: modalDisetorResult,
-      usaha_lain_toko: usahaLainLainTokoResult,
-      modal_unit_toko: modalUnitTokoResult,
-      shu_th_2023: shuTh2023Result,
-      shu_th_2024: shuTh2024Result,
-      shu_th_2025: shuTh2025Result,
-      utang_dagang: utangDagangResult,
-      utang_dari_pihak_ketiga: utangPihakKetigaResult,
-      utang_dari_sp: utangDariSPResult,
-      penjualan_tunai: penjualanTunaiResult,
-      penjualan_qris: penjualanQrisResult,
-      penjualan_kredit: penjualanKreditResult,
-      harga_pokok_penjualan: hargaPokokPenjualanResult,
-      retur_penjualan: returPenjualanResult,
-      pendapatan_sewa: pendapatanSewaResult,
-      pendapatan_lain: pendapatanLainLainResult,
-      pembelian_tunai: pembelianTunaiResult,
-      pembelian_kredit: pembelianKreditResult,
-      harga_pokok_pembelian: hargaPokokPembelianResult,
-      retur_pembelian: returPembelianResult,
-      beban_gaji: bebanGajiResult,
-      uang_makan: uangMakanResult,
-      thr_karyawan: thrResult,
-      beban_adm_umum: bebanAdmUmumResult,
-      beban_perlengkapan_toko: bebanPerlengkapanResult,
-      beban_penyusutan_inventaris: bebanPenyusutanInventarisResult,
-      beban_penyusutan_gedung: bebanPenyusutanGedungResult,
-      pemeliharaan_inventaris: pemeliharaanInventarisResult,
-      pemeliharaan_gedung: pemeliharaanGedungResult,
-      pengeluaran_lain: pengeluaranLainLainResult,
-      beban_kerugian_persediaan: bebanKerugianPersediaanResult,
-      honor_pengurus: honorPengurusResult,
-      honor_pengawas: honorPengawasResult,
-    },
-    total_neraca: {
-      total_neraca_awal: { debit: 0, kredit: 0 },
-      total_neraca_mutasi: { debit: 0, kredit: 0 },
-      total_neraca_percobaan: { debit: 0, kredit: 0 },
-      total_neraca_saldo: { debit: 0, kredit: 0 },
-      total_hasil_usaha: { debit: 0, kredit: 0 },
-      total_neraca_akhir: { debit: 0, kredit: 0 },
-    },
+    data_neraca,
+    total_neraca,
   };
 }
-
-const dummyData = {
-  neraca_awal: { debit: 0, kredit: 0 },
-  neraca_mutasi: { debit: 0, kredit: 0 },
-  neraca_percobaan: { debit: 0, kredit: 0 },
-  neraca_saldo: { debit: 0, kredit: 0 },
-  hasil_usaha: { debit: 0, kredit: 0 },
-  neraca_akhir: { debit: 0, kredit: 0 },
-};
 
 export { laporanNeracaLajur };

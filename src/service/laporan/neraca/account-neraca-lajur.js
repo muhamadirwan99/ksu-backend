@@ -470,6 +470,30 @@ async function pembelianKredit() {
   });
 }
 
+async function hargaPokokPembelian() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => {
+      const returCash = await getTotalRetur("tunai", startDate, endDate);
+      const returCredit = await getTotalRetur("kredit", startDate, endDate);
+
+      return returCash + returCredit;
+    },
+    getKredit: async () => {
+      const purchasesCash = await getCurrentMonthPurchase("tunai");
+      const purchasesCredit = await getCurrentMonthPurchase("kredit");
+
+      purchasesCash.reduce((sum, p) => sum + parseFloat(p.total_nilai_beli), 0);
+      purchasesCredit.reduce(
+        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        0,
+      );
+
+      return purchasesCash + purchasesCredit;
+    },
+  });
+}
+
 async function bebanGaji() {
   const neracaAwalKas = {
     akhir_debit: 0,
@@ -987,6 +1011,7 @@ export {
   pendapatanLainLain,
   pembelianTunai,
   pembelianKredit,
+  hargaPokokPembelian,
   bebanGaji,
   uangMakan,
   thrKaryawan,

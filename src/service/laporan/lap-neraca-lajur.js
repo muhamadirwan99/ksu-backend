@@ -5,12 +5,15 @@ import {
   bankBri,
   bebanAdmUmum,
   bebanGaji,
+  bebanKerugianPersediaan,
   bebanPenyusutanGedung,
   bebanPenyusutanInventaris,
   bebanPerlengkapanToko,
   gedung,
   hargaPokokPembelian,
   hargaPokokPenjualan,
+  honorPengawas,
+  honorPengurus,
   inventaris,
   kas,
   modalDisetor,
@@ -183,6 +186,9 @@ async function laporanNeracaLajur(month, year) {
     pemeliharaanInventarisResult,
     pemeliharaanGedungResult,
     pengeluaranLainLainResult,
+    bebanKerugianPersediaanResult,
+    honorPengurusResult,
+    honorPengawasResult,
   ] = await Promise.all([
     penjualanTunai(),
     penjualanQris(),
@@ -205,6 +211,9 @@ async function laporanNeracaLajur(month, year) {
     pemeliharaanInventaris(),
     pemeliharaanGedung(),
     pengeluaranLainLain(),
+    bebanKerugianPersediaan(),
+    honorPengurus(),
+    honorPengawas(),
   ]);
 
   return {
@@ -250,9 +259,9 @@ async function laporanNeracaLajur(month, year) {
       pemeliharaan_inventaris: pemeliharaanInventarisResult,
       pemeliharaan_gedung: pemeliharaanGedungResult,
       pengeluaran_lain: pengeluaranLainLainResult,
-      beban_kerugian_persediaan: dummyData,
-      honor_pengurus: dummyData,
-      honor_pengawas: dummyData,
+      beban_kerugian_persediaan: bebanKerugianPersediaanResult,
+      honor_pengurus: honorPengurusResult,
+      honor_pengawas: honorPengawasResult,
     },
     total_neraca: {
       total_neraca_awal: { debit: 0, kredit: 0 },

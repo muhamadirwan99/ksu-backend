@@ -483,13 +483,29 @@ async function hargaPokokPembelian() {
       const purchasesCash = await getCurrentMonthPurchase("tunai");
       const purchasesCredit = await getCurrentMonthPurchase("kredit");
 
-      purchasesCash.reduce((sum, p) => sum + parseFloat(p.total_nilai_beli), 0);
-      purchasesCredit.reduce(
+      let total = purchasesCash.reduce(
+        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        0,
+      );
+      total += purchasesCredit.reduce(
         (sum, p) => sum + parseFloat(p.total_nilai_beli),
         0,
       );
 
-      return purchasesCash + purchasesCredit;
+      return total;
+    },
+  });
+}
+
+async function returPembelian() {
+  return generateNeraca({
+    includeHasilUsaha: true,
+    getDebit: async () => 0,
+    getKredit: async () => {
+      const returCash = await getTotalRetur("tunai", startDate, endDate);
+      const returCredit = await getTotalRetur("kredit", startDate, endDate);
+
+      return returCash + returCredit;
     },
   });
 }
@@ -1012,6 +1028,7 @@ export {
   pembelianTunai,
   pembelianKredit,
   hargaPokokPembelian,
+  returPembelian,
   bebanGaji,
   uangMakan,
   thrKaryawan,

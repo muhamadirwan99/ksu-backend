@@ -129,7 +129,7 @@ async function persediaan() {
       ]);
 
       const totalPembelian = [...cashPurchases, ...creditPurchases].reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
 
@@ -444,7 +444,7 @@ async function pembelianTunai() {
     getDebit: async () => {
       const purchases = await getCurrentMonthPurchase("tunai");
       return purchases.reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
     },
@@ -458,7 +458,7 @@ async function pembelianKredit() {
     getDebit: async () => {
       const purchases = await getCurrentMonthPurchase("kredit");
       return purchases.reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
     },
@@ -480,11 +480,11 @@ async function hargaPokokPembelian() {
       const purchasesCredit = await getCurrentMonthPurchase("kredit");
 
       let total = purchasesCash.reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
       total += purchasesCredit.reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
 

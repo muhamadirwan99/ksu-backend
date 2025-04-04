@@ -90,7 +90,12 @@ async function getNeracaAwalKas(namaUraian) {
 let yearMonth, newYear;
 
 function setYearMonth(year, month) {
+  //jika month nya tidak ada 0 tambahkan 0 di depan
+  if (month < 10) {
+    month = "0" + month;
+  }
   yearMonth = new Date(year + "-" + month);
+
   newYear = parseInt(year, 10);
 }
 

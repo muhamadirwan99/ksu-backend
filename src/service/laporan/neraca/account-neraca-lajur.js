@@ -3,6 +3,8 @@ import {
   generateNeraca,
   getCurrentMonthPurchase,
   getCurrentMonthSale,
+  getHutangAnggota,
+  getHutangDagang,
   getTotalRetur,
   newYear,
   startDate,
@@ -38,8 +40,18 @@ async function kas() {
         endDate,
       );
 
+      const hutangAnggota = await getHutangAnggota();
+      const totalHutangAnggota = hutangAnggota.reduce(
+        (sum, hutang) => sum + parseFloat(hutang.nominal),
+        0,
+      );
+
       return (
-        totalCurrentMonthSale + totalRetur + pendapatanLain + utangPihakKetiga
+        totalCurrentMonthSale +
+        totalRetur +
+        pendapatanLain +
+        utangPihakKetiga +
+        totalHutangAnggota
       );
     },
     getKredit: async () => {
@@ -74,7 +86,13 @@ async function kas() {
 
       const totalPengeluaran = pengeluaran.reduce((acc, curr) => acc + curr, 0);
 
-      return totalCurrentMonthPurchase + totalPengeluaran;
+      const hutangDagang = await getHutangDagang();
+      const totalHutangDagang = hutangDagang.reduce(
+        (sum, hutang) => sum + parseFloat(hutang.nominal),
+        0,
+      );
+
+      return totalCurrentMonthPurchase + totalPengeluaran + totalHutangDagang;
     },
   });
 }
@@ -98,7 +116,13 @@ async function bankBni() {
   return generateNeraca({
     akun: "BANK BNI",
     includeNeracaAwal: true,
-    getDebit: async () => 0,
+    getDebit: async () => {
+      return await getTotalCashInOutByDateRange(
+        CASH_OUT_CODES.TENANT,
+        startDate,
+        endDate,
+      );
+    },
     getKredit: async () => 0,
   });
 }
@@ -114,7 +138,13 @@ async function piutangDagang() {
         0,
       );
     },
-    getKredit: async () => 0,
+    getKredit: async () => {
+      const hutangAnggota = await getHutangAnggota();
+      return hutangAnggota.reduce(
+        (sum, hutang) => sum + parseFloat(hutang.nominal),
+        0,
+      );
+    },
   });
 }
 
@@ -304,12 +334,21 @@ async function utangDagang() {
     akun: "UTANG DAGANG",
     includeNeracaAwal: true,
     getDebit: async () => {
-      return await getTotalRetur("kredit", startDate, endDate);
+      const hutangDagang = await getHutangDagang();
+
+      const totalHutangDagang = hutangDagang.reduce(
+        (sum, hutang) => sum + parseFloat(hutang.nominal),
+        0,
+      );
+      const returCredit = await getTotalRetur("kredit", startDate, endDate);
+
+      return totalHutangDagang + returCredit;
     },
     getKredit: async () => {
       const purchases = await getCurrentMonthPurchase("kredit");
+
       return purchases.reduce(
-        (sum, p) => sum + parseFloat(p.total_nilai_beli),
+        (sum, p) => sum + parseFloat(p.total_harga_beli),
         0,
       );
     },
@@ -420,7 +459,13 @@ async function pendapatanSewa() {
   return generateNeraca({
     includeHasilUsaha: true,
     getDebit: async () => 0,
-    getKredit: async () => 0,
+    getKredit: async () => {
+      return await getTotalCashInOutByDateRange(
+        CASH_OUT_CODES.TENANT,
+        startDate,
+        endDate,
+      );
+    },
   });
 }
 

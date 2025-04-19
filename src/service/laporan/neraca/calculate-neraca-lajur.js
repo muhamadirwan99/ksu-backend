@@ -123,6 +123,28 @@ function getCurrentMonthPurchase(jenisPembayaran) {
   });
 }
 
+function getHutangAnggota() {
+  return prismaClient.historyHutangAnggota.findMany({
+    where: {
+      created_at: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+  });
+}
+
+function getHutangDagang() {
+  return prismaClient.historyHutangDagang.findMany({
+    where: {
+      created_at: {
+        gte: startDate,
+        lt: endDate,
+      },
+    },
+  });
+}
+
 function getDate(year, month) {
   // Tanggal awal dan akhir bulan ini dalam UTC
   startDate = new Date(Date.UTC(year, month - 1, 1));
@@ -219,6 +241,8 @@ export {
   getDate,
   getTotalRetur,
   getHasilUsaha,
+  getHutangAnggota,
+  getHutangDagang,
   yearMonth,
   newYear,
   startDate,

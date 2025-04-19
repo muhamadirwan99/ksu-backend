@@ -6,7 +6,7 @@ async function main() {
   // await seedCommon();
   // await cashInOut();
   // await seedAkunNeraca();
-  const date = new Date("2024-12");
+  const date = new Date("2025-01");
   await initDataNeracaAwal(date);
 }
 
@@ -49,26 +49,26 @@ async function seedAkunNeraca() {
 
 async function initDataNeracaAwal(date) {
   const neracaData = [
-    neracaModel(1, 69343225, 0),
-    neracaModel(2, 4117026, 0),
+    neracaModel(1, 36283750, 0),
+    neracaModel(2, 22323440, 0),
     neracaModel(3, 0, 0),
-    neracaModel(4, 12763734, 0),
-    neracaModel(5, 48767331, 0),
-    neracaModel(6, 96683115, 0),
+    neracaModel(4, 14793975, 0),
+    neracaModel(5, 18954831, 0),
+    neracaModel(6, 91683115, 0),
     neracaModel(7, 149185956, 0),
-    neracaModel(8, 0, 141242206),
+    neracaModel(8, 0, 142210956),
     neracaModel(9, 154878130, 0),
-    neracaModel(10, 0, 98898847),
-    neracaModel(11, 0, 12655213),
-    neracaModel(12, 0, 53205769),
-    neracaModel(13, 0, 43318438),
-    neracaModel(14, 0, 28000000),
-    neracaModel(15, 0, 11313276),
-    neracaModel(16, 0, 73073118),
+    neracaModel(10, 0, 101079337),
+    neracaModel(11, 0, 41078845),
+    neracaModel(12, 0, 28000000),
+    neracaModel(13, 0, 11313276),
+    neracaModel(14, 0, 73073118),
+    neracaModel(15, 0, 27945335),
+    neracaModel(16, 0, 52196561),
     neracaModel(17, 0, 0),
-    neracaModel(18, 0, 27946033),
-    neracaModel(19, 0, 27401537),
-    neracaModel(20, 0, 18684080),
+    neracaModel(18, 0, 0),
+    neracaModel(19, 0, 0),
+    neracaModel(20, 0, 11205769),
   ];
 
   const dataToInsert = neracaData.map((item) => ({

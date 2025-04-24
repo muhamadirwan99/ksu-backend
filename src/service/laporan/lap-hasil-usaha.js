@@ -232,29 +232,6 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCreditPurchase += parseFloat(purchase.total_harga_beli);
   });
 
-  const salesCurrent = await prismaClient.pembelian.findMany();
-
-  let totalSalesCurrent = 0;
-
-  salesCurrent.forEach((sale) => {
-    totalSalesCurrent += parseFloat(sale.total_harga_beli);
-  });
-
-  // Mendapatkan total penjualan dari awal hingga bulan lalu
-  const salesLast = await prismaClient.pembelian.findMany({
-    where: {
-      created_at: {
-        lt: startDate,
-      },
-    },
-  });
-
-  let totalSalesLast = 0;
-
-  salesLast.forEach((sale) => {
-    totalSalesLast += parseFloat(sale.total_harga_beli);
-  });
-
   const [returCurrent, returLast] = await Promise.all([
     getTotalRetur(startDate, endDate),
     getTotalRetur(lastMonthStartDate, lastMonthEndDate),
@@ -280,12 +257,15 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCreditPurchase -
     returLast;
 
-  grossProfitCurrent =
+  const totalSalesCurrent =
     readyToSellCurrent -
     (totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase);
-  grossProfitLast =
+  const totalSalesLast =
     readyToSellLast -
     (totalLastMonthCashPurchase + totalLastMonthCreditPurchase);
+
+  grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent;
+  grossProfitLast = totalLastMonthSale - totalSalesLast;
 
   return {
     persediaan_awal: totalCurrentInventoryValue,

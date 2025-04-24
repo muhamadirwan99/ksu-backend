@@ -178,7 +178,7 @@ async function laporanHargaPokokPenjualan() {
   const inventoryAtEnd = await prismaClient.product.findMany({
     where: {
       updated_at: {
-        lt: endDate, // Produk yang sudah ada sebelum atau pada tanggal 1 bulan yang diminta
+        lt: lastMonthEndDate, // Produk yang sudah ada sebelum atau pada tanggal 1 bulan yang diminta
       },
     },
     select: {

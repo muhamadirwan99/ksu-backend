@@ -280,8 +280,12 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCreditPurchase -
     returLast;
 
-  grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent;
-  grossProfitLast = totalLastMonthSale - totalSalesLast;
+  grossProfitCurrent =
+    readyToSellCurrent -
+    (totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase);
+  grossProfitLast =
+    readyToSellLast -
+    (totalLastMonthCashPurchase + totalLastMonthCreditPurchase);
 
   return {
     persediaan_awal: totalCurrentInventoryValue,

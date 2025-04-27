@@ -38,22 +38,9 @@ async function getNeracaSaldo(neracaPercobaanDebit, neracaPercobaanKredit) {
 }
 
 async function getHasilUsaha(neracaSaldoDebit, neracaSaldoKredit) {
-  if (neracaSaldoDebit === 0 && neracaSaldoKredit === 0) {
-    return {
-      debit: 0,
-      kredit: 0,
-    };
-  }
-
   return {
-    debit:
-      neracaSaldoDebit - neracaSaldoKredit > 0
-        ? neracaSaldoDebit - neracaSaldoKredit
-        : 0,
-    kredit:
-      neracaSaldoKredit - neracaSaldoDebit > 0
-        ? neracaSaldoKredit - neracaSaldoDebit
-        : 0,
+    debit: neracaSaldoDebit,
+    kredit: neracaSaldoKredit,
   };
 }
 

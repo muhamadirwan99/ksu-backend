@@ -161,43 +161,38 @@ async function getTotalRetur(startDate, endDate) {
   return parseFloat(result._sum.total_nilai_beli) || 0;
 }
 
-async function laporanHargaPokokPenjualan() {
-  // Dapatkan semua data produk yang tersedia pada tanggal 1
-  const inventoryAtStart = await prismaClient.product.findMany({
+async function getInventorySnapshot(tanggalSnapshot) {
+  return prismaClient.product.findMany({
     where: {
       updated_at: {
-        lt: startDate, // Produk yang sudah ada sebelum atau pada tanggal 1 bulan yang diminta
+        lt: tanggalSnapshot, // hanya stok yang sudah tercatat sebelum tanggal ini
       },
     },
     select: {
-      harga_beli: true, // Harga beli dari produk
-      jumlah: true, // Stok barang pada awal bulan
+      harga_beli: true,
+      jumlah: true,
     },
   });
+}
 
-  const inventoryAtEnd = await prismaClient.product.findMany({
-    where: {
-      updated_at: {
-        lt: endDate, // Produk yang sudah ada sebelum atau pada tanggal 1 bulan yang diminta
-      },
-    },
-    select: {
-      harga_beli: true, // Harga beli dari produk
-      jumlah: true, // Stok barang pada awal bulan
-    },
-  });
+async function laporanHargaPokokPenjualan() {
+  // SET tanggal snapshot agar konsisten: awal bulan untuk inventoryAtStart, dan awal bulan berikutnya untuk inventoryAtEnd
+  const tanggalAwalBulanIni = startDate; // contoh: 1 April 2025
+  const tanggalAwalBulanLalu = lastMonthStartDate; // contoh: 1 Maret 2025
+  const tanggalAwalBulanDepan = endDate; // contoh: 1 Mei 2025
+
+  // Dapatkan semua data produk yang tersedia pada tanggal 1
+  const inventoryAtStart = await getInventorySnapshot(tanggalAwalBulanIni);
+
+  const inventoryAtEnd = await getInventorySnapshot(tanggalAwalBulanLalu);
 
   // Hitung total nilai persediaan awal (stok * harga beli)
   const totalCurrentInventoryValue = inventoryAtStart.reduce((total, item) => {
-    return (
-      parseFloat(total) + parseFloat(item.jumlah) * parseFloat(item.harga_beli)
-    );
+    return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
   }, 0);
 
   const totalLastInventoryValue = inventoryAtEnd.reduce((total, item) => {
-    return (
-      parseFloat(total) + parseFloat(item.jumlah) * parseFloat(item.harga_beli)
-    );
+    return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
   }, 0);
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran tunai
@@ -232,29 +227,6 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCreditPurchase += parseFloat(purchase.total_harga_beli);
   });
 
-  const salesCurrent = await prismaClient.pembelian.findMany();
-
-  let totalSalesCurrent = 0;
-
-  salesCurrent.forEach((sale) => {
-    totalSalesCurrent += parseFloat(sale.total_harga_beli);
-  });
-
-  // Mendapatkan total penjualan dari awal hingga bulan lalu
-  const salesLast = await prismaClient.pembelian.findMany({
-    where: {
-      created_at: {
-        lt: startDate,
-      },
-    },
-  });
-
-  let totalSalesLast = 0;
-
-  salesLast.forEach((sale) => {
-    totalSalesLast += parseFloat(sale.total_harga_beli);
-  });
-
   const [returCurrent, returLast] = await Promise.all([
     getTotalRetur(startDate, endDate),
     getTotalRetur(lastMonthStartDate, lastMonthEndDate),
@@ -279,6 +251,13 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCashPurchase +
     totalLastMonthCreditPurchase -
     returLast;
+
+  const totalSalesCurrent =
+    readyToSellCurrent -
+    (totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase);
+  const totalSalesLast =
+    readyToSellLast -
+    (totalLastMonthCashPurchase + totalLastMonthCreditPurchase);
 
   grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent;
   grossProfitLast = totalLastMonthSale - totalSalesLast;

@@ -290,7 +290,7 @@ async function getTotalCashInOutByDateRange(idDetail, startDate, endDate) {
   const result = await prismaClient.cashInOut.aggregate({
     where: {
       id_detail: idDetail,
-      created_at: {
+      tg_transaksi: {
         gte: startDate,
         lt: endDate,
       },

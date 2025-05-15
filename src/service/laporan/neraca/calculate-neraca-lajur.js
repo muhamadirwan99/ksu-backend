@@ -217,8 +217,38 @@ async function generateNeraca({
   );
 }
 
+async function generateNeracaSHU({
+  akun,
+  getDebit = async () => 0,
+  getKredit = async () => 0,
+}) {
+  const neracaAwalKas = await getNeracaAwalKas(akun);
+  const placeHolder = {
+    debit: 0,
+    kredit: 0,
+  };
+
+  const hasilUsaha = await getHasilUsaha(await getDebit(), await getKredit());
+  const neracaAkhir = {
+    debit: neracaAwalKas.akhir_debit + hasilUsaha.debit,
+    kredit: neracaAwalKas.akhir_kredit + hasilUsaha.kredit,
+  };
+
+  return createNeracaModel(
+    neracaAwalKas.akhir_debit,
+    neracaAwalKas.akhir_kredit,
+    0,
+    0,
+    placeHolder,
+    placeHolder,
+    hasilUsaha,
+    neracaAkhir,
+  );
+}
+
 export {
   generateNeraca,
+  generateNeracaSHU,
   getNeracaPercobaan,
   getNeracaSaldo,
   getNeracaAwalKas,

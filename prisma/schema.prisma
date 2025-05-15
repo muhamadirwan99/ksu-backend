@@ -489,3 +489,15 @@ model Neraca {
   @@index([bulan_tahun]) // Mempercepat query berdasarkan bulan
   @@map("neraca")
 }
+
+model HasilUsaha {
+  id_hasil_usaha   Int       @id @default(autoincrement())
+  bulan_tahun      DateTime  @db.Date
+  sisa_hasil_usaha Decimal   @db.Decimal(20, 2)
+  created_at       DateTime  @db.Timestamp(6)
+  updated_at       DateTime? @db.Timestamp(6)
+
+  @@unique([bulan_tahun]) // Mencegah duplikasi per akun per bulan
+  @@index([bulan_tahun]) // Mempercepat query berdasarkan bulan
+  @@map("hasil_usaha")
+}

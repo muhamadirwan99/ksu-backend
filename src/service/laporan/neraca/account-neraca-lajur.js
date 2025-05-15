@@ -1,6 +1,7 @@
 import {
   endDate,
   generateNeraca,
+  generateNeracaSHU,
   getCurrentMonthPurchase,
   getCurrentMonthSale,
   getHutangAnggota,
@@ -12,6 +13,7 @@ import {
 import { prismaClient } from "../../../application/database.js";
 import { getTotalCashInOutByDateRange } from "../lap-hasil-usaha.js";
 import { CASH_OUT_CODES } from "../../../utils/constant.js";
+import laporanService from "../laporan-service.js";
 
 async function kas() {
   return generateNeraca({
@@ -152,6 +154,7 @@ async function persediaan() {
   return generateNeraca({
     akun: "PERSEDIAAN",
     includeNeracaAwal: true,
+    includeHasilUsaha: true,
     getDebit: async () => {
       const [cashPurchases, creditPurchases] = await Promise.all([
         getCurrentMonthPurchase("tunai"),
@@ -320,12 +323,18 @@ async function shuTh2024() {
   });
 }
 
-async function shuTh2025() {
-  return generateNeraca({
+async function shuTh2025(year, month) {
+  return generateNeracaSHU({
     akun: "SHU TH. 2025",
-    includeNeracaAwal: true,
     getDebit: async () => 0,
-    getKredit: async () => 0,
+    getKredit: async () => {
+      const result = await laporanService.getLaporanHasilUsaha({
+        month: month,
+        year: year,
+      });
+
+      return result.sisa_hasil_usaha.sisa_hasil_usaha;
+    },
   });
 }
 

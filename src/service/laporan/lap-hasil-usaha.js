@@ -367,6 +367,10 @@ async function laporanBebanOperasional() {
       getTotalPendapatanLain(lastMonthStartDate, lastMonthEndDate),
     ]);
 
+    const [totalBebanKerugianPersediaan, totalBebanKerugianPersediaanLast] = [
+      1000000, 1000000,
+    ];
+
     const [totalBebanPenyusutanInventaris, totalBebanPenyusutanGedung] =
       await Promise.all([
         prismaClient.penyusutanAset.findFirst({
@@ -399,6 +403,7 @@ async function laporanBebanOperasional() {
       parseFloat(totalBebanPenyusutanGedung.penyusutan_bulan) +
       totalPemeliharaanInventarisCurrent +
       totalPemeliharaanGedungCurrent +
+      totalBebanKerugianPersediaan +
       totalPengeluaranLain;
 
     const totalBebanOperasionalLast =
@@ -411,6 +416,7 @@ async function laporanBebanOperasional() {
       parseFloat(totalBebanPenyusutanGedung.penyusutan_bulan) +
       totalPemeliharaanInventarisLast +
       totalPemeliharaanGedungLast +
+      totalBebanKerugianPersediaanLast +
       totalPengeluaranLainLast;
 
     const hasilUsahaBersih = grossProfitCurrent - totalBebanOperasionalCurrent;
@@ -428,21 +434,23 @@ async function laporanBebanOperasional() {
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       beban_peny_inventaris: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_inventaris_last_month: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_gedung: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       beban_peny_gedung_last_month: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       pemeliharaan_inventaris: totalPemeliharaanInventarisCurrent,
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,
       pemeliharaan_gedung: totalPemeliharaanGedungCurrent,
       pemeliharaan_gedung_last_month: totalPemeliharaanGedungLast,
+      beban_kerugian_persediaan: totalBebanKerugianPersediaan,
+      beban_kerugian_persediaan_last_month: totalBebanKerugianPersediaanLast,
       pengeluaran_lain: totalPengeluaranLain,
       pengeluaran_lain_last_month: totalPengeluaranLainLast,
       total_beban_operasional: totalBebanOperasionalCurrent,

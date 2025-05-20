@@ -224,14 +224,19 @@ async function generateNeracaSHU({
 }) {
   const neracaAwalKas = await getNeracaAwalKas(akun);
   const placeHolder = {
-    debit: 0,
-    kredit: 0,
+    debit: neracaAwalKas.akhir_debit,
+    kredit: neracaAwalKas.akhir_kredit,
   };
 
-  const hasilUsaha = await getHasilUsaha(await getDebit(), await getKredit());
+  const hasilUsaha = await getHasilUsaha(
+    await getDebit(),
+    neracaAwalKas.akhir_kredit,
+  );
+
   const neracaAkhir = {
-    debit: neracaAwalKas.akhir_debit + hasilUsaha.debit,
-    kredit: neracaAwalKas.akhir_kredit + hasilUsaha.kredit,
+    debit: 0,
+    kredit: await getKredit(),
+    // kredit: neracaAwalKas.akhir_kredit + (await getKredit()),
   };
 
   return createNeracaModel(

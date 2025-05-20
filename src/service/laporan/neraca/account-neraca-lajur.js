@@ -326,7 +326,14 @@ async function shuTh2024() {
 async function shuTh2025(year, month) {
   return generateNeracaSHU({
     akun: "SHU TH. 2025",
-    getDebit: async () => 0,
+    getDebit: async () => {
+      const result = await laporanService.getLaporanHasilUsaha({
+        month: month,
+        year: year,
+      });
+
+      return result.sisa_hasil_usaha.sisa_hasil_usaha;
+    },
     getKredit: async () => {
       const result = await laporanService.getLaporanHasilUsaha({
         month: month,

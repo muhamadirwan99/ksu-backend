@@ -216,9 +216,24 @@ async function laporanNeracaLajur(month, year) {
     honorPengawas(),
   ]);
 
-  // Sum debit, shu th 2025, penjualan tunai sampai honor pengawas
+  // Sum debit, persediaan sampai honor pengawas
   const totalDebit = [
     persediaanResult,
+    penghapusanPersediaanResult,
+    inventarisResult,
+    akumPenyInventarisResult,
+    gedungResult,
+    akumPenyGedungResult,
+    modalTidakTetapResult,
+    modalDisetorResult,
+    usahaLainLainTokoResult,
+    modalUnitTokoResult,
+    shuTh2023Result,
+    shuTh2024Result,
+    shuTh2025Result,
+    utangDagangResult,
+    utangPihakKetigaResult,
+    utangDariSPResult,
     penjualanTunaiResult,
     penjualanQrisResult,
     penjualanKreditResult,
@@ -247,7 +262,21 @@ async function laporanNeracaLajur(month, year) {
 
   // Sum kredit, penjualan tunai sampai honor pengawas
   const totalKredit = [
+    penghapusanPersediaanResult,
+    inventarisResult,
+    akumPenyInventarisResult,
+    gedungResult,
+    akumPenyGedungResult,
+    modalTidakTetapResult,
+    modalDisetorResult,
+    usahaLainLainTokoResult,
+    modalUnitTokoResult,
+    shuTh2023Result,
+    shuTh2024Result,
     shuTh2025Result,
+    utangDagangResult,
+    utangPihakKetigaResult,
+    utangDariSPResult,
     penjualanTunaiResult,
     penjualanQrisResult,
     penjualanKreditResult,
@@ -275,6 +304,7 @@ async function laporanNeracaLajur(month, year) {
   ].reduce((acc, item) => acc + parseFloat(item.hasil_usaha.kredit), 0);
 
   persediaanResult.hasil_usaha.kredit = totalDebit - totalKredit;
+  persediaanResult.neraca_akhir.debit = totalDebit - totalKredit;
 
   const data_neraca = {
     kas: kasResult,

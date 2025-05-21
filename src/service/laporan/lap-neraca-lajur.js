@@ -101,68 +101,6 @@ async function laporanNeracaLajur(month, year) {
     utangDariSP(),
   ]);
 
-  const neracaData = [
-    { akun_id: 1, ...kasResult.neraca_akhir },
-    { akun_id: 2, ...bankBriResult.neraca_akhir },
-    { akun_id: 3, ...bankBniResult.neraca_akhir },
-    { akun_id: 4, ...piutangDagangResult.neraca_akhir },
-    { akun_id: 5, ...persediaanResult.neraca_akhir },
-    { akun_id: 6, ...penghapusanPersediaanResult.neraca_akhir },
-    { akun_id: 7, ...inventarisResult.neraca_akhir },
-    { akun_id: 8, ...akumPenyInventarisResult.neraca_akhir },
-    { akun_id: 9, ...gedungResult.neraca_akhir },
-    { akun_id: 10, ...akumPenyGedungResult.neraca_akhir },
-    { akun_id: 11, ...modalTidakTetapResult.neraca_akhir },
-    { akun_id: 12, ...modalDisetorResult.neraca_akhir },
-    { akun_id: 13, ...usahaLainLainTokoResult.neraca_akhir },
-    { akun_id: 14, ...modalUnitTokoResult.neraca_akhir },
-    { akun_id: 15, ...shuTh2023Result.neraca_akhir },
-    { akun_id: 16, ...shuTh2024Result.neraca_akhir },
-    { akun_id: 17, ...shuTh2025Result.neraca_akhir },
-    { akun_id: 18, ...utangDagangResult.neraca_akhir },
-    { akun_id: 19, ...utangPihakKetigaResult.neraca_akhir },
-    { akun_id: 20, ...utangDariSPResult.neraca_akhir },
-  ].map((item) => ({
-    akun_id: item.akun_id,
-    debit: parseFloat(item.debit) || 0,
-    kredit: parseFloat(item.kredit) || 0,
-  }));
-
-  // Optimized upsert with Promise.all (parallel)
-  await Promise.all(
-    neracaData.map(async (item) => {
-      const existing = await prismaClient.neraca.findFirst({
-        where: {
-          akun_id: item.akun_id,
-          bulan_tahun: bulanTahun,
-        },
-      });
-
-      if (existing) {
-        await prismaClient.neraca.update({
-          where: {
-            id_neraca: existing.id_neraca,
-          },
-          data: {
-            debit: item.debit,
-            kredit: item.kredit,
-            updated_at: now,
-          },
-        });
-      } else {
-        await prismaClient.neraca.create({
-          data: {
-            akun_id: item.akun_id,
-            debit: item.debit,
-            kredit: item.kredit,
-            bulan_tahun: bulanTahun,
-            created_at: now,
-          },
-        });
-      }
-    }),
-  );
-
   // Sisanya (beban2 dan dummy) tetap sama
   const [
     penjualanTunaiResult,
@@ -305,6 +243,68 @@ async function laporanNeracaLajur(month, year) {
 
   persediaanResult.hasil_usaha.kredit = totalDebit - totalKredit;
   persediaanResult.neraca_akhir.debit = totalDebit - totalKredit;
+
+  const neracaData = [
+    { akun_id: 1, ...kasResult.neraca_akhir },
+    { akun_id: 2, ...bankBriResult.neraca_akhir },
+    { akun_id: 3, ...bankBniResult.neraca_akhir },
+    { akun_id: 4, ...piutangDagangResult.neraca_akhir },
+    { akun_id: 5, ...persediaanResult.neraca_akhir },
+    { akun_id: 6, ...penghapusanPersediaanResult.neraca_akhir },
+    { akun_id: 7, ...inventarisResult.neraca_akhir },
+    { akun_id: 8, ...akumPenyInventarisResult.neraca_akhir },
+    { akun_id: 9, ...gedungResult.neraca_akhir },
+    { akun_id: 10, ...akumPenyGedungResult.neraca_akhir },
+    { akun_id: 11, ...modalTidakTetapResult.neraca_akhir },
+    { akun_id: 12, ...modalDisetorResult.neraca_akhir },
+    { akun_id: 13, ...usahaLainLainTokoResult.neraca_akhir },
+    { akun_id: 14, ...modalUnitTokoResult.neraca_akhir },
+    { akun_id: 15, ...shuTh2023Result.neraca_akhir },
+    { akun_id: 16, ...shuTh2024Result.neraca_akhir },
+    { akun_id: 17, ...shuTh2025Result.neraca_akhir },
+    { akun_id: 18, ...utangDagangResult.neraca_akhir },
+    { akun_id: 19, ...utangPihakKetigaResult.neraca_akhir },
+    { akun_id: 20, ...utangDariSPResult.neraca_akhir },
+  ].map((item) => ({
+    akun_id: item.akun_id,
+    debit: parseFloat(item.debit) || 0,
+    kredit: parseFloat(item.kredit) || 0,
+  }));
+
+  // Optimized upsert with Promise.all (parallel)
+  await Promise.all(
+    neracaData.map(async (item) => {
+      const existing = await prismaClient.neraca.findFirst({
+        where: {
+          akun_id: item.akun_id,
+          bulan_tahun: bulanTahun,
+        },
+      });
+
+      if (existing) {
+        await prismaClient.neraca.update({
+          where: {
+            id_neraca: existing.id_neraca,
+          },
+          data: {
+            debit: item.debit,
+            kredit: item.kredit,
+            updated_at: now,
+          },
+        });
+      } else {
+        await prismaClient.neraca.create({
+          data: {
+            akun_id: item.akun_id,
+            debit: item.debit,
+            kredit: item.kredit,
+            bulan_tahun: bulanTahun,
+            created_at: now,
+          },
+        });
+      }
+    })
+  );
 
   const data_neraca = {
     kas: kasResult,

@@ -2,6 +2,7 @@ import { prismaClient } from "../../application/database.js";
 
 let startDate, endDate;
 let lastMonthStartDate, lastMonthEndDate;
+let twoMonthStartDate, twoMonthEndDate;
 let totalCurrentMonthSale, totalLastMonthSale;
 let grossProfitCurrent, grossProfitLast;
 
@@ -18,10 +19,14 @@ function getDate(request) {
     // Jika bulan Januari, bulan sebelumnya adalah Desember tahun lalu
     lastMonthStartDate = new Date(Date.UTC(year - 1, 11, 1)); // 1 Desember tahun lalu
     lastMonthEndDate = new Date(Date.UTC(year, 0, 1)); // 1 Januari tahun ini
+    twoMonthStartDate = new Date(Date.UTC(year - 1, 10, 1)); // 1 November tahun lalu
+    twoMonthEndDate = new Date(Date.UTC(year - 1, 11, 1)); // 1 Desember tahun lalu
   } else {
     // Bulan sebelumnya masih dalam tahun yang sama
     lastMonthStartDate = new Date(Date.UTC(year, month - 2, 1)); // Awal bulan sebelumnya
     lastMonthEndDate = new Date(Date.UTC(year, month - 1, 1)); // Awal bulan ini
+    twoMonthStartDate = new Date(Date.UTC(year, month - 3, 1)); // Awal dua bulan lalu
+    twoMonthEndDate = new Date(Date.UTC(year, month - 2, 1)); // Awal bulan lalu
   }
 }
 
@@ -67,6 +72,18 @@ function getLastMonthPurchase(jenisPembayaran) {
       created_at: {
         gte: lastMonthStartDate,
         lt: lastMonthEndDate,
+      },
+      jenis_pembayaran: jenisPembayaran,
+    },
+  });
+}
+
+function getTwoMonthPurchase(jenisPembayaran) {
+  return prismaClient.pembelian.findMany({
+    where: {
+      created_at: {
+        gte: twoMonthStartDate,
+        lt: twoMonthEndDate,
       },
       jenis_pembayaran: jenisPembayaran,
     },
@@ -179,12 +196,16 @@ async function laporanHargaPokokPenjualan() {
   // SET tanggal snapshot agar konsisten: awal bulan untuk inventoryAtStart, dan awal bulan berikutnya untuk inventoryAtEnd
   const tanggalAwalBulanIni = startDate; // contoh: 1 April 2025
   const tanggalAwalBulanLalu = lastMonthStartDate; // contoh: 1 Maret 2025
-  const tanggalAwalBulanDepan = endDate; // contoh: 1 Mei 2025
+  const tanggalAwalDuaBulanLalu = twoMonthStartDate; // contoh: 1 Februari 2025
 
   // Dapatkan semua data produk yang tersedia pada tanggal 1
   const inventoryAtStart = await getInventorySnapshot(tanggalAwalBulanIni);
 
   const inventoryAtEnd = await getInventorySnapshot(tanggalAwalBulanLalu);
+
+  const inventoryAtTwoMonth = await getInventorySnapshot(
+    tanggalAwalDuaBulanLalu,
+  );
 
   // Hitung total nilai persediaan awal (stok * harga beli)
   const totalCurrentInventoryValue = inventoryAtStart.reduce((total, item) => {
@@ -195,13 +216,22 @@ async function laporanHargaPokokPenjualan() {
     return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
   }, 0);
 
+  const totalTwoMonthInventoryValue = inventoryAtTwoMonth.reduce(
+    (total, item) => {
+      return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
+    },
+    0,
+  );
+
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran tunai
   const currentMonthCashPurchases = await getCurrentMonthPurchase("tunai");
   const lastMonthCashPurchases = await getLastMonthPurchase("tunai");
+  const twoMonthCashPurchases = await getTwoMonthPurchase("tunai");
 
   // Menghitung total penjualan untuk jenis pembayaran tunai bulan ini dan bulan lalu
   let totalCurrentMonthCashPurchase = 0;
   let totalLastMonthCashPurchase = 0;
+  let totalTwoMonthCashPurchase = 0;
 
   currentMonthCashPurchases.forEach((purchase) => {
     totalCurrentMonthCashPurchase += parseFloat(purchase.total_harga_beli);
@@ -211,13 +241,19 @@ async function laporanHargaPokokPenjualan() {
     totalLastMonthCashPurchase += parseFloat(purchase.total_harga_beli);
   });
 
+  twoMonthCashPurchases.forEach((purchase) => {
+    totalTwoMonthCashPurchase += parseFloat(purchase.total_harga_beli);
+  });
+
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran kredit
   const currentMonthCreditPurchases = await getCurrentMonthPurchase("kredit");
   const lastMonthCreditPurchases = await getLastMonthPurchase("kredit");
+  const twoMonthCreditPurchases = await getTwoMonthPurchase("kredit");
 
   // Menghitung total penjualan untuk jenis pembayaran kredit bulan ini dan bulan lalu
   let totalCurrentMonthCreditPurchase = 0;
   let totalLastMonthCreditPurchase = 0;
+  let totalTwoMonthCreditPurchase = 0;
 
   currentMonthCreditPurchases.forEach((purchase) => {
     totalCurrentMonthCreditPurchase += parseFloat(purchase.total_harga_beli);
@@ -225,6 +261,10 @@ async function laporanHargaPokokPenjualan() {
 
   lastMonthCreditPurchases.forEach((purchase) => {
     totalLastMonthCreditPurchase += parseFloat(purchase.total_harga_beli);
+  });
+
+  twoMonthCreditPurchases.forEach((purchase) => {
+    totalTwoMonthCreditPurchase += parseFloat(purchase.total_harga_beli);
   });
 
   const [returCurrent, returLast] = await Promise.all([
@@ -263,8 +303,9 @@ async function laporanHargaPokokPenjualan() {
   grossProfitLast = totalLastMonthSale - totalSalesLast;
 
   return {
-    persediaan_awal: totalCurrentInventoryValue,
-    persediaan_awal_last_month: totalLastInventoryValue,
+    persediaan_awal: totalLastMonthCashPurchase + totalLastMonthCreditPurchase,
+    persediaan_awal_last_month:
+      totalTwoMonthCashPurchase + totalTwoMonthCreditPurchase,
     pembelian_tunai: totalCurrentMonthCashPurchase,
     pembelian_tunai_last_month: totalLastMonthCashPurchase,
     pembelian_kredit: totalCurrentMonthCreditPurchase,
@@ -367,6 +408,10 @@ async function laporanBebanOperasional() {
       getTotalPendapatanLain(lastMonthStartDate, lastMonthEndDate),
     ]);
 
+    const [totalBebanKerugianPersediaan, totalBebanKerugianPersediaanLast] = [
+      1000000, 1000000,
+    ];
+
     const [totalBebanPenyusutanInventaris, totalBebanPenyusutanGedung] =
       await Promise.all([
         prismaClient.penyusutanAset.findFirst({
@@ -399,6 +444,7 @@ async function laporanBebanOperasional() {
       parseFloat(totalBebanPenyusutanGedung.penyusutan_bulan) +
       totalPemeliharaanInventarisCurrent +
       totalPemeliharaanGedungCurrent +
+      totalBebanKerugianPersediaan +
       totalPengeluaranLain;
 
     const totalBebanOperasionalLast =
@@ -411,6 +457,7 @@ async function laporanBebanOperasional() {
       parseFloat(totalBebanPenyusutanGedung.penyusutan_bulan) +
       totalPemeliharaanInventarisLast +
       totalPemeliharaanGedungLast +
+      totalBebanKerugianPersediaanLast +
       totalPengeluaranLainLast;
 
     const hasilUsahaBersih = grossProfitCurrent - totalBebanOperasionalCurrent;
@@ -443,6 +490,8 @@ async function laporanBebanOperasional() {
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,
       pemeliharaan_gedung: totalPemeliharaanGedungCurrent,
       pemeliharaan_gedung_last_month: totalPemeliharaanGedungLast,
+      beban_kerugian_persediaan: totalBebanKerugianPersediaan,
+      beban_kerugian_persediaan_last_month: totalBebanKerugianPersediaanLast,
       pengeluaran_lain: totalPengeluaranLain,
       pengeluaran_lain_last_month: totalPengeluaranLainLast,
       total_beban_operasional: totalBebanOperasionalCurrent,

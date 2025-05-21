@@ -1,273 +1,392 @@
+import {
+  akumPenyGedung,
+  akumPenyInventaris,
+  bankBni,
+  bankBri,
+  bebanAdmUmum,
+  bebanGaji,
+  bebanKerugianPersediaan,
+  bebanPenyusutanGedung,
+  bebanPenyusutanInventaris,
+  bebanPerlengkapanToko,
+  gedung,
+  hargaPokokPembelian,
+  hargaPokokPenjualan,
+  honorPengawas,
+  honorPengurus,
+  inventaris,
+  kas,
+  modalDisetor,
+  modalTidakTetap,
+  modalUnitToko,
+  pembelianKredit,
+  pembelianTunai,
+  pemeliharaanGedung,
+  pemeliharaanInventaris,
+  pendapatanLainLain,
+  pendapatanSewa,
+  pengeluaranLainLain,
+  penghapusanPersediaan,
+  penjualanKredit,
+  penjualanQris,
+  penjualanTunai,
+  persediaan,
+  piutangDagang,
+  returPembelian,
+  returPenjualan,
+  shuTh2023,
+  shuTh2024,
+  shuTh2025,
+  thrKaryawan,
+  uangMakan,
+  usahaLainLainToko,
+  utangDagang,
+  utangDariSP,
+  utangPihakKetiga,
+} from "./neraca/account-neraca-lajur.js";
+import { getDate, setYearMonth } from "./neraca/calculate-neraca-lajur.js";
+import { generateDate, getNextMonthDate } from "../../utils/generate-date.js";
 import { prismaClient } from "../../application/database.js";
-import { getTotalCashInOutByDateRange } from "./lap-hasil-usaha.js";
 
-async function getNeracaPercobaan(
-  neracaAwalDebit,
-  neracaAwalKredit,
-  neracaMutasiDebit,
-  neracaMutasiKredit,
-) {
-  const debit = neracaAwalDebit + neracaMutasiDebit;
-  const kredit = neracaAwalKredit + neracaMutasiKredit;
+async function laporanNeracaLajur(month, year) {
+  setYearMonth(year, month);
+  getDate(year, month);
 
-  return {
-    debit: debit,
-    kredit: kredit,
-  };
-}
+  const now = generateDate();
+  const bulanTahun = getNextMonthDate(year, month);
+  bulanTahun.setUTCHours(0, 0, 0, 0);
 
-async function getNeracaSaldo(
-  kdNeracaSaldo,
-  neracaPercobaanDebit,
-  neracaPercobaanKredit,
-) {
-  switch (kdNeracaSaldo) {
-    case 1:
-      return {
-        debit: neracaPercobaanDebit - neracaPercobaanKredit,
-        kredit: 0,
-      };
-    case 2:
-      return {
-        debit: 0,
-        kredit: neracaPercobaanKredit - neracaPercobaanDebit,
-      };
-    default:
-      return {
-        debit: 0,
-        kredit: 0,
-      };
-  }
-}
-
-async function getNeracaAwalKas(namaUraian, startOfMonth, endOfMonth) {
-  let result = await prismaClient.neraca.findFirst({
-    where: {
-      nama_uraian: namaUraian,
-      bulan_tahun: {
-        gte: startOfMonth, // >= awal bulan sebelumnya
-        lte: endOfMonth, // <= akhir bulan sebelumnya
-      },
-    },
-    select: {
-      akhir_debit: true,
-      akhir_kredit: true,
-    },
-  });
-
-  return {
-    akhir_debit: parseFloat(result.akhir_debit) || 0,
-    akhir_kredit: parseFloat(result.akhir_kredit) || 0,
-  };
-}
-
-async function kas(bulan, tahun) {
-  // Ambil data akhir_debit dan akhir_kredit dari tabel neraca bulan lalu format datetime berdasarkan bulan_tahun apabila nama_uraian == "kas" dan bulan sekarang januari maka ambil desember dari tahun lalu
-  bulan = bulan - 1;
-  if (bulan === 0) {
-    bulan = 12;
-    tahun = tahun - 1;
-  }
-
-  const startOfMonth = new Date(tahun, bulan - 1, 1, 0, 0, 0); // Awal bulan sebelumnya
-  const endOfMonth = new Date(tahun, bulan, 0, 23, 59, 59); // Akhir bulan sebelumnya
-
-  const neracaAwalKas = await getNeracaAwalKas("kas", startOfMonth, endOfMonth);
-
-  const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-    getTotalCashInOutByDateRange(16, startOfMonth, endOfMonth),
-    getTotalCashInOutByDateRange(1, startOfMonth, endOfMonth),
+  // Parallel execution untuk semua fungsi async
+  const [
+    kasResult,
+    bankBriResult,
+    bankBniResult,
+    piutangDagangResult,
+    persediaanResult,
+    penghapusanPersediaanResult,
+    inventarisResult,
+    akumPenyInventarisResult,
+    gedungResult,
+    akumPenyGedungResult,
+    modalTidakTetapResult,
+    modalDisetorResult,
+    usahaLainLainTokoResult,
+    modalUnitTokoResult,
+    shuTh2023Result,
+    shuTh2024Result,
+    shuTh2025Result,
+    utangDagangResult,
+    utangPihakKetigaResult,
+    utangDariSPResult,
+  ] = await Promise.all([
+    kas(),
+    bankBri(),
+    bankBni(),
+    piutangDagang(),
+    persediaan(),
+    penghapusanPersediaan(),
+    inventaris(),
+    akumPenyInventaris(),
+    gedung(),
+    akumPenyGedung(),
+    modalTidakTetap(),
+    modalDisetor(),
+    usahaLainLainToko(),
+    modalUnitToko(),
+    shuTh2023(),
+    shuTh2024(),
+    shuTh2025(year, month),
+    utangDagang(),
+    utangPihakKetiga(),
+    utangDariSP(),
   ]);
 
-  const neracaPercobaan = await getNeracaPercobaan(
-    neracaAwalKas.akhir_debit,
-    neracaAwalKas.akhir_kredit,
-    neracaMutasiDebit,
-    neracaMutasiKredit,
-  );
-
-  const neracaSaldo = await getNeracaSaldo(
-    1,
-    neracaPercobaan.debit,
-    neracaPercobaan.kredit,
-  );
-
-  const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
-  };
-
-  return {
-    neraca_awal: {
-      debit: neracaAwalKas.akhir_debit,
-      kredit: neracaAwalKas.akhir_kredit,
-    },
-    neraca_mutasi: {
-      debit: neracaMutasiDebit,
-      kredit: neracaMutasiKredit,
-    },
-    neraca_percobaan: neracaPercobaan,
-    neraca_saldo: neracaSaldo,
-    hasil_usaha: {
-      debit: 0,
-      kredit: 0,
-    },
-    neraca_akhir: neracaAkhir,
-  };
-}
-
-async function bankBri(bulan, tahun) {
-  // Ambil data akhir_debit dan akhir_kredit dari tabel neraca bulan lalu format datetime berdasarkan bulan_tahun apabila nama_uraian == "kas" dan bulan sekarang januari maka ambil desember dari tahun lalu
-  bulan = bulan - 1;
-  if (bulan === 0) {
-    bulan = 12;
-    tahun = tahun - 1;
-  }
-
-  const startOfMonth = new Date(tahun, bulan - 1, 1, 0, 0, 0); // Awal bulan sebelumnya
-  const endOfMonth = new Date(tahun, bulan, 0, 23, 59, 59); // Akhir bulan sebelumnya
-
-  const neracaAwalKas = await getNeracaAwalKas("kas", startOfMonth, endOfMonth);
-
-  const [neracaMutasiDebit, neracaMutasiKredit] = await Promise.all([
-    getTotalCashInOutByDateRange(16, startOfMonth, endOfMonth),
-    getTotalCashInOutByDateRange(1, startOfMonth, endOfMonth),
+  // Sisanya (beban2 dan dummy) tetap sama
+  const [
+    penjualanTunaiResult,
+    penjualanQrisResult,
+    penjualanKreditResult,
+    hargaPokokPenjualanResult,
+    returPenjualanResult,
+    pendapatanSewaResult,
+    pendapatanLainLainResult,
+    pembelianTunaiResult,
+    pembelianKreditResult,
+    hargaPokokPembelianResult,
+    returPembelianResult,
+    bebanGajiResult,
+    uangMakanResult,
+    thrResult,
+    bebanAdmUmumResult,
+    bebanPerlengkapanResult,
+    bebanPenyusutanInventarisResult,
+    bebanPenyusutanGedungResult,
+    pemeliharaanInventarisResult,
+    pemeliharaanGedungResult,
+    pengeluaranLainLainResult,
+    bebanKerugianPersediaanResult,
+    honorPengurusResult,
+    honorPengawasResult,
+  ] = await Promise.all([
+    penjualanTunai(),
+    penjualanQris(),
+    penjualanKredit(),
+    hargaPokokPenjualan(),
+    returPenjualan(),
+    pendapatanSewa(),
+    pendapatanLainLain(),
+    pembelianTunai(),
+    pembelianKredit(),
+    hargaPokokPembelian(),
+    returPembelian(),
+    bebanGaji(),
+    uangMakan(),
+    thrKaryawan(),
+    bebanAdmUmum(),
+    bebanPerlengkapanToko(),
+    bebanPenyusutanInventaris(),
+    bebanPenyusutanGedung(),
+    pemeliharaanInventaris(),
+    pemeliharaanGedung(),
+    pengeluaranLainLain(),
+    bebanKerugianPersediaan(),
+    honorPengurus(),
+    honorPengawas(),
   ]);
 
-  const neracaPercobaan = await getNeracaPercobaan(
-    neracaAwalKas.akhir_debit,
-    neracaAwalKas.akhir_kredit,
-    neracaMutasiDebit,
-    neracaMutasiKredit,
+  // Sum debit, persediaan sampai honor pengawas
+  const totalDebit = [
+    persediaanResult,
+    penghapusanPersediaanResult,
+    inventarisResult,
+    akumPenyInventarisResult,
+    gedungResult,
+    akumPenyGedungResult,
+    modalTidakTetapResult,
+    modalDisetorResult,
+    usahaLainLainTokoResult,
+    modalUnitTokoResult,
+    shuTh2023Result,
+    shuTh2024Result,
+    shuTh2025Result,
+    utangDagangResult,
+    utangPihakKetigaResult,
+    utangDariSPResult,
+    penjualanTunaiResult,
+    penjualanQrisResult,
+    penjualanKreditResult,
+    hargaPokokPenjualanResult,
+    returPenjualanResult,
+    pendapatanSewaResult,
+    pendapatanLainLainResult,
+    pembelianTunaiResult,
+    pembelianKreditResult,
+    hargaPokokPembelianResult,
+    returPembelianResult,
+    bebanGajiResult,
+    uangMakanResult,
+    thrResult,
+    bebanAdmUmumResult,
+    bebanPerlengkapanResult,
+    bebanPenyusutanInventarisResult,
+    bebanPenyusutanGedungResult,
+    pemeliharaanInventarisResult,
+    pemeliharaanGedungResult,
+    pengeluaranLainLainResult,
+    bebanKerugianPersediaanResult,
+    honorPengurusResult,
+    honorPengawasResult,
+  ].reduce((acc, item) => acc + parseFloat(item.hasil_usaha.debit), 0);
+
+  // Sum kredit, penjualan tunai sampai honor pengawas
+  const totalKredit = [
+    penghapusanPersediaanResult,
+    inventarisResult,
+    akumPenyInventarisResult,
+    gedungResult,
+    akumPenyGedungResult,
+    modalTidakTetapResult,
+    modalDisetorResult,
+    usahaLainLainTokoResult,
+    modalUnitTokoResult,
+    shuTh2023Result,
+    shuTh2024Result,
+    shuTh2025Result,
+    utangDagangResult,
+    utangPihakKetigaResult,
+    utangDariSPResult,
+    penjualanTunaiResult,
+    penjualanQrisResult,
+    penjualanKreditResult,
+    hargaPokokPenjualanResult,
+    returPenjualanResult,
+    pendapatanSewaResult,
+    pendapatanLainLainResult,
+    pembelianTunaiResult,
+    pembelianKreditResult,
+    hargaPokokPembelianResult,
+    returPembelianResult,
+    bebanGajiResult,
+    uangMakanResult,
+    thrResult,
+    bebanAdmUmumResult,
+    bebanPerlengkapanResult,
+    bebanPenyusutanInventarisResult,
+    bebanPenyusutanGedungResult,
+    pemeliharaanInventarisResult,
+    pemeliharaanGedungResult,
+    pengeluaranLainLainResult,
+    bebanKerugianPersediaanResult,
+    honorPengurusResult,
+    honorPengawasResult,
+  ].reduce((acc, item) => acc + parseFloat(item.hasil_usaha.kredit), 0);
+
+  persediaanResult.hasil_usaha.kredit = totalDebit - totalKredit;
+  persediaanResult.neraca_akhir.debit = totalDebit - totalKredit;
+
+  const neracaData = [
+    { akun_id: 1, ...kasResult.neraca_akhir },
+    { akun_id: 2, ...bankBriResult.neraca_akhir },
+    { akun_id: 3, ...bankBniResult.neraca_akhir },
+    { akun_id: 4, ...piutangDagangResult.neraca_akhir },
+    { akun_id: 5, ...persediaanResult.neraca_akhir },
+    { akun_id: 6, ...penghapusanPersediaanResult.neraca_akhir },
+    { akun_id: 7, ...inventarisResult.neraca_akhir },
+    { akun_id: 8, ...akumPenyInventarisResult.neraca_akhir },
+    { akun_id: 9, ...gedungResult.neraca_akhir },
+    { akun_id: 10, ...akumPenyGedungResult.neraca_akhir },
+    { akun_id: 11, ...modalTidakTetapResult.neraca_akhir },
+    { akun_id: 12, ...modalDisetorResult.neraca_akhir },
+    { akun_id: 13, ...usahaLainLainTokoResult.neraca_akhir },
+    { akun_id: 14, ...modalUnitTokoResult.neraca_akhir },
+    { akun_id: 15, ...shuTh2023Result.neraca_akhir },
+    { akun_id: 16, ...shuTh2024Result.neraca_akhir },
+    { akun_id: 17, ...shuTh2025Result.neraca_akhir },
+    { akun_id: 18, ...utangDagangResult.neraca_akhir },
+    { akun_id: 19, ...utangPihakKetigaResult.neraca_akhir },
+    { akun_id: 20, ...utangDariSPResult.neraca_akhir },
+  ].map((item) => ({
+    akun_id: item.akun_id,
+    debit: parseFloat(item.debit) || 0,
+    kredit: parseFloat(item.kredit) || 0,
+  }));
+
+  // Optimized upsert with Promise.all (parallel)
+  await Promise.all(
+    neracaData.map(async (item) => {
+      const existing = await prismaClient.neraca.findFirst({
+        where: {
+          akun_id: item.akun_id,
+          bulan_tahun: bulanTahun,
+        },
+      });
+
+      if (existing) {
+        await prismaClient.neraca.update({
+          where: {
+            id_neraca: existing.id_neraca,
+          },
+          data: {
+            debit: item.debit,
+            kredit: item.kredit,
+            updated_at: now,
+          },
+        });
+      } else {
+        await prismaClient.neraca.create({
+          data: {
+            akun_id: item.akun_id,
+            debit: item.debit,
+            kredit: item.kredit,
+            bulan_tahun: bulanTahun,
+            created_at: now,
+          },
+        });
+      }
+    })
   );
 
-  const neracaSaldo = await getNeracaSaldo(
-    1,
-    neracaPercobaan.debit,
-    neracaPercobaan.kredit,
-  );
-
-  const neracaAkhir = {
-    debit: 0,
-    kredit: 0,
+  const data_neraca = {
+    kas: kasResult,
+    bank_bri: bankBriResult,
+    bank_bni: bankBniResult,
+    piutang_dagang: piutangDagangResult,
+    persediaan: persediaanResult,
+    penghapusan_persediaan: penghapusanPersediaanResult,
+    inventaris: inventarisResult,
+    akumulasi_penyusutan_inventaris: akumPenyInventarisResult,
+    gedung: gedungResult,
+    akumulasi_penyusutan_gedung: akumPenyGedungResult,
+    modal_tidak_tetap: modalTidakTetapResult,
+    modal_disetor: modalDisetorResult,
+    usaha_lain_toko: usahaLainLainTokoResult,
+    modal_unit_toko: modalUnitTokoResult,
+    shu_th_2023: shuTh2023Result,
+    shu_th_2024: shuTh2024Result,
+    shu_th_2025: shuTh2025Result,
+    utang_dagang: utangDagangResult,
+    utang_dari_pihak_ketiga: utangPihakKetigaResult,
+    utang_dari_sp: utangDariSPResult,
+    penjualan_tunai: penjualanTunaiResult,
+    penjualan_qris: penjualanQrisResult,
+    penjualan_kredit: penjualanKreditResult,
+    harga_pokok_penjualan: hargaPokokPenjualanResult,
+    retur_penjualan: returPenjualanResult,
+    pendapatan_sewa: pendapatanSewaResult,
+    pendapatan_lain: pendapatanLainLainResult,
+    pembelian_tunai: pembelianTunaiResult,
+    pembelian_kredit: pembelianKreditResult,
+    harga_pokok_pembelian: hargaPokokPembelianResult,
+    retur_pembelian: returPembelianResult,
+    beban_gaji: bebanGajiResult,
+    uang_makan: uangMakanResult,
+    thr_karyawan: thrResult,
+    beban_adm_umum: bebanAdmUmumResult,
+    beban_perlengkapan_toko: bebanPerlengkapanResult,
+    beban_penyusutan_inventaris: bebanPenyusutanInventarisResult,
+    beban_penyusutan_gedung: bebanPenyusutanGedungResult,
+    pemeliharaan_inventaris: pemeliharaanInventarisResult,
+    pemeliharaan_gedung: pemeliharaanGedungResult,
+    pengeluaran_lain: pengeluaranLainLainResult,
+    beban_kerugian_persediaan: bebanKerugianPersediaanResult,
+    honor_pengurus: honorPengurusResult,
+    honor_pengawas: honorPengawasResult,
   };
+
+  // Total semua dari data_neraca
+  const total_neraca = {
+    total_neraca_awal: { debit: 0, kredit: 0 },
+    total_neraca_mutasi: { debit: 0, kredit: 0 },
+    total_neraca_percobaan: { debit: 0, kredit: 0 },
+    total_neraca_saldo: { debit: 0, kredit: 0 },
+    total_hasil_usaha: { debit: 0, kredit: 0 },
+    total_neraca_akhir: { debit: 0, kredit: 0 },
+  };
+
+  for (const item of Object.values(data_neraca)) {
+    total_neraca.total_neraca_awal.debit += item.neraca_awal.debit;
+    total_neraca.total_neraca_awal.kredit += item.neraca_awal.kredit;
+
+    total_neraca.total_neraca_mutasi.debit += item.neraca_mutasi.debit;
+    total_neraca.total_neraca_mutasi.kredit += item.neraca_mutasi.kredit;
+
+    total_neraca.total_neraca_percobaan.debit += item.neraca_percobaan.debit;
+    total_neraca.total_neraca_percobaan.kredit += item.neraca_percobaan.kredit;
+
+    total_neraca.total_neraca_saldo.debit += item.neraca_saldo.debit;
+    total_neraca.total_neraca_saldo.kredit += item.neraca_saldo.kredit;
+
+    total_neraca.total_hasil_usaha.debit += item.hasil_usaha.debit;
+    total_neraca.total_hasil_usaha.kredit += item.hasil_usaha.kredit;
+
+    total_neraca.total_neraca_akhir.debit += item.neraca_akhir.debit;
+    total_neraca.total_neraca_akhir.kredit += item.neraca_akhir.kredit;
+  }
 
   return {
-    neraca_awal: {
-      debit: neracaAwalKas.akhir_debit,
-      kredit: neracaAwalKas.akhir_kredit,
-    },
-    neraca_mutasi: {
-      debit: neracaMutasiDebit,
-      kredit: neracaMutasiKredit,
-    },
-    neraca_percobaan: neracaPercobaan,
-    neraca_saldo: neracaSaldo,
-    hasil_usaha: {
-      debit: 0,
-      kredit: 0,
-    },
-    neraca_akhir: neracaAkhir,
+    data_neraca,
+    total_neraca,
   };
 }
-
-async function laporanNeracaLajur(bulan, tahun) {
-  const kasResult = await kas(bulan, tahun);
-  const bankBriResult = await bankBri(bulan, tahun);
-
-  return {
-    data_neraca: {
-      kas: kasResult,
-      bank_bri: dummyData,
-      piutang_dagang: dummyData,
-      persediaan: dummyData,
-      penghapusan_persediaan: dummyData,
-      inventaris: dummyData,
-      akumulasi_penyusutan_inventaris: dummyData,
-      gedung: dummyData,
-      akumulasi_penyusutan_gedung: dummyData,
-      utang_dagang: dummyData,
-      utang_sp: dummyData,
-      modal_tidak_tetap: dummyData,
-      modal_disetor: dummyData,
-      usaha_lain_toko: dummyData,
-      modal_unit_toko: dummyData,
-      shu_th_2023: dummyData,
-      shu_th_2024: dummyData,
-      penjualan_tunai: dummyData,
-      penjualan_kredit: dummyData,
-      penjualan_qris: dummyData,
-      pendapatan_sewa: dummyData,
-      pendapatan_lain: dummyData,
-      pembelian_tunai: dummyData,
-      pembelian_kredit: dummyData,
-      retur_pembelian: dummyData,
-      beban_gaji: dummyData,
-      uang_makan: dummyData,
-      thr_karyawan: dummyData,
-      beban_adm_umum: dummyData,
-      beban_perlengkapan: dummyData,
-      beban_penyusutan_inventaris: dummyData,
-      beban_penyusutan_gedung: dummyData,
-      pemeliharaan_inventaris: dummyData,
-      pemeliharaan_gedung: dummyData,
-      pengeluaran_lain: dummyData,
-      pengeluaran_pusat_lain: dummyData,
-    },
-    total_neraca: {
-      total_neraca_awal: {
-        debit: 0,
-        kredit: 0,
-      },
-      total_neraca_mutasi: {
-        debit: 0,
-        kredit: 0,
-      },
-      total_neraca_percobaan: {
-        debit: 0,
-        kredit: 0,
-      },
-      total_neraca_saldo: {
-        debit: 0,
-        kredit: 0,
-      },
-      total_hasil_usaha: {
-        debit: 0,
-        kredit: 0,
-      },
-      total_neraca_akhir: {
-        debit: 0,
-        kredit: 0,
-      },
-    },
-  };
-}
-
-const dummyData = {
-  neraca_awal: {
-    debit: 0,
-    kredit: 0,
-  },
-  neraca_mutasi: {
-    debit: 0,
-    kredit: 0,
-  },
-  neraca_percobaan: {
-    debit: 0,
-    kredit: 0,
-  },
-  neraca_saldo: {
-    debit: 0,
-    kredit: 0,
-  },
-  hasil_usaha: {
-    debit: 0,
-    kredit: 0,
-  },
-  neraca_akhir: {
-    debit: 0,
-    kredit: 0,
-  },
-};
 
 export { laporanNeracaLajur };

@@ -32,10 +32,16 @@ const createCashInOut = async (request) => {
   request.id_cash_in_out = newIdCashInOut;
 
   // ubah request.tg_transaksi ke format date
-  request.tg_transaksi = parse(
+
+  const dateFormatted = parse(
     request.tg_transaksi,
     "dd-MM-yyyy, HH:mm",
     new Date()
+  );
+
+  const gmtPlus7Offset = 7 * 60;
+  request.tg_transaksi = new Date(
+    dateFormatted.getTime() + gmtPlus7Offset * 60 * 1000,
   );
 
   request.created_at = generateDate();
@@ -86,9 +92,18 @@ const updateCashInOut = async (request) => {
   const data = {};
   updateFields(request, data, fieldCashInOut);
 
-  // if (request.tg_transaksi) {
-  //   data.tg_transaksi = parse(request.tg_transaksi);
-  // }
+  if (request.tg_transaksi) {
+    const dateFormatted = parse(
+      request.tg_transaksi,
+      "dd-MM-yyyy, HH:mm",
+      new Date(),
+    );
+
+    const gmtPlus7Offset = 7 * 60;
+    data.tg_transaksi = new Date(
+      dateFormatted.getTime() + gmtPlus7Offset * 60 * 1000,
+    );
+  }
 
   data.updated_at = generateDate();
 

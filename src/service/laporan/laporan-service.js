@@ -15,6 +15,8 @@ import {
   laporanPengeluaran,
 } from "./lap-realisasi-pendapatan.js";
 import { laporanNeracaLajur } from "./lap-neraca-lajur.js";
+import { prismaClient } from "../../application/database.js";
+import { generateDate, getNextMonthDate } from "../../utils/generate-date.js";
 
 const getLaporanHasilUsaha = async (request) => {
   request = validate(monthlyIncomeValidation, request);
@@ -24,14 +26,47 @@ const getLaporanHasilUsaha = async (request) => {
   const laporanHargaPokokPenjualanResult = await laporanHargaPokokPenjualan();
   const laporanBebanOperasionalResult = await laporanBebanOperasional();
   const laporanPendapatanLainResult = await laporanPendapatanLain();
+  const sisaHasilUsaha =
+    laporanBebanOperasionalResult.hasil_usaha_bersih +
+    laporanPendapatanLainResult.total_pendapatan_lain;
+  const sisaHasilUsahaLastMonth =
+    laporanBebanOperasionalResult.hasil_usaha_bersih_last_month +
+    laporanPendapatanLainResult.total_pendapatan_lain_last_month;
+
   const laporanSisaHasilUsaha = {
-    sisa_hasil_usaha:
-      laporanBebanOperasionalResult.hasil_usaha_bersih +
-      laporanPendapatanLainResult.total_pendapatan_lain,
-    sisa_hasil_usaha_last_month:
-      laporanBebanOperasionalResult.hasil_usaha_bersih_last_month +
-      laporanPendapatanLainResult.total_pendapatan_lain_last_month,
+    sisa_hasil_usaha: sisaHasilUsaha,
+    sisa_hasil_usaha_last_month: sisaHasilUsahaLastMonth,
   };
+
+  const now = generateDate();
+  const bulanTahun = getNextMonthDate(request.year, request.month);
+  bulanTahun.setUTCHours(0, 0, 0, 0);
+
+  const existing = await prismaClient.hasilUsaha.findFirst({
+    where: {
+      bulan_tahun: bulanTahun,
+    },
+  });
+
+  if (existing) {
+    await prismaClient.hasilUsaha.update({
+      where: {
+        id_hasil_usaha: existing.id_hasil_usaha,
+      },
+      data: {
+        sisa_hasil_usaha: sisaHasilUsaha,
+        updated_at: now,
+      },
+    });
+  } else {
+    await prismaClient.hasilUsaha.create({
+      data: {
+        sisa_hasil_usaha: sisaHasilUsaha,
+        bulan_tahun: bulanTahun,
+        created_at: now,
+      },
+    });
+  }
 
   return {
     penjualan: laporanPenjualanResult,
@@ -77,12 +112,7 @@ const getLaporanRealisasiPendapatan = async (request) => {
 const getLaporanNeracaLajur = async (request) => {
   request = validate(monthlyIncomeValidation, request);
 
-  const laporanNeracaLajurResult = await laporanNeracaLajur(
-    request.month,
-    request.year,
-  );
-
-  return laporanNeracaLajurResult;
+  return await laporanNeracaLajur(request.month, request.year);
 };
 
 export default {

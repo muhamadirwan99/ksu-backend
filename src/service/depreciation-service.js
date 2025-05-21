@@ -2,7 +2,7 @@ import { prismaClient } from "../application/database.js";
 import { generateDate } from "../utils/generate-date.js";
 
 const calculateDepreciation = async (year) => {
-  // year = 2025; // Hardcoded to 2025 for the sake of the example
+  // year = 2024; // Hardcoded to 2025 for the sake of the example
   const previousYear = year - 1;
 
   // Check if there's a record for the previous year's depreciation
@@ -23,15 +23,15 @@ const calculateDepreciation = async (year) => {
   // If no record exists for the previous year, use the 2024 default values
   const bebanPenyusutanInventaris = lastYearInventaris
     ? parseFloat(lastYearInventaris.nilai_aset_akhir)
-    : 2395506; // Default for 2024
+    : 149185956; // Default for 2024
 
-  const persenBerkurangInventaris = 2.94 / 100; // Persentase berkurang inventaris
+  const persenBerkurangInventaris = 1.55846 / 100; // Persentase berkurang inventaris
 
   const bebanPenyusutanGedung = lastYearGedung
     ? parseFloat(lastYearGedung.nilai_aset_akhir)
-    : 4701052; // Default for 2024
+    : 154878130; // Default for 2024
 
-  const persenBertambahGedung = 11.32 / 100; // Persentase bertambah gedung
+  const persenBertambahGedung = 3.379 / 100; // Persentase bertambah gedung
 
   // Calculate the depreciation values
   const totalPenyusutanInventaris =
@@ -43,8 +43,8 @@ const calculateDepreciation = async (year) => {
     bebanPenyusutanInventaris - totalPenyusutanInventaris;
   const nilaiAsetAkhirGedung = bebanPenyusutanGedung + totalPenyusutanGedung;
 
-  const penyusutanInventarisPerBulan = nilaiAsetAkhirInventaris / 12;
-  const penyusutanGedungPerBulan = nilaiAsetAkhirGedung / 12;
+  const penyusutanInventarisPerBulan = totalPenyusutanInventaris / 12;
+  const penyusutanGedungPerBulan = totalPenyusutanGedung / 12;
 
   // Check if records for this year already exist, and skip storing new records if they do
   const existingInventaris = await prismaClient.penyusutanAset.findFirst({

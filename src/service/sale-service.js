@@ -196,6 +196,14 @@ const getSaleList = async (request) => {
     });
   }
 
+  if (request.id_anggota) {
+    filters.push({
+      id_anggota: {
+        contains: request.id_anggota,
+      },
+    });
+  }
+
   const sortBy = request.sort_by || ["tg_penjualan"];
   const sortOrder = request.sort_order || ["asc"];
 

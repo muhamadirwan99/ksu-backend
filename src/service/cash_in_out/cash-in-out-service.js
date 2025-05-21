@@ -36,7 +36,7 @@ const createCashInOut = async (request) => {
   const dateFormatted = parse(
     request.tg_transaksi,
     "dd-MM-yyyy, HH:mm",
-    new Date(),
+    new Date()
   );
 
   const gmtPlus7Offset = 7 * 60;

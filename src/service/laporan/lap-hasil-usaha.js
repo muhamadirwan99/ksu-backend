@@ -542,4 +542,5 @@ export {
   laporanBebanOperasional,
   laporanPendapatanLain,
   getTotalCashInOutByDateRange,
+  getTotalRetur,
 };

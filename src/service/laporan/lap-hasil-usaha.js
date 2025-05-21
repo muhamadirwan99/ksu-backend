@@ -428,16 +428,16 @@ async function laporanBebanOperasional() {
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       beban_peny_inventaris: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_inventaris_last_month: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_gedung: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       beban_peny_gedung_last_month: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       pemeliharaan_inventaris: totalPemeliharaanInventarisCurrent,
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,
@@ -493,4 +493,5 @@ export {
   laporanBebanOperasional,
   laporanPendapatanLain,
   getTotalCashInOutByDateRange,
+  getTotalRetur,
 };

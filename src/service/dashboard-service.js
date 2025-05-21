@@ -2,6 +2,7 @@ import { prismaClient } from "../application/database.js";
 import { monthlyIncomeValidation } from "../validation/dashboard-validation.js";
 import { validate } from "../validation/validation.js";
 import { generateDate } from "../utils/generate-date.js";
+import { getTotalRetur } from "./laporan/lap-hasil-usaha.js";
 
 const getDashboardIncome = async () => {
   // Mendapatkan offset zona waktu (dalam menit) dan mengonversinya ke milidetik
@@ -85,7 +86,7 @@ const getDashboardIncome = async () => {
   const cashInToday = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
-      created_at: {
+      tg_transaksi: {
         gte: todayStart,
         lt: todayEnd,
       },
@@ -96,7 +97,7 @@ const getDashboardIncome = async () => {
   const cashInYesterday = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
-      created_at: {
+      tg_transaksi: {
         gte: yesterdayStart,
         lt: yesterdayEnd,
       },
@@ -194,7 +195,7 @@ const getStatisticIncomeMonthly = async (request) => {
   const cashInCurrentMonth = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
-      created_at: {
+      tg_transaksi: {
         gte: startDate,
         lt: endDate,
       },
@@ -204,7 +205,7 @@ const getStatisticIncomeMonthly = async (request) => {
   const cashInLastMonth = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
-      created_at: {
+      tg_transaksi: {
         gte: lastMonthStartDate,
         lt: lastMonthEndDate,
       },
@@ -234,11 +235,11 @@ const getStatisticIncomeMonthly = async (request) => {
     totalSaleLastMonth += parseFloat(purchase.total_nilai_jual);
   });
 
-  // Mendapatkan data cash in berdasarkan request.month dan request.year
+  // Mendapatkan data cash out berdasarkan request.month dan request.year
   const cashOutCurrentMonth = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "2",
-      created_at: {
+      tg_transaksi: {
         gte: startDate,
         lt: endDate,
       },
@@ -248,7 +249,7 @@ const getStatisticIncomeMonthly = async (request) => {
   const cashOutLastMonth = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "2",
-      created_at: {
+      tg_transaksi: {
         gte: lastMonthStartDate,
         lt: lastMonthEndDate,
       },
@@ -271,15 +272,23 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const totalIncomeLastMonth = totalSaleLastMonth + totalCashInLastMonth;
 
+  const [returCurrent, returLast] = await Promise.all([
+    getTotalRetur(startDate, endDate),
+    getTotalRetur(lastMonthStartDate, lastMonthEndDate),
+  ]);
+
   const totalExpenseCurrentMonth =
-    parseFloat(totalPurchaseCurrentMonth) +
+    parseFloat(totalPurchaseCurrentMonth) -
+    returCurrent +
     parseFloat(totalCashOutCurrentMonth);
 
   const totalProfitCurrentMonth =
     parseFloat(totalSaleCurrentMonth) - parseFloat(totalPurchaseCurrentMonth);
 
   const totalExpenseLastMonth =
-    parseFloat(totalPurchaseLastMonth) + parseFloat(totalCashOutLastMonth);
+    parseFloat(totalPurchaseLastMonth) -
+    returLast +
+    parseFloat(totalCashOutLastMonth);
 
   const totalProfitLastMonth =
     parseFloat(totalSaleLastMonth) - parseFloat(totalPurchaseLastMonth);

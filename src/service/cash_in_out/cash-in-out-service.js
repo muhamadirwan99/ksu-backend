@@ -35,7 +35,7 @@ const createCashInOut = async (request) => {
   request.tg_transaksi = parse(
     request.tg_transaksi,
     "dd-MM-yyyy, HH:mm",
-    new Date(),
+    new Date()
   );
 
   request.created_at = generateDate();

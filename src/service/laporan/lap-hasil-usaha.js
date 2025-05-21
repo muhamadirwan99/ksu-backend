@@ -204,7 +204,7 @@ async function laporanHargaPokokPenjualan() {
   const inventoryAtEnd = await getInventorySnapshot(tanggalAwalBulanLalu);
 
   const inventoryAtTwoMonth = await getInventorySnapshot(
-    tanggalAwalDuaBulanLalu,
+    tanggalAwalDuaBulanLalu
   );
 
   // Hitung total nilai persediaan awal (stok * harga beli)
@@ -220,7 +220,7 @@ async function laporanHargaPokokPenjualan() {
     (total, item) => {
       return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
     },
-    0,
+    0
   );
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran tunai
@@ -272,6 +272,11 @@ async function laporanHargaPokokPenjualan() {
     getTotalRetur(lastMonthStartDate, lastMonthEndDate),
   ]);
 
+  const persediaanAwal =
+    totalLastMonthCashPurchase + totalLastMonthCreditPurchase;
+  const persediaanAwalLast =
+    totalTwoMonthCashPurchase + totalTwoMonthCreditPurchase;
+
   const netPurchaseCurrent =
     totalCurrentMonthCashPurchase +
     totalCurrentMonthCreditPurchase -
@@ -280,17 +285,9 @@ async function laporanHargaPokokPenjualan() {
   const netPurchaseLast =
     totalLastMonthCashPurchase + totalLastMonthCreditPurchase - returLast;
 
-  const readyToSellCurrent =
-    totalCurrentInventoryValue +
-    totalCurrentMonthCashPurchase +
-    totalCurrentMonthCreditPurchase -
-    returCurrent;
+  const readyToSellCurrent = persediaanAwal + netPurchaseCurrent - returCurrent;
 
-  const readyToSellLast =
-    totalLastInventoryValue +
-    totalLastMonthCashPurchase +
-    totalLastMonthCreditPurchase -
-    returLast;
+  const readyToSellLast = persediaanAwalLast + netPurchaseLast - returLast;
 
   const totalSalesCurrent =
     readyToSellCurrent -
@@ -303,9 +300,8 @@ async function laporanHargaPokokPenjualan() {
   grossProfitLast = totalLastMonthSale - totalSalesLast;
 
   return {
-    persediaan_awal: totalLastMonthCashPurchase + totalLastMonthCreditPurchase,
-    persediaan_awal_last_month:
-      totalTwoMonthCashPurchase + totalTwoMonthCreditPurchase,
+    persediaan_awal: persediaanAwal,
+    persediaan_awal_last_month: persediaanAwalLast,
     pembelian_tunai: totalCurrentMonthCashPurchase,
     pembelian_tunai_last_month: totalLastMonthCashPurchase,
     pembelian_kredit: totalCurrentMonthCreditPurchase,
@@ -475,16 +471,16 @@ async function laporanBebanOperasional() {
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       beban_peny_inventaris: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan,
+        totalBebanPenyusutanInventaris.penyusutan_bulan
       ),
       beban_peny_inventaris_last_month: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan,
+        totalBebanPenyusutanInventaris.penyusutan_bulan
       ),
       beban_peny_gedung: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan,
+        totalBebanPenyusutanGedung.penyusutan_bulan
       ),
       beban_peny_gedung_last_month: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan,
+        totalBebanPenyusutanGedung.penyusutan_bulan
       ),
       pemeliharaan_inventaris: totalPemeliharaanInventarisCurrent,
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,

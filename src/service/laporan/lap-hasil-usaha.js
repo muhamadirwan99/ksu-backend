@@ -285,9 +285,9 @@ async function laporanHargaPokokPenjualan() {
   const netPurchaseLast =
     totalLastMonthCashPurchase + totalLastMonthCreditPurchase - returLast;
 
-  const readyToSellCurrent = persediaanAwal + netPurchaseCurrent - returCurrent;
+  const readyToSellCurrent = persediaanAwal + netPurchaseCurrent;
 
-  const readyToSellLast = persediaanAwalLast + netPurchaseLast - returLast;
+  const readyToSellLast = persediaanAwalLast + netPurchaseLast;
 
   const totalSalesCurrent =
     readyToSellCurrent -

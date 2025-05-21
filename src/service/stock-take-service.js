@@ -44,8 +44,6 @@ const createStockTake = async (request) => {
 const searchStockTake = async (request) => {
   request = validate(searchStockTakeValidation, request);
 
-  // 1 ((page - 1) * size) = 0
-  // 2 ((page - 1) * size) = 10
   const skip = (request.page - 1) * request.size;
 
   const filters = [];
@@ -86,8 +84,45 @@ const searchStockTake = async (request) => {
     },
   });
 
+  // Ambil semua ID produk dari hasil stocktake
+  const productIds = stocks.map((stock) => stock.id_product);
+
+  // Ambil data produk terkait
+  const products = await prismaClient.product.findMany({
+    where: {
+      id_product: {
+        in: productIds,
+      },
+    },
+  });
+
+  const productMap = products.reduce((acc, product) => {
+    acc[product.id_product] = product;
+    return acc;
+  }, {});
+
+  // Tambahkan informasi harga dan perhitungan ke hasil stocks
+  const enrichedStocks = stocks.map((stock) => {
+    const product = productMap[stock.id_product];
+    const jumlahProduk = product?.jumlah ?? 0;
+    const jumlahStocktake = stock.stok_akhir ?? "";
+    const hargaJual = product?.harga_jual ?? 0;
+
+    const totalHargaJualStock = jumlahProduk * hargaJual;
+    const totalHargaJualStockTake =
+      jumlahStocktake !== "" ? jumlahStocktake * hargaJual : "";
+    const selisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
+
+    return {
+      ...stock,
+      total_harga_jual_stock: totalHargaJualStock,
+      total_harga_jual_stocktake: totalHargaJualStockTake,
+      selisih_harga_jual: selisihHargaJual,
+    };
+  });
+
   return {
-    data_stock: stocks,
+    data_stock: enrichedStocks,
     paging: {
       page: request.page,
       total_item: totalItems,
@@ -126,26 +161,40 @@ const rekonStockTake = async (request) => {
       const divisiNama = divisiMap[product.id_divisi] || "Tidak Diketahui";
 
       const stockTake = latestStockTakes.find(
-        (stockTake) => stockTake.id_product === product.id_product,
+        (stockTake) => stockTake.id_product === product.id_product
       );
+
+      const jumlahProduk = product.jumlah;
+      const jumlahStocktake = stockTake ? stockTake.stok_akhir : "";
+
+      const hargaJual = product.harga_jual || 0;
+
+      const totalHargaJualStock = jumlahProduk * hargaJual;
+      const totalHargaJualStockTake =
+        jumlahStocktake !== "" ? jumlahStocktake * hargaJual : "";
+
+      const selisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
 
       return {
         id_product: product.id_product,
         nm_product: product.nm_product,
         divisi: divisiNama,
-        sisa: product.jumlah,
-        stock: stockTake ? stockTake.stok_akhir : "",
+        sisa: jumlahProduk,
+        stock: jumlahStocktake,
+        total_harga_jual_stock: totalHargaJualStock,
+        total_harga_jual_stocktake: totalHargaJualStockTake,
+        selisih_harga_jual: selisihHargaJual,
         selisih: stockTake ? stockTake.selisih : "",
         petugas: stockTake ? stockTake.username : "",
         is_selisih: stockTake ? stockTake.selisih !== 0 : true,
       };
-    }),
+    })
   );
 
   // **Filter berdasarkan isSelisih**
   if (is_selisih !== undefined) {
     listProduct = listProduct.filter(
-      (product) => product.is_selisih === is_selisih,
+      (product) => product.is_selisih === is_selisih
     );
   }
 

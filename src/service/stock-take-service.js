@@ -104,7 +104,7 @@ const searchStockTake = async (request) => {
   // Tambahkan informasi harga dan perhitungan ke hasil stocks
   const enrichedStocks = stocks.map((stock) => {
     const product = productMap[stock.id_product];
-    const jumlahProduk = product?.jumlah ?? 0;
+    const jumlahProduk = stock.stok_awal ?? 0;
     const jumlahStocktake = stock.stok_akhir ?? "";
     const hargaJual = product?.harga_jual ?? 0;
 

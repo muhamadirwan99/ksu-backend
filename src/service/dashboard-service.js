@@ -2,7 +2,7 @@ import { prismaClient } from "../application/database.js";
 import { monthlyIncomeValidation } from "../validation/dashboard-validation.js";
 import { validate } from "../validation/validation.js";
 import { generateDate } from "../utils/generate-date.js";
-import { getTotalRetur } from "./laporan/lap-hasil-usaha.js";
+import laporanService from "./laporan/laporan-service.js";
 
 const getDashboardIncome = async () => {
   // Mendapatkan offset zona waktu (dalam menit) dan mengonversinya ke milidetik
@@ -142,180 +142,74 @@ const getDashboardIncome = async () => {
 
 const getStatisticIncomeMonthly = async (request) => {
   request = validate(monthlyIncomeValidation, request);
-  // Mendapatkan data penjualan berdasarkan request.month dan request.year
-  const month = request.month;
-  const year = request.year;
 
-  // Tanggal awal dan akhir bulan saat ini
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1)); // Awal bulan berikutnya
+  const result = await laporanService.getLaporanHasilUsaha(request);
 
-  // Jika bulan adalah Januari (1), bulan sebelumnya harus Desember tahun lalu
-  let lastMonthStartDate, lastMonthEndDate;
-  if (month === 1) {
-    // Bulan sebelumnya adalah Desember tahun sebelumnya
-    lastMonthStartDate = new Date(Date.UTC(year - 1, 11, 1)); // Desember tahun lalu
-    lastMonthEndDate = new Date(Date.UTC(year - 1, 12, 1)); // Awal Januari tahun ini
-  } else {
-    // Bulan sebelumnya masih dalam tahun yang sama
-    lastMonthStartDate = new Date(Date.UTC(year, month - 2, 1)); // Bulan sebelumnya
-    lastMonthEndDate = new Date(Date.UTC(year, month - 1, 1)); // Awal bulan ini
-  }
-
-  const purchasesCurrentMonth = await prismaClient.penjualan.findMany({
-    where: {
-      created_at: {
-        gte: startDate,
-        lt: endDate,
-      },
-    },
-  });
-
-  const purchasesLastMonth = await prismaClient.penjualan.findMany({
-    where: {
-      created_at: {
-        gte: lastMonthStartDate,
-        lt: lastMonthEndDate,
-      },
-    },
-  });
-
-  let totalPurchaseCurrentMonth = 0;
-  let totalPurchaseLastMonth = 0;
-
-  purchasesCurrentMonth.forEach((purchase) => {
-    totalPurchaseCurrentMonth += parseFloat(purchase.total_nilai_beli);
-  });
-
-  purchasesLastMonth.forEach((purchase) => {
-    totalPurchaseLastMonth += parseFloat(purchase.total_nilai_beli);
-  });
-
-  // Mendapatkan data cash in berdasarkan request.month dan request.year
-  const cashInCurrentMonth = await prismaClient.cashInOut.findMany({
-    where: {
-      id_cash: "1",
-      tg_transaksi: {
-        gte: startDate,
-        lt: endDate,
-      },
-    },
-  });
-
-  const cashInLastMonth = await prismaClient.cashInOut.findMany({
-    where: {
-      id_cash: "1",
-      tg_transaksi: {
-        gte: lastMonthStartDate,
-        lt: lastMonthEndDate,
-      },
-    },
-  });
-
-  let totalCashInCurrentMonth = 0;
-  let totalCashInLastMonth = 0;
-
-  cashInCurrentMonth.forEach((cashIn) => {
-    totalCashInCurrentMonth += parseFloat(cashIn.nominal);
-  });
-
-  cashInLastMonth.forEach((cashIn) => {
-    totalCashInLastMonth += parseFloat(cashIn.nominal);
-  });
-
-  // Mendapatkan data penjualan berdasarkan request.month dan request.year
-  let totalSaleCurrentMonth = 0;
-  let totalSaleLastMonth = 0;
-
-  purchasesCurrentMonth.forEach((purchase) => {
-    totalSaleCurrentMonth += parseFloat(purchase.total_nilai_jual);
-  });
-
-  purchasesLastMonth.forEach((purchase) => {
-    totalSaleLastMonth += parseFloat(purchase.total_nilai_jual);
-  });
-
-  // Mendapatkan data cash out berdasarkan request.month dan request.year
-  const cashOutCurrentMonth = await prismaClient.cashInOut.findMany({
-    where: {
-      id_cash: "2",
-      tg_transaksi: {
-        gte: startDate,
-        lt: endDate,
-      },
-    },
-  });
-
-  const cashOutLastMonth = await prismaClient.cashInOut.findMany({
-    where: {
-      id_cash: "2",
-      tg_transaksi: {
-        gte: lastMonthStartDate,
-        lt: lastMonthEndDate,
-      },
-    },
-  });
-
-  let totalCashOutCurrentMonth = 0;
-  let totalCashOutLastMonth = 0;
-
-  cashOutCurrentMonth.forEach((cashOut) => {
-    totalCashOutCurrentMonth += parseFloat(cashOut.nominal);
-  });
-
-  cashOutLastMonth.forEach((cashOut) => {
-    totalCashOutLastMonth += parseFloat(cashOut.nominal);
-  });
-
-  const totalIncomeCurrentMonth =
-    totalSaleCurrentMonth + totalCashInCurrentMonth;
-
-  const totalIncomeLastMonth = totalSaleLastMonth + totalCashInLastMonth;
-
-  const [returCurrent, returLast] = await Promise.all([
-    getTotalRetur(startDate, endDate),
-    getTotalRetur(lastMonthStartDate, lastMonthEndDate),
-  ]);
-
-  const totalExpenseCurrentMonth =
-    parseFloat(totalPurchaseCurrentMonth) -
-    returCurrent +
-    parseFloat(totalCashOutCurrentMonth);
-
-  const totalProfitCurrentMonth =
-    parseFloat(totalSaleCurrentMonth) - parseFloat(totalPurchaseCurrentMonth);
-
-  const totalExpenseLastMonth =
-    parseFloat(totalPurchaseLastMonth) -
-    returLast +
-    parseFloat(totalCashOutLastMonth);
-
-  const totalProfitLastMonth =
-    parseFloat(totalSaleLastMonth) - parseFloat(totalPurchaseLastMonth);
-
-  // Menghitung persentase kenaikan dari total income bulan ini dan bulan lalu
-  const percentageIncome =
-    ((totalIncomeCurrentMonth - totalIncomeLastMonth) / totalIncomeLastMonth) *
+  const penjualanToko = result.penjualan.total_current_month_sale;
+  const presentasePenjualan =
+    ((penjualanToko - result.penjualan.total_last_month_sale) /
+      result.penjualan.total_last_month_sale) *
     100;
 
-  // Menghitung persentase kenaikan dari total expense bulan ini dan bulan lalu
-  const percentageExpense =
-    ((totalExpenseCurrentMonth - totalExpenseLastMonth) /
-      totalExpenseLastMonth) *
+  const keuntunganToko =
+    result.penjualan.total_current_month_sale -
+    result.penjualan.total_current_month_sale_nilai_beli;
+  const keuntunganTokoLastMonth =
+    result.penjualan.total_last_month_sale -
+    result.penjualan.total_last_month_sale_nilai_beli;
+  const presentaseKeuntungan =
+    ((keuntunganToko - keuntunganTokoLastMonth) / keuntunganTokoLastMonth) *
     100;
 
-  // Menghitung persentase kenaikan dari total profit bulan ini dan bulan lalu
-  const percentageProfit =
-    ((totalProfitCurrentMonth - totalProfitLastMonth) / totalProfitLastMonth) *
+  const pendapatanToko = {
+    penjualan: penjualanToko,
+    presentase_penjualan: presentasePenjualan,
+    keuntungan: keuntunganToko,
+    presentase_keuntungan: presentaseKeuntungan,
+  };
+
+  const pendapatanKoperasi =
+    result.penjualan.total_current_month_sale +
+    result.pendapatan_lain.total_pendapatan_lain;
+  const pendapatanKoperasiLastMonth =
+    result.penjualan.total_last_month_sale +
+    result.pendapatan_lain.total_pendapatan_lain_last_month;
+  const presentasePendapatanKoperasi =
+    ((pendapatanKoperasi - pendapatanKoperasiLastMonth) /
+      pendapatanKoperasiLastMonth) *
     100;
+
+  const pengeluaranKoperasi =
+    result.harga_pokok_penjualan.pembelian_bersih +
+    result.beban_operasional.total_beban_operasional;
+  const pengeluaranKoperasiLastMonth =
+    result.harga_pokok_penjualan.pembelian_bersih_last_month +
+    result.beban_operasional.total_beban_operasional_last_month;
+  const presentasePengeluaranKoperasi =
+    ((pengeluaranKoperasi - pengeluaranKoperasiLastMonth) /
+      pengeluaranKoperasiLastMonth) *
+    100;
+
+  const keuntunganKoperasi = pendapatanKoperasi - pengeluaranKoperasi;
+  const keuntunganKoperasiLastMonth =
+    pendapatanKoperasiLastMonth - pengeluaranKoperasiLastMonth;
+  const presentaseKeuntunganKoperasi =
+    ((keuntunganKoperasi - keuntunganKoperasiLastMonth) /
+      keuntunganKoperasiLastMonth) *
+    100;
+
+  const koperasi = {
+    pendapatan_koperasi: pendapatanKoperasi,
+    presentase_pendapatan: presentasePendapatanKoperasi,
+    pengeluaran_koperasi: pengeluaranKoperasi,
+    presentase_pengeluaran: presentasePengeluaranKoperasi,
+    keuntungan_koperasi: keuntunganKoperasi,
+    presentase_keuntungan: presentaseKeuntunganKoperasi,
+  };
 
   return {
-    total_income: totalIncomeCurrentMonth,
-    percentage_income: percentageIncome,
-    total_expense: totalExpenseCurrentMonth,
-    percentage_expense: percentageExpense,
-    total_profit: totalProfitCurrentMonth,
-    percentage_profit: percentageProfit,
+    pendapatan_toko: pendapatanToko,
+    pendapatan_koperasi: koperasi,
   };
 };
 

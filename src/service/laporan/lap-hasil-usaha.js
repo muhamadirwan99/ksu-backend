@@ -98,13 +98,17 @@ async function laporanPenjualan() {
   // Menghitung total penjualan untuk jenis pembayaran tunai bulan ini dan bulan lalu
   let totalCurrentMonthCashSale = 0;
   let totalLastMonthCashSale = 0;
+  let totalCurrentMonthSaleNilaiBeli = 0;
+  let totalLastMonthSaleNilaiBeli = 0;
 
   currentMonthCashSales.forEach((sale) => {
     totalCurrentMonthCashSale += parseFloat(sale.total_nilai_jual);
+    totalCurrentMonthSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   lastMonthCashSales.forEach((sale) => {
     totalLastMonthCashSale += parseFloat(sale.total_nilai_jual);
+    totalLastMonthSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran kredit
@@ -114,13 +118,17 @@ async function laporanPenjualan() {
   // Menghitung total penjualan untuk jenis pembayaran kredit bulan ini dan bulan lalu
   let totalCurrentMonthCreditSale = 0;
   let totalLastMonthCreditSale = 0;
+  let totalCurrentMonthCreditSaleNilaiBeli = 0;
+  let totalLastMonthCreditSaleNilaiBeli = 0;
 
   currentMonthCreditSales.forEach((sale) => {
     totalCurrentMonthCreditSale += parseFloat(sale.total_nilai_jual);
+    totalCurrentMonthCreditSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   lastMonthCreditSales.forEach((sale) => {
     totalLastMonthCreditSale += parseFloat(sale.total_nilai_jual);
+    totalLastMonthCreditSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran qris
@@ -130,13 +138,17 @@ async function laporanPenjualan() {
   // Menghitung total penjualan untuk jenis pembayaran qris bulan ini dan bulan lalu
   let totalCurrentMonthQrisSale = 0;
   let totalLastMonthQrisSale = 0;
+  let totalCurrentMonthQrisSaleNilaiBeli = 0;
+  let totalLastMonthQrisSaleNilaiBeli = 0;
 
   currentMonthQrisSales.forEach((sale) => {
     totalCurrentMonthQrisSale += parseFloat(sale.total_nilai_jual);
+    totalCurrentMonthQrisSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   lastMonthQrisSales.forEach((sale) => {
     totalLastMonthQrisSale += parseFloat(sale.total_nilai_jual);
+    totalLastMonthQrisSaleNilaiBeli += parseFloat(sale.total_nilai_beli);
   });
 
   // Menghitung total penjualan bulan ini dan bulan lalu
@@ -150,9 +162,21 @@ async function laporanPenjualan() {
     parseFloat(totalLastMonthCreditSale) +
     parseFloat(totalLastMonthQrisSale);
 
+  totalCurrentMonthSaleNilaiBeli =
+    parseFloat(totalCurrentMonthSaleNilaiBeli) +
+    parseFloat(totalCurrentMonthCreditSaleNilaiBeli) +
+    parseFloat(totalCurrentMonthQrisSaleNilaiBeli);
+
+  totalLastMonthSaleNilaiBeli =
+    parseFloat(totalLastMonthSaleNilaiBeli) +
+    parseFloat(totalLastMonthCreditSaleNilaiBeli) +
+    parseFloat(totalLastMonthQrisSaleNilaiBeli);
+
   return {
     total_current_month_sale: totalCurrentMonthSale,
     total_last_month_sale: totalLastMonthSale,
+    total_current_month_sale_nilai_beli: totalCurrentMonthSaleNilaiBeli,
+    total_last_month_sale_nilai_beli: totalLastMonthSaleNilaiBeli,
     current_month_cash_sale: totalCurrentMonthCashSale,
     last_month_cash_sale: totalLastMonthCashSale,
     current_month_credit_sale: totalCurrentMonthCreditSale,
@@ -204,7 +228,7 @@ async function laporanHargaPokokPenjualan() {
   const inventoryAtEnd = await getInventorySnapshot(tanggalAwalBulanLalu);
 
   const inventoryAtTwoMonth = await getInventorySnapshot(
-    tanggalAwalDuaBulanLalu
+    tanggalAwalDuaBulanLalu,
   );
 
   // Hitung total nilai persediaan awal (stok * harga beli)
@@ -220,7 +244,7 @@ async function laporanHargaPokokPenjualan() {
     (total, item) => {
       return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
     },
-    0
+    0,
   );
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran tunai
@@ -471,16 +495,16 @@ async function laporanBebanOperasional() {
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       beban_peny_inventaris: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_inventaris_last_month: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan
+        totalBebanPenyusutanInventaris.penyusutan_bulan,
       ),
       beban_peny_gedung: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       beban_peny_gedung_last_month: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan
+        totalBebanPenyusutanGedung.penyusutan_bulan,
       ),
       pemeliharaan_inventaris: totalPemeliharaanInventarisCurrent,
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,

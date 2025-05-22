@@ -140,26 +140,38 @@ const getDashboardIncome = async () => {
   };
 };
 
+const getPercentageChange = (current, previous) => {
+  if (previous === 0) return 0;
+  return ((current - previous) / Math.abs(previous)) * 100;
+};
+
 const getStatisticIncomeMonthly = async (request) => {
   request = validate(monthlyIncomeValidation, request);
-
   const result = await laporanService.getLaporanHasilUsaha(request);
 
-  const penjualanToko = result.penjualan.total_current_month_sale;
-  const presentasePenjualan =
-    ((penjualanToko - result.penjualan.total_last_month_sale) /
-      result.penjualan.total_last_month_sale) *
-    100;
+  const {
+    total_current_month_sale,
+    total_last_month_sale,
+    total_current_month_sale_nilai_beli,
+    total_last_month_sale_nilai_beli,
+  } = result.penjualan;
 
+  // Penjualan
+  const penjualanToko = total_current_month_sale;
+  const presentasePenjualan = getPercentageChange(
+    total_current_month_sale,
+    total_last_month_sale,
+  );
+
+  // Keuntungan
   const keuntunganToko =
-    result.penjualan.total_current_month_sale -
-    result.penjualan.total_current_month_sale_nilai_beli;
+    total_current_month_sale - total_current_month_sale_nilai_beli;
   const keuntunganTokoLastMonth =
-    result.penjualan.total_last_month_sale -
-    result.penjualan.total_last_month_sale_nilai_beli;
-  const presentaseKeuntungan =
-    ((keuntunganToko - keuntunganTokoLastMonth) / keuntunganTokoLastMonth) *
-    100;
+    total_last_month_sale - total_last_month_sale_nilai_beli;
+  const presentaseKeuntungan = getPercentageChange(
+    keuntunganToko,
+    keuntunganTokoLastMonth,
+  );
 
   const pendapatanToko = {
     penjualan: penjualanToko,
@@ -168,35 +180,43 @@ const getStatisticIncomeMonthly = async (request) => {
     presentase_keuntungan: presentaseKeuntungan,
   };
 
+  // Pendapatan Koperasi
   const pendapatanKoperasi =
     result.penjualan.total_current_month_sale +
     result.pendapatan_lain.total_pendapatan_lain;
+
   const pendapatanKoperasiLastMonth =
     result.penjualan.total_last_month_sale +
     result.pendapatan_lain.total_pendapatan_lain_last_month;
-  const presentasePendapatanKoperasi =
-    ((pendapatanKoperasi - pendapatanKoperasiLastMonth) /
-      pendapatanKoperasiLastMonth) *
-    100;
 
+  const presentasePendapatanKoperasi = getPercentageChange(
+    pendapatanKoperasi,
+    pendapatanKoperasiLastMonth,
+  );
+
+  // Pengeluaran Koperasi
   const pengeluaranKoperasi =
     result.harga_pokok_penjualan.pembelian_bersih +
     result.beban_operasional.total_beban_operasional;
+
   const pengeluaranKoperasiLastMonth =
     result.harga_pokok_penjualan.pembelian_bersih_last_month +
     result.beban_operasional.total_beban_operasional_last_month;
-  const presentasePengeluaranKoperasi =
-    ((pengeluaranKoperasi - pengeluaranKoperasiLastMonth) /
-      pengeluaranKoperasiLastMonth) *
-    100;
 
+  const presentasePengeluaranKoperasi = getPercentageChange(
+    pengeluaranKoperasi,
+    pengeluaranKoperasiLastMonth,
+  );
+
+  // Keuntungan Koperasi
   const keuntunganKoperasi = pendapatanKoperasi - pengeluaranKoperasi;
   const keuntunganKoperasiLastMonth =
     pendapatanKoperasiLastMonth - pengeluaranKoperasiLastMonth;
-  const presentaseKeuntunganKoperasi =
-    ((keuntunganKoperasi - keuntunganKoperasiLastMonth) /
-      keuntunganKoperasiLastMonth) *
-    100;
+
+  const presentaseKeuntunganKoperasi = getPercentageChange(
+    keuntunganKoperasi,
+    keuntunganKoperasiLastMonth,
+  );
 
   const koperasi = {
     pendapatan_koperasi: pendapatanKoperasi,

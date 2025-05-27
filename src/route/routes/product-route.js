@@ -17,6 +17,10 @@ const productRoute = () => {
     productController.removeProduct,
   );
   userRouter.post("/api/products/list-products", productController.listProduct);
+  userRouter.post(
+    "/api/products/aktivitas-stock",
+    productController.aktivitasStock,
+  );
 };
 
 export default productRoute;

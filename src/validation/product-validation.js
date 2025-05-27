@@ -38,9 +38,19 @@ const searchProductValidation = Joi.object({
   sort_order: Joi.array().optional(),
 });
 
+const aktivitasStockValidation = Joi.object({
+  page: Joi.number().min(1).positive().default(1),
+  size: Joi.number().min(1).positive().max(1000).default(10),
+  id_product: Joi.string().optional(),
+  nm_produk: Joi.string().optional(),
+  sort_by: Joi.array().optional(),
+  sort_order: Joi.array().optional(),
+});
+
 export {
   addProductValidation,
   getProductValidation,
   updateProductValidation,
   searchProductValidation,
+  aktivitasStockValidation,
 };

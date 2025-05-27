@@ -4,6 +4,7 @@ import { ResponseError } from "../utils/response-error.js";
 import { generateDate } from "../utils/generate-date.js";
 import {
   addProductValidation,
+  aktivitasStockValidation,
   getProductValidation,
   searchProductValidation,
   updateProductValidation,
@@ -212,10 +213,127 @@ const searchProduct = async (request) => {
   };
 };
 
+const aktivitasStock = async (request) => {
+  request = validate(aktivitasStockValidation, request);
+  const skip = (request.page - 1) * request.size;
+
+  const productConditions = [];
+  if (request.id_product) {
+    productConditions.push({ id_product: { equals: request.id_product } });
+  }
+  if (request.nm_produk) {
+    productConditions.push({ nm_produk: { contains: request.nm_produk } });
+  }
+
+  const filterPenjualan =
+    productConditions.length > 0
+      ? {
+          DetailPenjualan: {
+            some: {
+              AND: productConditions,
+            },
+          },
+        }
+      : {};
+
+  const filterPembelian =
+    productConditions.length > 0
+      ? {
+          DetailPembelian: {
+            some: {
+              AND: productConditions,
+            },
+          },
+        }
+      : {};
+
+  const penjualanList = await prismaClient.penjualan.findMany({
+    where: filterPenjualan,
+    include: {
+      DetailPenjualan: true,
+    },
+    take: request.size,
+    skip: skip,
+    orderBy: {
+      id_penjualan: "desc",
+    },
+  });
+
+  const pembelianList = await prismaClient.pembelian.findMany({
+    where: filterPembelian,
+    include: {
+      DetailPembelian: true,
+    },
+    take: request.size,
+    skip: skip,
+    orderBy: {
+      id_pembelian: "desc",
+    },
+  });
+
+  const aktivitas = penjualanList.flatMap((penjualanItem) =>
+    penjualanItem.DetailPenjualan.filter((detail) => {
+      const matchId = request.id_product
+        ? detail.id_product.includes(request.id_product)
+        : true;
+      const matchName = request.nm_produk
+        ? detail.nm_produk.includes(request.nm_produk)
+        : true;
+      return matchId && matchName;
+    }).map((detail) => ({
+      tg_aktivitas: detail.created_at,
+      tg_update_aktivitas: detail.updated_at || detail.created_at,
+      id_product: detail.id_product,
+      nm_product: detail.nm_produk,
+      divisi: detail.nm_divisi,
+      jumlah: "-" + detail.jumlah,
+      aktivitas: "Penjualan",
+      id_aktivitas: detail.id_penjualan,
+      user: penjualanItem.username || "",
+    })),
+  );
+
+  aktivitas.push(
+    ...pembelianList.flatMap((pembelianItem) =>
+      pembelianItem.DetailPembelian.filter((detail) => {
+        const matchId = request.id_product
+          ? detail.id_product.includes(request.id_product)
+          : true;
+        const matchName = request.nm_produk
+          ? detail.nm_produk.includes(request.nm_produk)
+          : true;
+        return matchId && matchName;
+      }).map((detail) => ({
+        tg_aktivitas: detail.created_at,
+        tg_update_aktivitas: detail.updated_at || detail.created_at,
+        id_product: detail.id_product,
+        nm_product: detail.nm_produk,
+        divisi: detail.nm_divisi,
+        jumlah: detail.jumlah,
+        aktivitas: "Pembelian",
+        id_aktivitas: detail.id_pembelian,
+        user: pembelianItem.username || "",
+      })),
+    ),
+  );
+
+  aktivitas.sort((a, b) => new Date(b.tg_aktivitas) - new Date(a.tg_aktivitas));
+
+  return {
+    data_aktivitas: aktivitas,
+    paging: {
+      page: request.page,
+      total_item: aktivitas.length,
+      total_page: Math.ceil(aktivitas.length / request.size),
+    },
+  };
+};
+
 export default {
   createProduct,
   getProduct,
   updateProduct,
   removeProduct,
   searchProduct,
+  aktivitasStock,
 };

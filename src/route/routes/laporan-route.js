@@ -15,6 +15,7 @@ const laporanRoute = () => {
     "/api/laporan/neraca-lajur",
     laporanController.getLaporanNeracaLajur,
   );
+  userRouter.post("/api/laporan/neraca", laporanController.getLaporanNeraca);
 };
 
 export default laporanRoute;

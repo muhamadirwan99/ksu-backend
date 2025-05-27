@@ -17,6 +17,7 @@ import {
 import { laporanNeracaLajur } from "./lap-neraca-lajur.js";
 import { prismaClient } from "../../application/database.js";
 import { generateDate, getNextMonthDate } from "../../utils/generate-date.js";
+import { laporanNeraca } from "./lap-neraca.js";
 
 const getLaporanHasilUsaha = async (request) => {
   request = validate(monthlyIncomeValidation, request);
@@ -115,8 +116,15 @@ const getLaporanNeracaLajur = async (request) => {
   return await laporanNeracaLajur(request.month, request.year);
 };
 
+const getLaporanNeraca = async (request) => {
+  request = validate(monthlyIncomeValidation, request);
+
+  return await laporanNeraca(request.month, request.year);
+};
+
 export default {
   getLaporanHasilUsaha,
   getLaporanRealisasiPendapatan,
   getLaporanNeracaLajur,
+  getLaporanNeraca,
 };

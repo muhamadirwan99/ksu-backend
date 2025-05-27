@@ -43,8 +43,11 @@ import {
   utangDagang,
   utangDariSP,
   utangPihakKetiga,
-} from "./neraca/account-neraca-lajur.js";
-import { getDate, setYearMonth } from "./neraca/calculate-neraca-lajur.js";
+} from "./neraca-lajur/account-neraca-lajur.js";
+import {
+  getDate,
+  setYearMonth,
+} from "./neraca-lajur/calculate-neraca-lajur.js";
 import { generateDate, getNextMonthDate } from "../../utils/generate-date.js";
 import { prismaClient } from "../../application/database.js";
 
@@ -303,7 +306,7 @@ async function laporanNeracaLajur(month, year) {
           },
         });
       }
-    })
+    }),
   );
 
   const data_neraca = {

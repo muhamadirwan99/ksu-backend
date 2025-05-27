@@ -40,8 +40,22 @@ const getLaporanNeracaLajur = async (req, res, next) => {
   }
 };
 
+const getLaporanNeraca = async (req, res, next) => {
+  try {
+    const result = await laporanService.getLaporanNeraca(req.body);
+    const responses = new ResponseSuccess(
+      "Laporan neraca successfully registered",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export default {
   getLaporanHasilUsaha,
   getLaporanRealisasiPendapatan,
   getLaporanNeracaLajur,
+  getLaporanNeraca,
 };

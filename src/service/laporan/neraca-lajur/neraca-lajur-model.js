@@ -1,4 +1,4 @@
-function createNeracaModel(
+function createNeracaLajurModel(
   neracaAwalDebit,
   neracaAwalKredit,
   neracaMutasiDebit,
@@ -24,4 +24,4 @@ function createNeracaModel(
   };
 }
 
-export { createNeracaModel };
+export { createNeracaLajurModel };

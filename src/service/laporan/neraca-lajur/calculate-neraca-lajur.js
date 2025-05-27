@@ -1,5 +1,5 @@
 import { prismaClient } from "../../../application/database.js";
-import { createNeracaModel } from "./neraca-lajur-model.js";
+import { createNeracaLajurModel } from "./neraca-lajur-model.js";
 
 let startDate, endDate;
 
@@ -205,7 +205,7 @@ async function generateNeraca({
       }
     : { debit: 0, kredit: 0 };
 
-  return createNeracaModel(
+  return createNeracaLajurModel(
     neracaAwalKas.akhir_debit,
     neracaAwalKas.akhir_kredit,
     neracaMutasiDebit,
@@ -239,7 +239,7 @@ async function generateNeracaSHU({
     // kredit: neracaAwalKas.akhir_kredit + (await getKredit()),
   };
 
-  return createNeracaModel(
+  return createNeracaLajurModel(
     neracaAwalKas.akhir_debit,
     neracaAwalKas.akhir_kredit,
     0,

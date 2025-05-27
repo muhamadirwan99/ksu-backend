@@ -17,7 +17,7 @@ function createNeracaModel(
   modalUnitToko,
   shuTh2023,
   shuTh2024,
-  shuTh2025,
+  shuTh2025
 ) {
   const jumlahAktivaLancar =
     kas +
@@ -29,6 +29,8 @@ function createNeracaModel(
 
   const jumlahAktivaTetap = inventaris + gedung;
   const jumlahAkumPenyusutan = akumPenyusutanInventaris + akumPenyusutanGedung;
+  const nilaiBukuAktiva = jumlahAktivaTetap - jumlahAkumPenyusutan;
+  const jumlahAktivaLain = 0;
 
   const jumlahHutangLancar = hutangDagang + modalTidakTetap;
 
@@ -60,10 +62,11 @@ function createNeracaModel(
       gedung: akumPenyusutanGedung,
       jumlah: jumlahAkumPenyusutan,
     },
-    nilai_buku_aktiva: jumlahAktivaTetap - jumlahAkumPenyusutan,
+    nilai_buku_aktiva: nilaiBukuAktiva,
     aktiva_lain: {
-      jumlah: 0,
+      jumlah: jumlahAktivaLain,
     },
+    total_aktiva: jumlahAktivaLancar + nilaiBukuAktiva + jumlahAktivaLain,
     hutang_lancar: {
       hutang_dagang: hutangDagang,
       modal_tidak_tetap: modalTidakTetap,

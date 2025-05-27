@@ -40,8 +40,22 @@ const rekonStockTake = async (req, res, next) => {
   }
 };
 
+const detailRekonStockTake = async (req, res, next) => {
+  try {
+    const result = await stockTakeService.detailRekonStockTake(req.body);
+    const responses = new ResponseSuccess(
+      "Success detail rekon stock take",
+      result,
+    ).getResponse();
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export default {
   createStockTake,
   getStockTakeList,
   rekonStockTake,
+  detailRekonStockTake,
 };

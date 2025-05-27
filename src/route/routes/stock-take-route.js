@@ -15,6 +15,10 @@ const stockTakeRoute = () => {
     "/api/stock/list-stock-take",
     stockTakeHarianController.rekonStockTake,
   );
+  userRouter.post(
+    "/api/stock/detail-stock-take",
+    stockTakeHarianController.detailRekonStockTake,
+  );
 };
 
 export default stockTakeRoute;

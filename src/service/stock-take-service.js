@@ -4,6 +4,7 @@ import { ResponseError } from "../utils/response-error.js";
 import { generateDate } from "../utils/generate-date.js";
 import {
   addStockTakeValidation,
+  detailRekonStockTakeValidation,
   rekonStockTakeValidation,
   searchStockTakeValidation,
 } from "../validation/stock-take-harian-validation.js";
@@ -146,22 +147,144 @@ const rekonStockTake = async (request) => {
     `;
 
   // Ambil semua data product
-  const products = await prismaClient.product.findMany();
+  const products = await prismaClient.product.findMany({
+    where: {
+      status_product: true,
+    },
+  });
 
-  // Ambil semua data divisi untuk mengurangi query individual
-  const divisiList = await prismaClient.divisi.findMany();
-  const divisiMap = divisiList.reduce((acc, divisi) => {
-    acc[divisi.id_divisi] = divisi.nm_divisi;
+  // Gunakan Promise.all untuk menangani async dalam map
+  // Ambil semua data divisi
+  const divisions = await prismaClient.divisi.findMany();
+
+  // Buat mapping produk per divisi
+  const productsByDivisi = products.reduce((acc, product) => {
+    if (!acc[product.id_divisi]) acc[product.id_divisi] = [];
+    acc[product.id_divisi].push(product);
     return acc;
   }, {});
+
+  // Untuk setiap divisi, totalkan data produk-produknya
+  let listProduct = await Promise.all(
+    divisions.map(async (divisi) => {
+      const productsInDivisi = productsByDivisi[divisi.id_divisi] || [];
+
+      let stock = 0;
+      let stock_take = 0;
+      let total_harga_jual_stock = 0;
+      let total_harga_jual_stocktake = 0;
+      let selisih_harga_jual = 0;
+      let selisih = 0;
+
+      productsInDivisi.forEach((product) => {
+        const stockTake = latestStockTakes.find(
+          (st) => st.id_product === product.id_product,
+        );
+        const jumlahProduk = product.jumlah || 0;
+        const jumlahStocktake = stockTake ? stockTake.stok_akhir || 0 : 0;
+        const hargaJual = product.harga_jual || 0;
+
+        stock += jumlahProduk;
+        stock_take += jumlahStocktake;
+        total_harga_jual_stock += jumlahProduk * hargaJual;
+        total_harga_jual_stocktake += jumlahStocktake * hargaJual;
+        selisih_harga_jual += (jumlahStocktake - jumlahProduk) * hargaJual;
+      });
+
+      selisih = stock_take - stock;
+
+      return {
+        id_divisi: divisi.id_divisi,
+        nm_divisi: divisi.nm_divisi,
+        stock,
+        stock_take,
+        total_harga_jual_stock,
+        total_harga_jual_stocktake,
+        selisih_harga_jual,
+        selisih,
+      };
+    }),
+  );
+
+  // **Filter berdasarkan isSelisih**
+  if (is_selisih !== undefined) {
+    listProduct = listProduct.filter(
+      (product) => product.is_selisih === is_selisih,
+    );
+  }
+
+  // **Total Stock, Stock Take, dan Selisih**
+  const totalStock = listProduct.reduce(
+    (acc, product) => acc + product.stock,
+    0,
+  );
+  const totalStockTake = listProduct.reduce(
+    (acc, product) => acc + product.stock_take,
+    0,
+  );
+  const totalSelisih = totalStockTake - totalStock;
+  const totalHargaJualStock = listProduct.reduce(
+    (acc, product) => acc + product.total_harga_jual_stock,
+    0,
+  );
+  const totalHargaJualStockTake = listProduct.reduce(
+    (acc, product) => acc + product.total_harga_jual_stocktake,
+    0,
+  );
+  const totalSelisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
+
+  const totalData = {
+    total_stock: totalStock,
+    total_harga_jual_stock: totalHargaJualStock,
+    total_stock_take: totalStockTake,
+    total_harga_jual_stocktake: totalHargaJualStockTake,
+    total_selisih: totalSelisih,
+    total_selisih_harga_jual: totalSelisihHargaJual,
+  };
+
+  // **Pagination**
+  const totalItems = listProduct.length;
+  const totalPages = Math.ceil(totalItems / size);
+  const paginatedData = listProduct.slice((page - 1) * size, page * size);
+
+  return {
+    data_stock: paginatedData,
+    total_data: totalData,
+    paging: {
+      page: page,
+      total_item: totalItems,
+      total_page: totalPages,
+    },
+  };
+};
+
+const detailRekonStockTake = async (request) => {
+  request = validate(detailRekonStockTakeValidation, request);
+  const { page, size, is_selisih } = request;
+
+  // Ambil semua data stock take terbaru per id_product
+  const latestStockTakes = await prismaClient.$queryRaw`
+        SELECT s1.*
+        FROM stocktake s1
+                 JOIN (SELECT id_product, MAX(created_at) AS latest_created_at
+                       FROM stocktake
+                       GROUP BY id_product) s2
+                      ON s1.id_product = s2.id_product AND s1.created_at = s2.latest_created_at
+    `;
+
+  // Ambil semua data product
+  const products = await prismaClient.product.findMany({
+    where: {
+      status_product: true,
+      id_divisi: request.id_divisi,
+    },
+  });
 
   // Gunakan Promise.all untuk menangani async dalam map
   let listProduct = await Promise.all(
     products.map(async (product) => {
-      const divisiNama = divisiMap[product.id_divisi] || "Tidak Diketahui";
-
       const stockTake = latestStockTakes.find(
-        (stockTake) => stockTake.id_product === product.id_product
+        (stockTake) => stockTake.id_product === product.id_product,
       );
 
       const jumlahProduk = product.jumlah;
@@ -178,7 +301,6 @@ const rekonStockTake = async (request) => {
       return {
         id_product: product.id_product,
         nm_product: product.nm_product,
-        divisi: divisiNama,
         stock: jumlahProduk,
         stock_take: jumlahStocktake,
         total_harga_jual_stock: totalHargaJualStock,
@@ -188,13 +310,13 @@ const rekonStockTake = async (request) => {
         petugas: stockTake ? stockTake.username : "",
         is_selisih: stockTake ? stockTake.selisih !== 0 : true,
       };
-    })
+    }),
   );
 
   // **Filter berdasarkan isSelisih**
   if (is_selisih !== undefined) {
     listProduct = listProduct.filter(
-      (product) => product.is_selisih === is_selisih
+      (product) => product.is_selisih === is_selisih,
     );
   }
 
@@ -217,4 +339,5 @@ export default {
   createStockTake,
   searchStockTake,
   rekonStockTake,
+  detailRekonStockTake,
 };

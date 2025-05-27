@@ -85,6 +85,7 @@ function createNeracaModel(
       shu_th_2025: shuTh2025,
       jumlah: jumlahDanaModalShu,
     },
+    total_pasiva: jumlahHutangLancar + utangDariSp + jumlahDanaModalShu,
   };
 }
 

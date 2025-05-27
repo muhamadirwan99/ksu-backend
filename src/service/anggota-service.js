@@ -148,6 +148,31 @@ const searchAnggota = async (request) => {
     orderBy: orderBy,
   });
 
+  // Ambil id_anggota dari semua anggota
+  const anggotaIds = anggota.map((item) => item.id_anggota);
+
+  // Ambil total_nilai_jual per anggota dalam satu query
+  const penjualanTotals = await prismaClient.penjualan.groupBy({
+    by: ["id_anggota"],
+    where: {
+      id_anggota: { in: anggotaIds },
+    },
+    _sum: {
+      total_nilai_jual: true,
+    },
+  });
+
+  // Buat map untuk lookup cepat
+  const penjualanMap = {};
+  penjualanTotals.forEach((item) => {
+    penjualanMap[item.id_anggota] = item._sum.total_nilai_jual || 0;
+  });
+
+  // Tambahkan total_nominal_transaksi ke setiap anggota
+  anggota.forEach((item) => {
+    item.total_nominal_transaksi = penjualanMap[item.id_anggota] || 0;
+  });
+
   const totalItems = await prismaClient.anggota.count({
     where: {
       AND: filters,

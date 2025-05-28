@@ -195,7 +195,7 @@ const searchProduct = async (request) => {
 
   totalJumlahKeseluruhan = allProductsByFilter.reduce(
     (acc, product) => acc + product.jumlah,
-    0,
+    0
   );
 
   return {
@@ -249,26 +249,14 @@ const aktivitasStock = async (request) => {
 
   const penjualanList = await prismaClient.penjualan.findMany({
     where: filterPenjualan,
-    include: {
-      DetailPenjualan: true,
-    },
-    take: request.size,
-    skip: skip,
-    orderBy: {
-      id_penjualan: "desc",
-    },
+    include: { DetailPenjualan: true },
+    orderBy: { id_penjualan: "desc" },
   });
 
   const pembelianList = await prismaClient.pembelian.findMany({
     where: filterPembelian,
-    include: {
-      DetailPembelian: true,
-    },
-    take: request.size,
-    skip: skip,
-    orderBy: {
-      id_pembelian: "desc",
-    },
+    include: { DetailPembelian: true },
+    orderBy: { id_pembelian: "desc" },
   });
 
   const aktivitas = penjualanList.flatMap((penjualanItem) =>
@@ -290,7 +278,7 @@ const aktivitasStock = async (request) => {
       aktivitas: "Penjualan",
       id_aktivitas: detail.id_penjualan,
       user: penjualanItem.username || "",
-    })),
+    }))
   );
 
   aktivitas.push(
@@ -313,18 +301,26 @@ const aktivitasStock = async (request) => {
         aktivitas: "Pembelian",
         id_aktivitas: detail.id_pembelian,
         user: pembelianItem.username || "",
-      })),
-    ),
+      }))
+    )
   );
 
   aktivitas.sort((a, b) => new Date(b.tg_aktivitas) - new Date(a.tg_aktivitas));
 
+  // PAGINATION secara manual di array hasil akhir
+  const page = Number(request.page) || 1;
+  const size = Number(request.size) || 10;
+  const start = (page - 1) * size;
+  const end = start + size;
+
+  const paginatedAktivitas = aktivitas.slice(start, end);
+
   return {
-    data_aktivitas: aktivitas,
+    data_aktivitas: paginatedAktivitas,
     paging: {
-      page: request.page,
+      page: page,
       total_item: aktivitas.length,
-      total_page: Math.ceil(aktivitas.length / request.size),
+      total_page: Math.ceil(aktivitas.length / size),
     },
   };
 };

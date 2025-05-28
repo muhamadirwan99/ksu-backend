@@ -91,7 +91,7 @@ const createPurchase = async (request) => {
       // Jika produk tidak ada, lempar error (atau Anda bisa buat produk baru tergantung kebutuhan)
       if (!existingProduct) {
         throw new Error(
-          `Product with ID ${detail.id_product} does not exist. Please add the product first.`,
+          `Product with ID ${detail.id_product} does not exist. Please add the product first.`
         );
       }
 
@@ -137,7 +137,7 @@ const createPurchase = async (request) => {
         total_nilai_jual: detail.total_nilai_jual,
         created_at: generateDate(),
       };
-    }),
+    })
   );
 
   await prismaClient.detailPembelian.createMany({
@@ -160,6 +160,15 @@ const getDetailPurchase = async (request) => {
     throw new ResponseError("Purchase is not found");
   }
 
+  const existingPurchase = await prismaClient.pembelian.findUnique({
+    where: {
+      id_pembelian: request.id_pembelian,
+    },
+  });
+  if (!existingPurchase) {
+    throw new ResponseError("Purchase is not found");
+  }
+
   const detailPurchase = await prismaClient.detailPembelian.findMany({
     where: {
       id_pembelian: request.id_pembelian,
@@ -170,7 +179,10 @@ const getDetailPurchase = async (request) => {
     throw new ResponseError("Purchase is not found");
   }
 
-  return detailPurchase;
+  return {
+    existing_purchase: existingPurchase,
+    detail_purchase: detailPurchase,
+  };
 };
 
 const getPurchaseList = async (request) => {
@@ -304,7 +316,7 @@ const removePurchase = async (request) => {
       } catch (e) {
         throw new ResponseError(`Product ${detail.id_product} is not found`);
       }
-    }),
+    })
   );
 
   await prismaClient.detailPembelian.deleteMany({

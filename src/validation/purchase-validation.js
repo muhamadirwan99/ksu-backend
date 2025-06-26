@@ -32,6 +32,7 @@ const getDetailPurchaseValidation = Joi.object({
 const searchPurchaseValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
   size: Joi.number().min(1).positive().max(1000).default(10),
+  id_supplier: Joi.string().max(10).optional(),
   keterangan: Joi.string().optional(),
   sort_by: Joi.array().optional(),
   sort_order: Joi.array().optional(),

@@ -16,6 +16,10 @@ const laporanRoute = () => {
     laporanController.getLaporanNeracaLajur,
   );
   userRouter.post("/api/laporan/neraca", laporanController.getLaporanNeraca);
+  userRouter.post(
+    "/api/laporan/penjualan",
+    laporanController.getLaporanPenjualan,
+  );
 };
 
 export default laporanRoute;

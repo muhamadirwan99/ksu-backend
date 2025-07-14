@@ -137,14 +137,22 @@ const getLaporanPenjualan = async (request) => {
 
   endDate.setHours(23, 59, 59, 999);
 
+  // Build where clause with optional payment method filter
+  const whereClause = {
+    created_at: {
+      gte: startDate,
+      lte: endDate,
+    },
+  };
+
+  // Add payment method filter if provided
+  if (request.metode_pembayaran) {
+    whereClause.jenis_pembayaran = request.metode_pembayaran.toUpperCase();
+  }
+
   // Get all sales data within the date range
   const salesData = await prismaClient.penjualan.findMany({
-    where: {
-      created_at: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
+    where: whereClause,
     include: {
       DetailPenjualan: {
         include: {
@@ -207,9 +215,14 @@ const getLaporanPenjualan = async (request) => {
   Object.keys(productSummary).forEach((productName) => {
     const product = productSummary[productName];
 
+    // Determine which payment methods to show
+    const methodsToShow = request.metode_pembayaran
+      ? [request.metode_pembayaran.toUpperCase()]
+      : ["TUNAI", "QRIS", "KREDIT"];
+
     // Add rows for each payment method that has data
-    ["TUNAI", "QRIS", "KREDIT"].forEach((method) => {
-      if (product[method].jumlah > 0) {
+    methodsToShow.forEach((method) => {
+      if (product[method] && product[method].jumlah > 0) {
         formattedData.push({
           id_product: product.id_product,
           produk: productName,
@@ -230,8 +243,12 @@ const getLaporanPenjualan = async (request) => {
   });
 
   // Add totals for each payment method
-  ["TUNAI", "QRIS", "KREDIT"].forEach((method) => {
-    if (paymentMethodTotals[method].jumlah > 0) {
+  const methodsToShow = request.metode_pembayaran
+    ? [request.metode_pembayaran.toUpperCase()]
+    : ["TUNAI", "QRIS", "KREDIT"];
+
+  methodsToShow.forEach((method) => {
+    if (paymentMethodTotals[method] && paymentMethodTotals[method].jumlah > 0) {
       formattedData.push({
         produk: `TOTAL PENJUALAN ${method}`,
         metode_pembayaran: method,
@@ -251,38 +268,50 @@ const getLaporanPenjualan = async (request) => {
     }
   });
 
-  // Add grand total
+  // Calculate totals based on filtered methods
+  const relevantMethods = request.metode_pembayaran
+    ? [request.metode_pembayaran.toUpperCase()]
+    : ["TUNAI", "QRIS", "KREDIT"];
+
   const grandTotal = {
-    jumlah: Object.values(paymentMethodTotals).reduce(
-      (sum, method) => sum + method.jumlah,
+    jumlah: relevantMethods.reduce(
+      (sum, method) => sum + (paymentMethodTotals[method]?.jumlah || 0),
       0
     ),
-    modal: Object.values(paymentMethodTotals).reduce(
-      (sum, method) => sum + method.modal,
+    modal: relevantMethods.reduce(
+      (sum, method) => sum + (paymentMethodTotals[method]?.modal || 0),
       0
     ),
-    hasil_penjualan: Object.values(paymentMethodTotals).reduce(
-      (sum, method) => sum + method.hasil_penjualan,
+    hasil_penjualan: relevantMethods.reduce(
+      (sum, method) =>
+        sum + (paymentMethodTotals[method]?.hasil_penjualan || 0),
       0
     ),
-    keuntungan: Object.values(paymentMethodTotals).reduce(
-      (sum, method) => sum + method.keuntungan,
+    keuntungan: relevantMethods.reduce(
+      (sum, method) => sum + (paymentMethodTotals[method]?.keuntungan || 0),
       0
     ),
   };
 
-  formattedData.push({
-    produk: "TOTAL PENJUALAN",
-    metode_pembayaran: "ALL",
-    jumlah: grandTotal.jumlah,
-    modal: grandTotal.modal,
-    hasil_penjualan: grandTotal.hasil_penjualan,
-    keuntungan: grandTotal.keuntungan,
-    persentase:
-      grandTotal.modal > 0
-        ? Math.round((grandTotal.keuntungan / grandTotal.modal) * 100)
-        : 0,
-  });
+  // Add grand total only if we're showing multiple methods or have data
+  if (!request.metode_pembayaran || grandTotal.jumlah > 0) {
+    const totalLabel = request.metode_pembayaran
+      ? `TOTAL PENJUALAN ${request.metode_pembayaran.toUpperCase()}`
+      : "TOTAL PENJUALAN";
+
+    formattedData.push({
+      produk: totalLabel,
+      metode_pembayaran: request.metode_pembayaran?.toUpperCase() || "ALL",
+      jumlah: grandTotal.jumlah,
+      modal: grandTotal.modal,
+      hasil_penjualan: grandTotal.hasil_penjualan,
+      keuntungan: grandTotal.keuntungan,
+      persentase:
+        grandTotal.modal > 0
+          ? Math.round((grandTotal.keuntungan / grandTotal.modal) * 100)
+          : 0,
+    });
+  }
 
   return {
     periode: {

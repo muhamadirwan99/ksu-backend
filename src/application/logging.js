@@ -5,9 +5,21 @@ export const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
     winston.format.timestamp({
-      format: "YYYY-MM-DD HH:mm:ss",
+      format: () => {
+        // Format timestamp dengan timezone WIB
+        return new Date().toLocaleString("id-ID", {
+          timeZone: "Asia/Jakarta",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        });
+      },
     }),
-    winston.format.json(), // Format JSON untuk log terstruktur
+    winston.format.json() // Format JSON untuk log terstruktur
   ),
   transports: [
     // Rotasi log harian

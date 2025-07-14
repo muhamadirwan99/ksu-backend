@@ -20,18 +20,23 @@ class BackupService {
     }
   }
 
-  // Generate nama file backup dengan timestamp
+  // Generate nama file backup dengan timestamp WIB
   generateBackupFileName() {
+    // Buat timestamp dengan timezone WIB
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const wibTime = new Date(
+      now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
+    );
+
+    const year = wibTime.getFullYear();
+    const month = String(wibTime.getMonth() + 1).padStart(2, "0");
+    const day = String(wibTime.getDate()).padStart(2, "0");
+    const hours = String(wibTime.getHours()).padStart(2, "0");
+    const minutes = String(wibTime.getMinutes()).padStart(2, "0");
+    const seconds = String(wibTime.getSeconds()).padStart(2, "0");
 
     const timestamp = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
-    return `backup_ksu_${timestamp}.sql`;
+    return `backup_ksu_${timestamp}_WIB.sql`;
   }
 
   // Backup database menggunakan mysqldump

@@ -11,6 +11,7 @@ services:
       - .env
     environment:
       NODE_ENV: production
+      TZ: Asia/Jakarta
     ports:
       - "3000:3000"
     volumes:
@@ -18,3 +19,6 @@ services:
       - ./backups:/app/backups
       # Mount logs directory
       - ./logs:/app/logs
+      # Mount timezone info
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro

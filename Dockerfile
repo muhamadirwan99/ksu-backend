@@ -1,9 +1,14 @@
 # Use Node.js 20 as the base image
 FROM node:20
 
+# Set timezone to Asia/Jakarta (WIB)
+ENV TZ=Asia/Jakarta
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Install MySQL client tools for backup functionality
 RUN apt-get update && apt-get install -y \
     default-mysql-client \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory

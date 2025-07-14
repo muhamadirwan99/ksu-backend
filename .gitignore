@@ -1,8 +1,16 @@
 node_modules
 logs
 .env
+.env.production
+.env.local
+.env.development
 .idea
 
 .vercel
-.env
 /backup
+/backups
+
+# Security - Never commit these files
+*.key
+*.pem
+secrets.json

@@ -101,21 +101,27 @@ EOF
 
 print_status "MySQL configuration created ✓"
 
-# Create production environment file
-print_header "Creating production environment file..."
-cat > ".env.production" << 'EOF'
-# Database Configuration
-DATABASE_URL=mysql://ksu_user:Ksu123321@@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
-DATABASE_URL_NEW=mysql://ksu_user:Ksu123321@@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
+# Create production environment file template
+print_header "Creating production environment file template..."
+cat > ".env.production.example" << 'EOF'
+# MySQL Container Configuration
+MYSQL_ROOT_PASSWORD=your_secure_root_password_here
+MYSQL_DATABASE=ksu
+MYSQL_USER=ksu_user
+MYSQL_PASSWORD=your_secure_user_password_here
+
+# Application Configuration
+DATABASE_URL=mysql://ksu_user:your_secure_user_password_here@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
+DATABASE_URL_NEW=mysql://ksu_user:your_secure_user_password_here@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
 
 # JWT Configuration
-JWT_SECRET_KEY=ksu_koperasi_production_secret_key_2025
+JWT_SECRET_KEY=your_strong_jwt_secret_key_here
 
 # Backup Configuration for Docker
 BACKUP_MYSQL_HOST=mysql-db
 BACKUP_MYSQL_PORT=3306
 BACKUP_MYSQL_USER=root
-BACKUP_MYSQL_PASSWORD=Ksu123321@
+BACKUP_MYSQL_PASSWORD=your_secure_root_password_here
 BACKUP_MYSQL_DATABASE=ksu
 BACKUP_DIRECTORY=/app/backups
 BACKUP_RETENTION_DAYS=30
@@ -129,7 +135,8 @@ LOG_LEVEL=info
 LOG_FILE=/app/logs/application.log
 EOF
 
-print_status "Production environment file created ✓"
+print_status "Production environment template created ✓"
+print_warning "IMPORTANT: Copy .env.production.example to .env.production and fill in your actual passwords!"
 
 # Create backup test script
 print_header "Creating backup test script..."

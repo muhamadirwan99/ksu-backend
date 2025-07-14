@@ -6,11 +6,13 @@ services:
     image: mysql:8.0
     container_name: ksu-mysql
     restart: unless-stopped
+    env_file:
+      - .env.production
     environment:
-      MYSQL_ROOT_PASSWORD: Ksu123321@
-      MYSQL_DATABASE: ksu
-      MYSQL_USER: ksu_user
-      MYSQL_PASSWORD: Ksu123321@
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3307:3306"
     volumes:
@@ -32,17 +34,10 @@ services:
     restart: unless-stopped
     depends_on:
       - mysql-db
+    env_file:
+      - .env.production
     environment:
-      DATABASE_URL: mysql://ksu_user:Ksu123321@@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
-      JWT_SECRET_KEY: ksu_koperasi
       NODE_ENV: production
-      # Backup configuration
-      BACKUP_MYSQL_HOST: mysql-db
-      BACKUP_MYSQL_PORT: 3306
-      BACKUP_MYSQL_USER: root
-      BACKUP_MYSQL_PASSWORD: Ksu123321@
-      BACKUP_MYSQL_DATABASE: ksu
-      BACKUP_DIRECTORY: /app/backups
     ports:
       - "3000:3000"
     volumes:

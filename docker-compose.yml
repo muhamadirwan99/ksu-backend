@@ -7,17 +7,10 @@ services:
       dockerfile: Dockerfile
     container_name: ksu-backend
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      DATABASE_URL_NEW: mysql://root:Ksu123321@@192.168.99.2:3306/ksu?allowPublicKeyRetrieval=true
-      JWT_SECRET_KEY: ksu_koperasi
       NODE_ENV: production
-      # Backup configuration for external database
-      BACKUP_MYSQL_HOST: 192.168.99.2
-      BACKUP_MYSQL_PORT: 3306
-      BACKUP_MYSQL_USER: root
-      BACKUP_MYSQL_PASSWORD: Ksu123321@
-      BACKUP_MYSQL_DATABASE: ksu
-      BACKUP_DIRECTORY: /app/backups
     ports:
       - "3000:3000"
     volumes:

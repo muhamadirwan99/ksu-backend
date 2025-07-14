@@ -99,16 +99,17 @@ echo ""
 
 print_header "4. Test Direct Database Connection dari Container"
 echo "Testing mysqldump directly from container:"
-docker compose exec app mysqldump \
-    -h 192.168.99.2 \
-    -P 3306 \
-    -u root \
-    -pKsu123321@ \
+echo "Note: This test uses environment variables from container"
+docker compose exec app sh -c 'mysqldump \
+    -h $BACKUP_MYSQL_HOST \
+    -P $BACKUP_MYSQL_PORT \
+    -u $BACKUP_MYSQL_USER \
+    -p$BACKUP_MYSQL_PASSWORD \
     --single-transaction \
     --routines \
     --triggers \
-    ksu \
-    --where="1=0" \
+    $BACKUP_MYSQL_DATABASE \
+    --where="1=0"' \
     2>/dev/null && print_status "Database connection successful!" || print_error "Database connection failed!"
 echo ""
 

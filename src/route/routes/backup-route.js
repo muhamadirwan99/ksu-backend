@@ -1,3 +1,10 @@
+/*
+ * DEPRECATED: File ini sudah dipindahkan ke public-api.js
+ * Semua endpoint backup sekarang menjadi public endpoint dan tidak memerlukan autentikasi
+ * File ini disimpan untuk referensi dan backup
+ * Tanggal migrasi: 15 Juli 2025
+ */
+
 import { userRouter } from "../api.js";
 import { BackupController } from "../../controller/backup-controller.js";
 import { BackupSchedulerController } from "../../controller/backup-scheduler-controller.js";

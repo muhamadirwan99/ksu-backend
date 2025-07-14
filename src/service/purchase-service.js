@@ -91,7 +91,7 @@ const createPurchase = async (request) => {
       // Jika produk tidak ada, lempar error (atau Anda bisa buat produk baru tergantung kebutuhan)
       if (!existingProduct) {
         throw new Error(
-          `Product with ID ${detail.id_product} does not exist. Please add the product first.`,
+          `Product with ID ${detail.id_product} does not exist. Please add the product first.`
         );
       }
 
@@ -128,16 +128,16 @@ const createPurchase = async (request) => {
         id_product: detail.id_product,
         nm_divisi: detail.nm_divisi,
         nm_produk: detail.nm_produk,
-        harga_beli: hargaBeliBaru, // Harga beli yang sudah di-average
+        harga_beli: detail.harga_beli, // Harga beli asli dari input, bukan hasil averaging
         harga_jual: detail.harga_jual,
         jumlah: detail.jumlah,
         diskon: detail.diskon,
         ppn: detail.ppn,
-        total_nilai_beli: hargaBeliBaru * detail.jumlah,
+        total_nilai_beli: detail.harga_beli * detail.jumlah, // Gunakan harga beli asli
         total_nilai_jual: detail.total_nilai_jual,
         created_at: generateDate(),
       };
-    }),
+    })
   );
 
   await prismaClient.detailPembelian.createMany({
@@ -324,7 +324,7 @@ const removePurchase = async (request) => {
       } catch (e) {
         throw new ResponseError(`Product ${detail.id_product} is not found`);
       }
-    }),
+    })
   );
 
   await prismaClient.detailPembelian.deleteMany({

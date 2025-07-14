@@ -1,6 +1,10 @@
-# Use Node.js 22-alpine as the base image
-# FROM node:22-alpine
+# Use Node.js 20 as the base image
 FROM node:20
+
+# Install MySQL client tools for backup functionality
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory
 WORKDIR /app
@@ -22,6 +26,9 @@ COPY .env .env
 
 # Generate Prisma Client
 RUN npx prisma generate --schema=prisma/schema.prisma
+
+# Create backup and logs directories
+RUN mkdir -p /app/backups /app/logs
 
 # Run Prisma migration with a timestamped name for the migration
 # RUN TIMESTAMP=$(date +%Y%m%d%H%M%S) && npx prisma migrate dev --schema=./prisma/schema.prisma --name ${TIMESTAMP}-auto-migration

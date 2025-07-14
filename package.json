@@ -10,7 +10,16 @@
     "dev": "nodemon src/main.js",
     "migrate": "node prisma/migrate.js",
     "seed": "node prisma/seed.js",
-    "build": "prisma generate && <actual-build-command>"
+    "build": "prisma generate && echo 'Build completed'",
+    "docker:build": "docker build -f Dockerfile.production -t ksu-backend:latest .",
+    "docker:dev": "docker-compose up -d",
+    "docker:prod": "docker-compose -f docker-compose.production.yml up -d",
+    "docker:stop": "docker-compose -f docker-compose.production.yml down",
+    "docker:setup": "bash scripts/setup-docker-production.sh",
+    "docker:test": "bash scripts/test-docker-backup.sh",
+    "deploy": "bash deploy.sh",
+    "deploy:windows": "deploy.bat",
+    "deploy:quick": "docker compose down && docker compose up --build -d"
   },
   "jest": {
     "transform": {

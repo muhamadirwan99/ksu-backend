@@ -1,0 +1,78 @@
+version: "3.8"
+
+services:
+  # Database Container
+  mysql-db:
+    image: mysql:8.0
+    container_name: ksu-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Ksu123321@
+      MYSQL_DATABASE: ksu
+      MYSQL_USER: ksu_user
+      MYSQL_PASSWORD: Ksu123321@
+    ports:
+      - "3307:3306"
+    volumes:
+      # Data persistence
+      - mysql_data:/var/lib/mysql
+      # Backup directory mounted to host
+      - ./backups:/backups
+      # Config for backup optimization
+      - ./docker/mysql/conf.d:/etc/mysql/conf.d
+    networks:
+      - ksu-network
+
+  # Backend Container
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.production
+    container_name: ksu-backend
+    restart: unless-stopped
+    depends_on:
+      - mysql-db
+    environment:
+      DATABASE_URL: mysql://ksu_user:Ksu123321@@mysql-db:3306/ksu?allowPublicKeyRetrieval=true
+      JWT_SECRET_KEY: ksu_koperasi
+      NODE_ENV: production
+      # Backup configuration
+      BACKUP_MYSQL_HOST: mysql-db
+      BACKUP_MYSQL_PORT: 3306
+      BACKUP_MYSQL_USER: root
+      BACKUP_MYSQL_PASSWORD: Ksu123321@
+      BACKUP_MYSQL_DATABASE: ksu
+      BACKUP_DIRECTORY: /app/backups
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount backup directory to host for persistence
+      - ./backups:/app/backups
+      # Mount logs
+      - ./logs:/app/logs
+    networks:
+      - ksu-network
+
+  # Frontend Container (optional)
+  frontend:
+    image: nginx:alpine
+    container_name: ksu-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+    networks:
+      - ksu-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  ksu-network:
+    driver: bridge

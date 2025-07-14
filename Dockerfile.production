@@ -1,0 +1,45 @@
+# Production Dockerfile with MySQL tools
+FROM node:20-slim
+
+# Install MySQL client tools for backup
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    cron \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Copy Prisma schema
+COPY prisma ./prisma
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY src ./src
+COPY .env ./
+
+# Generate Prisma Client
+RUN npx prisma generate --schema=prisma/schema.prisma
+
+# Create backup directory
+RUN mkdir -p /app/backups
+
+# Create non-root user for security
+RUN groupadd -r ksu && useradd -r -g ksu ksu
+RUN chown -R ksu:ksu /app
+USER ksu
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start application
+CMD ["npm", "start"]

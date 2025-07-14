@@ -1,15 +1,21 @@
 import { web } from "./application/web.js";
-import { logger } from "./application/logging.js";
+import { logInfo, logError } from "./application/logging.js";
 import backupScheduler from "./scheduler/backup-scheduler.js";
 
 web.listen(3000, () => {
-  logger.info("App start");
+  logInfo("Application started successfully", {
+    port: 3000,
+    environment: process.env.NODE_ENV || "development",
+    pid: process.pid,
+  });
 
   // Mulai semua scheduler backup default
   try {
     backupScheduler.startAllDefaultSchedulers();
-    logger.info("Backup scheduler initialized successfully");
+    logInfo("Backup scheduler initialized successfully");
   } catch (error) {
-    logger.error(`Failed to initialize backup scheduler: ${error.message}`);
+    logError("Failed to initialize backup scheduler", error, {
+      scheduler: "backup-scheduler",
+    });
   }
 });

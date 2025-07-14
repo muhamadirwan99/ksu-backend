@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import backupService from "../service/backup-service.js";
-import { logger } from "../application/logging.js";
+import { logInfo, logError } from "../application/logging.js";
 
 class BackupScheduler {
   constructor() {
@@ -14,11 +14,11 @@ class BackupScheduler {
       "0 2 * * *",
       async () => {
         try {
-          logger.info("Memulai backup otomatis harian");
+          logInfo("Memulai backup otomatis harian");
           const result = await backupService.createDatabaseBackup();
-          logger.info(`Backup otomatis harian berhasil: ${result.fileName}`);
+          logInfo(`Backup otomatis harian berhasil: ${result.fileName}`);
         } catch (error) {
-          logger.error(`Error backup otomatis harian: ${error.message}`);
+          logError("Error backup otomatis harian", error);
         }
       },
       {
@@ -29,9 +29,7 @@ class BackupScheduler {
 
     this.tasks.set("daily", task);
     task.start();
-    logger.info(
-      "Scheduler backup harian diaktifkan (setiap hari jam 02:00 WIB)"
-    );
+    logInfo("Scheduler backup harian diaktifkan (setiap hari jam 02:00 WIB)");
   }
 
   // Jadwal backup mingguan (setiap Minggu jam 1 pagi)
@@ -41,14 +39,14 @@ class BackupScheduler {
       "0 1 * * 0",
       async () => {
         try {
-          logger.info("Memulai backup otomatis mingguan");
+          logInfo("Memulai backup otomatis mingguan");
           const result = await backupService.createDatabaseBackup();
-          logger.info(`Backup otomatis mingguan berhasil: ${result.fileName}`);
+          logInfo(`Backup otomatis mingguan berhasil: ${result.fileName}`);
 
           // Bersihkan backup lama (lebih dari 30 hari)
           await backupService.cleanOldBackups(30);
         } catch (error) {
-          logger.error(`Error backup otomatis mingguan: ${error.message}`);
+          logError(`Error backup otomatis mingguan: ${error.message}`);
         }
       },
       {
@@ -59,7 +57,7 @@ class BackupScheduler {
 
     this.tasks.set("weekly", task);
     task.start();
-    logger.info(
+    logInfo(
       "Scheduler backup mingguan diaktifkan (setiap Minggu jam 01:00 WIB)"
     );
   }
@@ -71,14 +69,14 @@ class BackupScheduler {
       "0 1 1 * *",
       async () => {
         try {
-          logger.info("Memulai backup otomatis bulanan");
+          logInfo("Memulai backup otomatis bulanan");
           const result = await backupService.createDatabaseBackup();
-          logger.info(`Backup otomatis bulanan berhasil: ${result.fileName}`);
+          logInfo(`Backup otomatis bulanan berhasil: ${result.fileName}`);
 
           // Bersihkan backup lama (lebih dari 90 hari)
           await backupService.cleanOldBackups(90);
         } catch (error) {
-          logger.error(`Error backup otomatis bulanan: ${error.message}`);
+          logError(`Error backup otomatis bulanan: ${error.message}`);
         }
       },
       {
@@ -89,7 +87,7 @@ class BackupScheduler {
 
     this.tasks.set("monthly", task);
     task.start();
-    logger.info(
+    logInfo(
       "Scheduler backup bulanan diaktifkan (tanggal 1 setiap bulan jam 01:00 WIB)"
     );
   }
@@ -101,15 +99,13 @@ class BackupScheduler {
       "0 3 * * 1",
       async () => {
         try {
-          logger.info("Memulai pembersihan backup lama otomatis");
+          logInfo("Memulai pembersihan backup lama otomatis");
           const result = await backupService.cleanOldBackups(30);
-          logger.info(
+          logInfo(
             `Pembersihan backup lama selesai: ${result.deletedCount} file dihapus`
           );
         } catch (error) {
-          logger.error(
-            `Error pembersihan backup lama otomatis: ${error.message}`
-          );
+          logError(`Error pembersihan backup lama otomatis: ${error.message}`);
         }
       },
       {
@@ -120,7 +116,7 @@ class BackupScheduler {
 
     this.tasks.set("cleanup", task);
     task.start();
-    logger.info(
+    logInfo(
       "Scheduler pembersihan backup diaktifkan (setiap Senin jam 03:00 WIB)"
     );
   }
@@ -135,11 +131,11 @@ class BackupScheduler {
       cronExpression,
       async () => {
         try {
-          logger.info(`Memulai backup otomatis custom (${taskName})`);
+          logInfo(`Memulai backup otomatis custom (${taskName})`);
           const result = await backupService.createDatabaseBackup();
-          logger.info(`Backup otomatis custom berhasil: ${result.fileName}`);
+          logInfo(`Backup otomatis custom berhasil: ${result.fileName}`);
         } catch (error) {
-          logger.error(
+          logError(
             `Error backup otomatis custom (${taskName}): ${error.message}`
           );
         }
@@ -152,7 +148,7 @@ class BackupScheduler {
 
     this.tasks.set(taskName, task);
     task.start();
-    logger.info(
+    logInfo(
       `Scheduler backup custom diaktifkan: ${taskName} (${cronExpression})`
     );
   }
@@ -163,7 +159,7 @@ class BackupScheduler {
     if (task) {
       task.stop();
       this.tasks.delete(taskName);
-      logger.info(`Scheduler ${taskName} dihentikan`);
+      logInfo(`Scheduler ${taskName} dihentikan`);
       return true;
     }
     return false;
@@ -173,10 +169,10 @@ class BackupScheduler {
   stopAllTasks() {
     this.tasks.forEach((task, name) => {
       task.stop();
-      logger.info(`Scheduler ${name} dihentikan`);
+      logInfo(`Scheduler ${name} dihentikan`);
     });
     this.tasks.clear();
-    logger.info("Semua scheduler backup dihentikan");
+    logInfo("Semua scheduler backup dihentikan");
   }
 
   // Dapatkan status semua task
@@ -197,18 +193,18 @@ class BackupScheduler {
     this.startWeeklyBackup();
     this.startMonthlyBackup();
     this.startCleanupScheduler();
-    logger.info("Semua scheduler backup default telah diaktifkan");
+    logInfo("Semua scheduler backup default telah diaktifkan");
   }
 
   // Test backup sekarang (untuk testing)
   async runBackupNow() {
     try {
-      logger.info("Menjalankan backup test manual");
+      logInfo("Menjalankan backup test manual");
       const result = await backupService.createDatabaseBackup();
-      logger.info(`Backup test berhasil: ${result.fileName}`);
+      logInfo(`Backup test berhasil: ${result.fileName}`);
       return result;
     } catch (error) {
-      logger.error(`Error backup test: ${error.message}`);
+      logError(`Error backup test: ${error.message}`);
       throw error;
     }
   }

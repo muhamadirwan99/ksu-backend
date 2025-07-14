@@ -1,13 +1,20 @@
 import { logResponse } from "../service/log-service.js";
+import { logWarn } from "../application/logging.js";
 
 class ResponseError extends Error {
-  constructor(message = "Error message", data = {}) {
+  constructor(message = "Error message", data = {}, statusCode = 400) {
     super(message);
     this.success = false;
     this.data = data;
+    this.statusCode = statusCode;
 
+    // Log to database asynchronously (don't wait for it)
     logResponse(this.success, this.message, this.data).catch((err) => {
-      console.error("Error logging response:", err);
+      logWarn("Failed to log response to database", {
+        originalError: this.message,
+        logError: err.message,
+        stack: err.stack,
+      });
     });
   }
 

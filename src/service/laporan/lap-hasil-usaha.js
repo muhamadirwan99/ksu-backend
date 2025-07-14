@@ -1,4 +1,7 @@
 import { prismaClient } from "../../application/database.js";
+import { logError } from "../../application/logging.js";
+
+// ... existing imports and code ...
 
 let startDate, endDate;
 let lastMonthStartDate, lastMonthEndDate;
@@ -228,7 +231,7 @@ async function laporanHargaPokokPenjualan() {
   const inventoryAtEnd = await getInventorySnapshot(tanggalAwalBulanLalu);
 
   const inventoryAtTwoMonth = await getInventorySnapshot(
-    tanggalAwalDuaBulanLalu,
+    tanggalAwalDuaBulanLalu
   );
 
   // Hitung total nilai persediaan awal (stok * harga beli)
@@ -244,7 +247,7 @@ async function laporanHargaPokokPenjualan() {
     (total, item) => {
       return total + parseFloat(item.jumlah) * parseFloat(item.harga_beli);
     },
-    0,
+    0
   );
 
   // Mendapatkan data penjualan berdasarkan request.month dan request.year untuk jenis pembayaran tunai
@@ -495,16 +498,16 @@ async function laporanBebanOperasional() {
       beban_perlengkapan: totalBebanPerlengkapanCurrent,
       beban_perlengkapan_last_month: totalBebanPerlengkapanLast,
       beban_peny_inventaris: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan,
+        totalBebanPenyusutanInventaris.penyusutan_bulan
       ),
       beban_peny_inventaris_last_month: parseFloat(
-        totalBebanPenyusutanInventaris.penyusutan_bulan,
+        totalBebanPenyusutanInventaris.penyusutan_bulan
       ),
       beban_peny_gedung: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan,
+        totalBebanPenyusutanGedung.penyusutan_bulan
       ),
       beban_peny_gedung_last_month: parseFloat(
-        totalBebanPenyusutanGedung.penyusutan_bulan,
+        totalBebanPenyusutanGedung.penyusutan_bulan
       ),
       pemeliharaan_inventaris: totalPemeliharaanInventarisCurrent,
       pemeliharaan_inventaris_last_month: totalPemeliharaanInventarisLast,
@@ -520,8 +523,12 @@ async function laporanBebanOperasional() {
       hasil_usaha_bersih_last_month: hasilUsahaBersihLast,
     };
   } catch (error) {
-    console.error("Error in laporanBebanOperasional:", error);
-    throw new Error(`Failed to retrieve operational expenses report. ${error}`);
+    logError("Error in laporanBebanOperasional", error, {
+      function: "laporanBebanOperasional",
+    });
+    throw new Error(
+      `Failed to retrieve operational expenses report. ${error.message}`
+    );
   }
 }
 
@@ -550,7 +557,9 @@ async function laporanPendapatanLain() {
       total_pendapatan_lain_last_month: totalPendapatanLainLast,
     };
   } catch (error) {
-    console.error("Error in laporanBebanOperasional:", error);
+    logError("Error in laporanPendapatanLain", error, {
+      function: "laporanPendapatanLain",
+    });
     throw new Error("Failed to retrieve operational other report.");
   }
 }

@@ -26,9 +26,6 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
-# Copy .env file
-COPY .env .env
-
 # Generate Prisma Client
 RUN npx prisma generate --schema=prisma/schema.prisma
 

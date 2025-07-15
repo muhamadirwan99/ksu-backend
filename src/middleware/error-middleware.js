@@ -41,13 +41,13 @@ const errorMiddleware = async (err, req, res, next) => {
     url: req.originalUrl,
     userContext,
     errorData: err.data,
-    statusCode: err.statusCode || 500,
+    statusCode: 200,
     userAgent: req.get("User-Agent"),
     ip: req.ip || req.connection.remoteAddress,
   });
 
   // Send error response
-  const statusCode = err.statusCode || 500;
+  const statusCode = 200;
   const errorResponse = new ResponseError(err.message, err.data).getResponse();
 
   res.status(statusCode).json(errorResponse).end();

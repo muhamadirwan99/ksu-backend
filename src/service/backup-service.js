@@ -55,15 +55,18 @@ class BackupService {
         host: url.hostname,
         port: url.port || 3306,
         username: url.username,
-        password: url.password,
+        password: decodeURIComponent(url.password), // Decode URL-encoded characters
         database: url.pathname.slice(1), // Remove leading slash
       };
 
       const backupFileName = this.generateBackupFileName();
       const backupPath = path.join(this.backupDir, backupFileName);
 
-      // Perintah mysqldump
-      const mysqldumpCommand = `mysqldump -h ${dbConfig.host} -P ${dbConfig.port} -u ${dbConfig.username} -p${dbConfig.password} --single-transaction --routines --triggers ${dbConfig.database} > "${backupPath}"`;
+      // Escape password for shell command to handle special characters
+      const escapedPassword = dbConfig.password.replace(/'/g, "'\"'\"'");
+
+      // Perintah mysqldump with properly escaped password
+      const mysqldumpCommand = `mysqldump -h "${dbConfig.host}" -P ${dbConfig.port} -u "${dbConfig.username}" -p'${escapedPassword}' --single-transaction --routines --triggers "${dbConfig.database}" > "${backupPath}"`;
 
       logger.info(`Memulai backup database: ${backupFileName}`);
 
@@ -203,12 +206,15 @@ class BackupService {
         host: url.hostname,
         port: url.port || 3306,
         username: url.username,
-        password: url.password,
+        password: decodeURIComponent(url.password), // Decode URL-encoded characters
         database: url.pathname.slice(1),
       };
 
-      // Perintah mysql restore
-      const restoreCommand = `mysql -h ${dbConfig.host} -P ${dbConfig.port} -u ${dbConfig.username} -p${dbConfig.password} ${dbConfig.database} < "${backupPath}"`;
+      // Escape password for shell command to handle special characters
+      const escapedPassword = dbConfig.password.replace(/'/g, "'\"'\"'");
+
+      // Perintah mysql restore with properly escaped password
+      const restoreCommand = `mysql -h "${dbConfig.host}" -P ${dbConfig.port} -u "${dbConfig.username}" -p'${escapedPassword}' "${dbConfig.database}" < "${backupPath}"`;
 
       logger.info(`Memulai restore database dari: ${backupFileName}`);
 
@@ -256,7 +262,7 @@ class BackupService {
         host: url.hostname,
         port: url.port || 3306,
         username: url.username,
-        password: url.password,
+        password: decodeURIComponent(url.password), // Decode URL-encoded characters
         database: url.pathname.slice(1),
       };
 
@@ -272,7 +278,10 @@ class BackupService {
       const backupFileName = `backup_${tableName}_${timestamp}.sql`;
       const backupPath = path.join(this.backupDir, backupFileName);
 
-      const mysqldumpCommand = `mysqldump -h ${dbConfig.host} -P ${dbConfig.port} -u ${dbConfig.username} -p${dbConfig.password} ${dbConfig.database} ${tableName} > "${backupPath}"`;
+      // Escape password for shell command to handle special characters
+      const escapedPassword = dbConfig.password.replace(/'/g, "'\"'\"'");
+
+      const mysqldumpCommand = `mysqldump -h "${dbConfig.host}" -P ${dbConfig.port} -u "${dbConfig.username}" -p'${escapedPassword}' "${dbConfig.database}" "${tableName}" > "${backupPath}"`;
 
       logger.info(`Memulai backup table ${tableName}: ${backupFileName}`);
 

@@ -76,12 +76,13 @@ const pembayaranHutangDagang = async (request) => {
       }
 
       const currentSupplierHutang = parseInt(supplier.hutang_dagang) || 0;
-      const newSupplierHutang = currentSupplierHutang - request.nominal_bayar;
 
-      // Validasi supplier hutang tidak boleh negatif
-      if (newSupplierHutang < 0) {
+      // Validasi pembayaran tidak boleh melebihi hutang supplier
+      if (request.nominal_bayar > currentSupplierHutang) {
         throw new ResponseError("Pembayaran melebihi total hutang supplier");
       }
+
+      const newSupplierHutang = currentSupplierHutang - request.nominal_bayar;
 
       // Generate ID untuk history
       const historyId = await generateBayarHutangDagangId(parseDate);

@@ -39,43 +39,60 @@ const createPurchase = async (request) => {
 
   // tambahkan untuk menambahkan hutang apabila jenis_pembayaran == kredit
   if (request.jenis_pembayaran === "kredit") {
-    await prismaClient.hutangDagang.create({
-      data: {
-        id_hutang_dagang: await generateHutangDagangId(parseDate),
-        id_supplier: newPurchase.id_supplier,
-        nm_supplier: newPurchase.nm_supplier,
-        tg_hutang: request.tg_pembelian,
-        nominal: newPurchase.total_harga_beli,
-        id_pembelian: newPurchase.id_pembelian,
-        created_at: generateDate(),
-      },
-    });
+    // Gunakan transaction untuk memastikan atomicity
+    await prismaClient.$transaction(
+      async (tx) => {
+        // Buat record hutang dagang
+        await tx.hutangDagang.create({
+          data: {
+            id_hutang_dagang: await generateHutangDagangId(parseDate),
+            id_supplier: newPurchase.id_supplier,
+            nm_supplier: newPurchase.nm_supplier,
+            tg_hutang: request.tg_pembelian,
+            nominal: newPurchase.total_harga_beli,
+            id_pembelian: newPurchase.id_pembelian,
+            created_at: generateDate(),
+          },
+        });
 
-    // Periksa jika nilai hutang null, ganti dengan 0
-    const supplier = await prismaClient.supplier.findUnique({
-      where: {
-        id_supplier: newPurchase.id_supplier,
-      },
-      select: {
-        hutang_dagang: true,
-      },
-    });
+        // Periksa jika nilai hutang null, ganti dengan 0
+        const supplier = await tx.supplier.findUnique({
+          where: {
+            id_supplier: newPurchase.id_supplier,
+          },
+          select: {
+            hutang_dagang: true,
+          },
+        });
 
-    // Jika hutang null, set ke 0
-    const currentHutang = supplier.hutang_dagang ?? 0; // Jika hutang null, gunakan 0 sebagai nilai awal
+        if (!supplier) {
+          throw new Error(
+            `Supplier dengan ID ${newPurchase.id_supplier} tidak ditemukan`
+          );
+        }
 
-    const newHutang =
-      parseFloat(currentHutang) + parseFloat(newPurchase.total_harga_beli);
+        // Jika hutang null, set ke 0
+        const currentHutang = supplier.hutang_dagang ?? 0;
 
-    await prismaClient.supplier.update({
-      where: {
-        id_supplier: newPurchase.id_supplier,
+        const newHutang =
+          parseFloat(currentHutang) + parseFloat(newPurchase.total_harga_beli);
+
+        // Update hutang supplier
+        await tx.supplier.update({
+          where: {
+            id_supplier: newPurchase.id_supplier,
+          },
+          data: {
+            hutang_dagang: newHutang,
+            updated_at: generateDate(),
+          },
+        });
       },
-      data: {
-        hutang_dagang: newHutang,
-        updated_at: generateDate(),
-      },
-    });
+      {
+        isolationLevel: "ReadCommitted",
+        timeout: 10000,
+      }
+    );
   }
 
   // Proses detail pembelian dan update tabel produk
@@ -261,83 +278,105 @@ const removePurchase = async (request) => {
     },
   });
 
-  //menghapus data di table hutang dagang
-  await prismaClient.hutangDagang.deleteMany({
-    where: {
-      id_pembelian: request.id_pembelian,
-    },
-  });
-
-  //mengurangi hutang supplier
   const existingPurchase = await prismaClient.pembelian.findUnique({
     where: {
       id_pembelian: request.id_pembelian,
     },
   });
-  if (existingPurchase.jenis_pembayaran === "kredit") {
-    const supplier = await prismaClient.supplier.findUnique({
-      where: {
-        id_supplier: existingPurchase.id_supplier,
-      },
-      select: {
-        hutang_dagang: true,
-      },
-    });
 
-    const currentHutang = supplier.hutang_dagang ?? 0;
-
-    const newHutang =
-      parseFloat(currentHutang) - parseFloat(existingPurchase.total_harga_beli);
-
-    await prismaClient.supplier.update({
-      where: {
-        id_supplier: existingPurchase.id_supplier,
-      },
-      data: {
-        hutang_dagang: newHutang,
-        updated_at: generateDate(),
-      },
-    });
-  }
-
-  //mengembalikan jumlah produk ke jumlah sebelum pembelian
-  await Promise.all(
-    existingDetailPurchase.map(async (detail) => {
-      const existingProduct = await prismaClient.product.findUnique({
+  // Gunakan transaction untuk semua operasi delete/update
+  await prismaClient.$transaction(
+    async (tx) => {
+      //menghapus data di table hutang dagang
+      await tx.hutangDagang.deleteMany({
         where: {
-          id_product: detail.id_product,
+          id_pembelian: request.id_pembelian,
         },
       });
 
-      const newQty = existingProduct.jumlah - detail.jumlah;
-
-      try {
-        await prismaClient.product.update({
+      //mengurangi hutang supplier
+      if (existingPurchase.jenis_pembayaran === "kredit") {
+        const supplier = await tx.supplier.findUnique({
           where: {
-            id_product: detail.id_product,
+            id_supplier: existingPurchase.id_supplier,
+          },
+          select: {
+            hutang_dagang: true,
+          },
+        });
+
+        if (!supplier) {
+          throw new Error(
+            `Supplier dengan ID ${existingPurchase.id_supplier} tidak ditemukan`
+          );
+        }
+
+        const currentHutang = supplier.hutang_dagang ?? 0;
+
+        const newHutang =
+          parseFloat(currentHutang) -
+          parseFloat(existingPurchase.total_harga_beli);
+
+        await tx.supplier.update({
+          where: {
+            id_supplier: existingPurchase.id_supplier,
           },
           data: {
-            jumlah: newQty,
+            hutang_dagang: newHutang,
             updated_at: generateDate(),
           },
         });
-      } catch (e) {
-        throw new ResponseError(`Product ${detail.id_product} is not found`);
       }
-    })
+
+      //mengembalikan jumlah produk ke jumlah sebelum pembelian
+      await Promise.all(
+        existingDetailPurchase.map(async (detail) => {
+          const existingProduct = await tx.product.findUnique({
+            where: {
+              id_product: detail.id_product,
+            },
+          });
+
+          if (!existingProduct) {
+            throw new ResponseError(
+              `Product ${detail.id_product} is not found`
+            );
+          }
+
+          const newQty = existingProduct.jumlah - detail.jumlah;
+
+          await tx.product.update({
+            where: {
+              id_product: detail.id_product,
+            },
+            data: {
+              jumlah: newQty,
+              updated_at: generateDate(),
+            },
+          });
+        })
+      );
+
+      await tx.detailPembelian.deleteMany({
+        where: {
+          id_pembelian: request.id_pembelian,
+        },
+      });
+
+      // Delete purchase record terakhir
+      await tx.pembelian.delete({
+        where: {
+          id_pembelian: request.id_pembelian,
+        },
+      });
+    },
+    {
+      isolationLevel: "ReadCommitted",
+      timeout: 10000,
+    }
   );
 
-  await prismaClient.detailPembelian.deleteMany({
-    where: {
-      id_pembelian: request.id_pembelian,
-    },
-  });
-
-  return prismaClient.pembelian.delete({
-    where: {
-      id_pembelian: request.id_pembelian,
-    },
-  });
+  return { message: "Purchase successfully deleted" };
 };
 
 export default {

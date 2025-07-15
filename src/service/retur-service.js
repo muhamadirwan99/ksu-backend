@@ -39,7 +39,7 @@ const createRetur = async (request) => {
       // Jika produk tidak ada, lempar error
       if (!existingProduct) {
         throw new Error(
-          `Product with ID ${detail.id_product} does not exist. Please add the retur first.`,
+          `Product with ID ${detail.id_product} does not exist. Please add the retur first.`
         );
       }
 
@@ -47,10 +47,10 @@ const createRetur = async (request) => {
       const newStock = existingProduct.jumlah - detail.jumlah;
       if (newStock < 0) {
         throw new Error(
-          `Not enough stock for retur ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`,
+          `Not enough stock for retur ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`
         );
       }
-    }),
+    })
   );
 
   const newRetur = await prismaClient.retur.create({
@@ -69,57 +69,78 @@ const createRetur = async (request) => {
 
   // Jika jenis pembayaran kredit, maka akan mengurangi hutang_dagang di table supplier
   if (jenisPembayaran.jenis_pembayaran === "kredit") {
-    // Mengurangi hutang dagang di table supplier
-    const supplier = await prismaClient.supplier.findUnique({
-      where: {
-        id_supplier: request.id_supplier,
-      },
-      select: {
-        hutang_dagang: true,
-      },
-    });
+    // Gunakan transaction untuk memastikan atomicity
+    await prismaClient.$transaction(
+      async (tx) => {
+        // Mengurangi hutang dagang di table supplier
+        const supplier = await tx.supplier.findUnique({
+          where: {
+            id_supplier: request.id_supplier,
+          },
+          select: {
+            hutang_dagang: true,
+          },
+        });
 
-    const currentHutang = supplier.hutang_dagang ?? 0;
+        if (!supplier) {
+          throw new Error(
+            `Supplier dengan ID ${request.id_supplier} tidak ditemukan`
+          );
+        }
 
-    const newHutang =
-      parseFloat(currentHutang) - parseFloat(request.total_nilai_beli);
+        const currentHutang = supplier.hutang_dagang ?? 0;
 
-    await prismaClient.supplier.update({
-      where: {
-        id_supplier: request.id_supplier,
-      },
-      data: {
-        hutang_dagang: newHutang,
-        updated_at: generateDate(),
-      },
-    });
+        const newHutang =
+          parseFloat(currentHutang) - parseFloat(request.total_nilai_beli);
 
-    // Mengurangi nominal di table hutang_dagang
-    const hutangDagang = await prismaClient.hutangDagang.findUnique({
-      where: {
-        id_pembelian: request.id_pembelian,
-      },
-      select: {
-        id_hutang_dagang: true,
-        nominal: true,
-      },
-    });
+        await tx.supplier.update({
+          where: {
+            id_supplier: request.id_supplier,
+          },
+          data: {
+            hutang_dagang: newHutang,
+            updated_at: generateDate(),
+          },
+        });
 
-    const currentNominalHutangDagang = hutangDagang.nominal ?? 0;
+        // Mengurangi nominal di table hutang_dagang
+        const hutangDagang = await tx.hutangDagang.findUnique({
+          where: {
+            id_pembelian: request.id_pembelian,
+          },
+          select: {
+            id_hutang_dagang: true,
+            nominal: true,
+          },
+        });
 
-    const newNominalHutangDagang =
-      parseFloat(currentNominalHutangDagang) -
-      parseFloat(request.total_nilai_beli);
+        if (!hutangDagang) {
+          throw new Error(
+            `Hutang dagang untuk pembelian ${request.id_pembelian} tidak ditemukan`
+          );
+        }
 
-    await prismaClient.hutangDagang.update({
-      where: {
-        id_pembelian: request.id_pembelian,
+        const currentNominalHutangDagang = hutangDagang.nominal ?? 0;
+
+        const newNominalHutangDagang =
+          parseFloat(currentNominalHutangDagang) -
+          parseFloat(request.total_nilai_beli);
+
+        await tx.hutangDagang.update({
+          where: {
+            id_pembelian: request.id_pembelian,
+          },
+          data: {
+            nominal: newNominalHutangDagang,
+            updated_at: generateDate(),
+          },
+        });
       },
-      data: {
-        nominal: newNominalHutangDagang,
-        updated_at: generateDate(),
-      },
-    });
+      {
+        isolationLevel: "ReadCommitted",
+        timeout: 10000,
+      }
+    );
   }
 
   // Proses detail retur dan update tabel produk
@@ -135,7 +156,7 @@ const createRetur = async (request) => {
       // Jika produk tidak ada, lempar error
       if (!existingProduct) {
         throw new Error(
-          `Product with ID ${detail.id_product} does not exist. Please add the retur first.`,
+          `Product with ID ${detail.id_product} does not exist. Please add the retur first.`
         );
       }
 
@@ -143,7 +164,7 @@ const createRetur = async (request) => {
       const newStock = existingProduct.jumlah - detail.jumlah;
       if (newStock < 0) {
         throw new Error(
-          `Not enough stock for retur ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`,
+          `Not enough stock for retur ${detail.nm_produk}. Available stock: ${existingProduct.jumlah}`
         );
       }
 
@@ -163,7 +184,7 @@ const createRetur = async (request) => {
       detail.created_at = generateDate();
 
       return detail;
-    }),
+    })
   );
 
   await prismaClient.detailRetur.createMany({
@@ -275,57 +296,78 @@ const removeRetur = async (request) => {
 
   // Jika jenis pembayaran kredit, maka akan mengembalikan hutang_dagang di table supplier
   if (jenisPembayaran.jenis_pembayaran === "kredit") {
-    // Mengembalikan hutang dagang di table supplier
-    const supplier = await prismaClient.supplier.findUnique({
-      where: {
-        id_supplier: returClient.id_supplier,
-      },
-      select: {
-        hutang_dagang: true,
-      },
-    });
+    // Gunakan transaction untuk memastikan atomicity
+    await prismaClient.$transaction(
+      async (tx) => {
+        // Mengembalikan hutang dagang di table supplier
+        const supplier = await tx.supplier.findUnique({
+          where: {
+            id_supplier: returClient.id_supplier,
+          },
+          select: {
+            hutang_dagang: true,
+          },
+        });
 
-    const currentHutang = supplier.hutang_dagang ?? 0;
+        if (!supplier) {
+          throw new Error(
+            `Supplier dengan ID ${returClient.id_supplier} tidak ditemukan`
+          );
+        }
 
-    const newHutang =
-      parseFloat(currentHutang) + parseFloat(returClient.total_nilai_beli);
+        const currentHutang = supplier.hutang_dagang ?? 0;
 
-    await prismaClient.supplier.update({
-      where: {
-        id_supplier: returClient.id_supplier,
-      },
-      data: {
-        hutang_dagang: newHutang,
-        updated_at: generateDate(),
-      },
-    });
+        const newHutang =
+          parseFloat(currentHutang) + parseFloat(returClient.total_nilai_beli);
 
-    // Mengembalikan nominal di table hutang_dagang
-    const hutangDagang = await prismaClient.hutangDagang.findUnique({
-      where: {
-        id_pembelian: returClient.id_pembelian,
-      },
-      select: {
-        id_hutang_dagang: true,
-        nominal: true,
-      },
-    });
+        await tx.supplier.update({
+          where: {
+            id_supplier: returClient.id_supplier,
+          },
+          data: {
+            hutang_dagang: newHutang,
+            updated_at: generateDate(),
+          },
+        });
 
-    const currentNominalHutangDagang = hutangDagang.nominal ?? 0;
+        // Mengembalikan nominal di table hutang_dagang
+        const hutangDagang = await tx.hutangDagang.findUnique({
+          where: {
+            id_pembelian: returClient.id_pembelian,
+          },
+          select: {
+            id_hutang_dagang: true,
+            nominal: true,
+          },
+        });
 
-    const newNominalHutangDagang =
-      parseFloat(currentNominalHutangDagang) +
-      parseFloat(returClient.total_nilai_beli);
+        if (!hutangDagang) {
+          throw new Error(
+            `Hutang dagang untuk pembelian ${returClient.id_pembelian} tidak ditemukan`
+          );
+        }
 
-    await prismaClient.hutangDagang.update({
-      where: {
-        id_pembelian: returClient.id_pembelian,
+        const currentNominalHutangDagang = hutangDagang.nominal ?? 0;
+
+        const newNominalHutangDagang =
+          parseFloat(currentNominalHutangDagang) +
+          parseFloat(returClient.total_nilai_beli);
+
+        await tx.hutangDagang.update({
+          where: {
+            id_pembelian: returClient.id_pembelian,
+          },
+          data: {
+            nominal: newNominalHutangDagang,
+            updated_at: generateDate(),
+          },
+        });
       },
-      data: {
-        nominal: newNominalHutangDagang,
-        updated_at: generateDate(),
-      },
-    });
+      {
+        isolationLevel: "ReadCommitted",
+        timeout: 10000,
+      }
+    );
   }
 
   // Mengembalikan jumlah produk ke jumlah sebelum retur
@@ -348,7 +390,7 @@ const removeRetur = async (request) => {
           updated_at: generateDate(),
         },
       });
-    }),
+    })
   );
 
   await prismaClient.detailRetur.deleteMany({

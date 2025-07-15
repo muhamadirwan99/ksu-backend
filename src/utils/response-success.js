@@ -8,15 +8,15 @@ class ResponseSuccess {
     this.message = message;
 
     // Log to database asynchronously (only if enabled)
-    if (process.env.ENABLE_DATABASE_LOGGING !== "false") {
-      logResponse(this.success, this.message, this.data).catch((err) => {
-        logWarn("Failed to log success response to database", {
-          originalMessage: this.message,
-          logError: err.message,
-          stack: err.stack,
-        });
-      });
-    }
+    // if (process.env.ENABLE_DATABASE_LOGGING !== "false") {
+    //   logResponse(this.success, this.message, this.data).catch((err) => {
+    //     logWarn("Failed to log success response to database", {
+    //       originalMessage: this.message,
+    //       logError: err.message,
+    //       stack: err.stack,
+    //     });
+    //   });
+    // }
   }
 
   getResponse() {

@@ -9,14 +9,21 @@ const execAsync = promisify(exec);
 
 class BackupService {
   constructor() {
-    this.backupDir = path.join(process.cwd(), "backup");
+    // Gunakan path backups yang sudah dimapping di Docker
+    this.backupDir = path.join(process.cwd(), "backups");
     this.ensureBackupDirectory();
+
+    // Log path backup untuk debugging
+    logger.info(`Backup directory initialized: ${this.backupDir}`);
   }
 
   // Pastikan direktori backup ada
   ensureBackupDirectory() {
     if (!fs.existsSync(this.backupDir)) {
       fs.mkdirSync(this.backupDir, { recursive: true });
+      logger.info(`Created backup directory: ${this.backupDir}`);
+    } else {
+      logger.info(`Backup directory exists: ${this.backupDir}`);
     }
   }
 
@@ -62,6 +69,8 @@ class BackupService {
       const backupFileName = this.generateBackupFileName();
       const backupPath = path.join(this.backupDir, backupFileName);
 
+      logger.info(`Backup akan disimpan di: ${backupPath}`);
+
       // Escape password for shell command to handle special characters
       const escapedPassword = dbConfig.password.replace(/'/g, "'\"'\"'");
 
@@ -69,6 +78,9 @@ class BackupService {
       const mysqldumpCommand = `mysqldump -h "${dbConfig.host}" -P ${dbConfig.port} -u "${dbConfig.username}" -p'${escapedPassword}' --single-transaction --routines --triggers "${dbConfig.database}" > "${backupPath}"`;
 
       logger.info(`Memulai backup database: ${backupFileName}`);
+      logger.debug(
+        `Command: ${mysqldumpCommand.replace(/-p'[^']*'/, "-p'***'")}`
+      ); // Hide password in log
 
       // Eksekusi mysqldump
       await execAsync(mysqldumpCommand);

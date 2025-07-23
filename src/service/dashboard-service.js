@@ -17,7 +17,7 @@ const getDashboardIncome = async () => {
     today.getDate(),
     0,
     0,
-    0, // Awal hari
+    0 // Awal hari
   );
 
   const todayEnd = new Date(
@@ -26,7 +26,7 @@ const getDashboardIncome = async () => {
     today.getDate() + 1,
     0,
     0,
-    0, // Awal hari berikutnya
+    0 // Awal hari berikutnya
   );
 
   // Mendapatkan data penjualan hari ini
@@ -48,7 +48,7 @@ const getDashboardIncome = async () => {
     yesterday.getDate(),
     0,
     0,
-    0, // Awal hari kemarin
+    0 // Awal hari kemarin
   );
 
   const yesterdayEnd = new Date(
@@ -57,7 +57,7 @@ const getDashboardIncome = async () => {
     yesterday.getDate() + 1,
     0,
     0,
-    0, // Akhir hari kemarin
+    0 // Akhir hari kemarin
   );
 
   // Mendapatkan data penjualan kemarin
@@ -160,7 +160,7 @@ const getStatisticIncomeMonthly = async (request) => {
   const penjualanToko = total_current_month_sale;
   const presentasePenjualan = getPercentageChange(
     total_current_month_sale,
-    total_last_month_sale,
+    total_last_month_sale
   );
 
   // Keuntungan
@@ -170,7 +170,7 @@ const getStatisticIncomeMonthly = async (request) => {
     total_last_month_sale - total_last_month_sale_nilai_beli;
   const presentaseKeuntungan = getPercentageChange(
     keuntunganToko,
-    keuntunganTokoLastMonth,
+    keuntunganTokoLastMonth
   );
 
   const pendapatanToko = {
@@ -191,7 +191,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentasePendapatanKoperasi = getPercentageChange(
     pendapatanKoperasi,
-    pendapatanKoperasiLastMonth,
+    pendapatanKoperasiLastMonth
   );
 
   // Pengeluaran Koperasi
@@ -205,7 +205,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentasePengeluaranKoperasi = getPercentageChange(
     pengeluaranKoperasi,
-    pengeluaranKoperasiLastMonth,
+    pengeluaranKoperasiLastMonth
   );
 
   // Keuntungan Koperasi
@@ -215,7 +215,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentaseKeuntunganKoperasi = getPercentageChange(
     keuntunganKoperasi,
-    keuntunganKoperasiLastMonth,
+    keuntunganKoperasiLastMonth
   );
 
   const koperasi = {

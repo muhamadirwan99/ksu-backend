@@ -27,20 +27,18 @@ class BackupService {
     }
   }
 
-  // Generate nama file backup dengan timestamp WIB
+  // Generate nama file backup dengan timestamp WIB (manual +7 jam)
   generateBackupFileName() {
-    // Buat timestamp dengan timezone WIB
+    // Buat timestamp dengan offset manual +7 jam untuk WIB
     const now = new Date();
-    const wibTime = new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" })
-    );
+    const wibTime = new Date(now.getTime() + 7 * 60 * 60 * 1000);
 
-    const year = wibTime.getFullYear();
-    const month = String(wibTime.getMonth() + 1).padStart(2, "0");
-    const day = String(wibTime.getDate()).padStart(2, "0");
-    const hours = String(wibTime.getHours()).padStart(2, "0");
-    const minutes = String(wibTime.getMinutes()).padStart(2, "0");
-    const seconds = String(wibTime.getSeconds()).padStart(2, "0");
+    const year = wibTime.getUTCFullYear();
+    const month = String(wibTime.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(wibTime.getUTCDate()).padStart(2, "0");
+    const hours = String(wibTime.getUTCHours()).padStart(2, "0");
+    const minutes = String(wibTime.getUTCMinutes()).padStart(2, "0");
+    const seconds = String(wibTime.getUTCSeconds()).padStart(2, "0");
 
     const timestamp = `${year}-${month}-${day}_${hours}-${minutes}-${seconds}`;
     return `backup_ksu_${timestamp}_WIB.sql`;

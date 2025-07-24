@@ -5,76 +5,65 @@ import { generateDate } from "../utils/generate-date.js";
 import laporanService from "./laporan/laporan-service.js";
 
 const getDashboardIncome = async () => {
-  // Mendapatkan offset zona waktu (dalam menit) dan mengonversinya ke milidetik
-
-  // Mengatur waktu sekarang ke UTC+7
+  // Mendapatkan tanggal hari ini dalam WIB
   const today = generateDate();
+  const todayUTC = new Date(); // Current UTC time
 
-  // Mengatur awal dan akhir hari di zona waktu UTC+7
-  const todayStart = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate(),
-    0,
-    0,
-    0 // Awal hari
-  );
+  // Untuk dashboard, kita ingin menghitung transaksi berdasarkan tanggal actual di UTC
+  // bukan berdasarkan timezone conversion
 
-  const todayEnd = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate() + 1,
-    0,
-    0,
-    0 // Awal hari berikutnya
-  );
+  // Dapatkan tanggal hari ini dan kemarin dalam UTC
+  const todayUTCDate = {
+    year: todayUTC.getUTCFullYear(),
+    month: todayUTC.getUTCMonth(),
+    day: todayUTC.getUTCDate(),
+  };
 
-  // Mendapatkan data penjualan hari ini
-  const sales = await prismaClient.penjualan.findMany({
+  const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayUTCDate = {
+    year: yesterdayUTC.getUTCFullYear(),
+    month: yesterdayUTC.getUTCMonth(),
+    day: yesterdayUTC.getUTCDate(),
+  };
+
+  // Range untuk mengambil data dari 2 hari terakhir
+  const twoDaysAgo = new Date(todayUTC.getTime() - 2 * 24 * 60 * 60 * 1000);
+  const tomorrow = new Date(todayUTC.getTime() + 24 * 60 * 60 * 1000);
+
+  // Ambil semua data dari rentang luas, lalu filter manual
+  const allSales = await prismaClient.penjualan.findMany({
     where: {
       created_at: {
-        gte: todayStart, // Menggunakan objek Date sesuai zona waktu
-        lt: todayEnd,
+        gte: twoDaysAgo,
+        lt: tomorrow,
       },
     },
   });
 
-  // Mengatur waktu untuk kemarin
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000); // Hari kemarin
+  // Filter transaksi berdasarkan tanggal UTC yang sebenarnya
+  const salesToday = allSales.filter((sale) => {
+    const saleDate = new Date(sale.created_at);
+    return (
+      saleDate.getUTCFullYear() === todayUTCDate.year &&
+      saleDate.getUTCMonth() === todayUTCDate.month &&
+      saleDate.getUTCDate() === todayUTCDate.day
+    );
+  });
 
-  const yesterdayStart = new Date(
-    yesterday.getFullYear(),
-    yesterday.getMonth(),
-    yesterday.getDate(),
-    0,
-    0,
-    0 // Awal hari kemarin
-  );
-
-  const yesterdayEnd = new Date(
-    yesterday.getFullYear(),
-    yesterday.getMonth(),
-    yesterday.getDate() + 1,
-    0,
-    0,
-    0 // Akhir hari kemarin
-  );
-
-  // Mendapatkan data penjualan kemarin
-  const salesYesterday = await prismaClient.penjualan.findMany({
-    where: {
-      created_at: {
-        gte: yesterdayStart,
-        lt: yesterdayEnd,
-      },
-    },
+  const salesYesterday = allSales.filter((sale) => {
+    const saleDate = new Date(sale.created_at);
+    return (
+      saleDate.getUTCFullYear() === yesterdayUTCDate.year &&
+      saleDate.getUTCMonth() === yesterdayUTCDate.month &&
+      saleDate.getUTCDate() === yesterdayUTCDate.day
+    );
   });
 
   // Menghitung total penjualan hari ini dan kemarin
   let totalSaleToday = 0;
   let totalSaleYesterday = 0;
 
-  sales.forEach((sale) => {
+  salesToday.forEach((sale) => {
     totalSaleToday += parseFloat(sale.total_nilai_jual);
   });
 
@@ -82,26 +71,34 @@ const getDashboardIncome = async () => {
     totalSaleYesterday += parseFloat(sale.total_nilai_jual);
   });
 
-  // Menghitung total dari table cash in out dengan id_cash = 1 hari ini
-  const cashInToday = await prismaClient.cashInOut.findMany({
+  // Untuk cash in out, kita juga perlu menggunakan logic yang sama
+  const allCashIn = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
       tg_transaksi: {
-        gte: todayStart,
-        lt: todayEnd,
+        gte: twoDaysAgo,
+        lt: tomorrow,
       },
     },
   });
 
-  // Menghitung total dari table cash in out dengan id_cash = 1 kemarin
-  const cashInYesterday = await prismaClient.cashInOut.findMany({
-    where: {
-      id_cash: "1",
-      tg_transaksi: {
-        gte: yesterdayStart,
-        lt: yesterdayEnd,
-      },
-    },
+  // Filter cash in berdasarkan tanggal UTC yang sebenarnya
+  const cashInToday = allCashIn.filter((cash) => {
+    const cashDate = new Date(cash.tg_transaksi);
+    return (
+      cashDate.getUTCFullYear() === todayUTCDate.year &&
+      cashDate.getUTCMonth() === todayUTCDate.month &&
+      cashDate.getUTCDate() === todayUTCDate.day
+    );
+  });
+
+  const cashInYesterday = allCashIn.filter((cash) => {
+    const cashDate = new Date(cash.tg_transaksi);
+    return (
+      cashDate.getUTCFullYear() === yesterdayUTCDate.year &&
+      cashDate.getUTCMonth() === yesterdayUTCDate.month &&
+      cashDate.getUTCDate() === yesterdayUTCDate.day
+    );
   });
 
   let totalCashInToday = 0;

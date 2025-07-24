@@ -10,9 +10,10 @@ const isDocker =
 const customFormat = winston.format.combine(
   winston.format.timestamp({
     format: () => {
-      // Format timestamp dengan timezone WIB
-      return new Date().toLocaleString("id-ID", {
-        timeZone: "Asia/Jakarta",
+      // Format timestamp dengan manual offset WIB (+7 jam)
+      const now = new Date();
+      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      return wib.toLocaleString("id-ID", {
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
@@ -31,8 +32,9 @@ const customFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({
     format: () => {
-      return new Date().toLocaleString("id-ID", {
-        timeZone: "Asia/Jakarta",
+      const now = new Date();
+      const wib = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+      return wib.toLocaleString("id-ID", {
         hour: "2-digit",
         minute: "2-digit",
         second: "2-digit",

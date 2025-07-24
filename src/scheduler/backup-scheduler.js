@@ -9,9 +9,9 @@ class BackupScheduler {
 
   // Jadwal backup harian (setiap hari jam 2 pagi)
   startDailyBackup() {
-    // Cron: 0 2 * * * = setiap hari jam 2:00 AM
+    // Cron: 0 19 * * * = setiap hari jam 19:00 UTC (02:00 WIB)
     const task = cron.schedule(
-      "0 2 * * *",
+      "0 19 * * *",
       async () => {
         try {
           logInfo("Memulai backup otomatis harian");
@@ -23,7 +23,6 @@ class BackupScheduler {
       },
       {
         scheduled: false,
-        timezone: "Asia/Jakarta",
       }
     );
 
@@ -34,9 +33,9 @@ class BackupScheduler {
 
   // Jadwal backup mingguan (setiap Minggu jam 1 pagi)
   startWeeklyBackup() {
-    // Cron: 0 1 * * 0 = setiap Minggu jam 1:00 AM
+    // Cron: 0 18 * * 0 = setiap Minggu jam 18:00 UTC (01:00 WIB)
     const task = cron.schedule(
-      "0 1 * * 0",
+      "0 18 * * 0",
       async () => {
         try {
           logInfo("Memulai backup otomatis mingguan");
@@ -51,7 +50,6 @@ class BackupScheduler {
       },
       {
         scheduled: false,
-        timezone: "Asia/Jakarta",
       }
     );
 
@@ -64,9 +62,9 @@ class BackupScheduler {
 
   // Jadwal backup bulanan (tanggal 1 setiap bulan jam 1 pagi)
   startMonthlyBackup() {
-    // Cron: 0 1 1 * * = tanggal 1 setiap bulan jam 1:00 AM
+    // Cron: 0 18 1 * * = tanggal 1 setiap bulan jam 18:00 UTC (01:00 WIB)
     const task = cron.schedule(
-      "0 1 1 * *",
+      "0 18 1 * *",
       async () => {
         try {
           logInfo("Memulai backup otomatis bulanan");
@@ -81,7 +79,6 @@ class BackupScheduler {
       },
       {
         scheduled: false,
-        timezone: "Asia/Jakarta",
       }
     );
 
@@ -94,9 +91,9 @@ class BackupScheduler {
 
   // Jadwal pembersihan backup lama (setiap Senin jam 3 pagi)
   startCleanupScheduler() {
-    // Cron: 0 3 * * 1 = setiap Senin jam 3:00 AM
+    // Cron: 0 20 * * 1 = setiap Senin jam 20:00 UTC (03:00 WIB)
     const task = cron.schedule(
-      "0 3 * * 1",
+      "0 20 * * 1",
       async () => {
         try {
           logInfo("Memulai pembersihan backup lama otomatis");
@@ -110,7 +107,6 @@ class BackupScheduler {
       },
       {
         scheduled: false,
-        timezone: "Asia/Jakarta",
       }
     );
 
@@ -142,7 +138,6 @@ class BackupScheduler {
       },
       {
         scheduled: false,
-        timezone: "Asia/Jakarta",
       }
     );
 

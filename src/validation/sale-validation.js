@@ -19,7 +19,7 @@ const addSaleValidation = Joi.object({
       jumlah: Joi.number().required(),
       diskon: Joi.number().required(),
       total: Joi.number().required(),
-    }),
+    })
   ),
 });
 
@@ -29,7 +29,7 @@ const getDetailSaleValidation = Joi.object({
 
 const searchSaleValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_anggota: Joi.string().max(8).optional(),
   keterangan: Joi.string().optional(),
   sort_by: Joi.array().optional(),

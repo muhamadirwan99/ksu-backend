@@ -9,7 +9,7 @@ const pembayaranHutangDagangValidation = Joi.object({
 
 const listHutangDagangValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_supplier: Joi.string().max(8).optional(),
   sort_by: Joi.array().optional(),
   sort_order: Joi.array().optional(),
@@ -17,7 +17,7 @@ const listHutangDagangValidation = Joi.object({
 
 const listPembayaranHutangDagangValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_supplier: Joi.string().max(8).optional(),
   nm_supplier: Joi.string().max(100).optional(),
   sort_by: Joi.array().optional(),

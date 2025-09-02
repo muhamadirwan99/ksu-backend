@@ -12,7 +12,7 @@ const addStockTakeValidation = Joi.object({
 
 const searchStockTakeValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   is_selisih: Joi.boolean().optional(),
   nm_product: Joi.string().max(100).optional(),
   sort_by: Joi.array().optional(),
@@ -21,12 +21,12 @@ const searchStockTakeValidation = Joi.object({
 
 const rekonStockTakeValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
 });
 
 const detailRekonStockTakeValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_divisi: Joi.string().max(10).required(),
   is_selisih: Joi.boolean().optional(),
 });

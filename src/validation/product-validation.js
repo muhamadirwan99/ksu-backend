@@ -30,7 +30,7 @@ const updateProductValidation = Joi.object({
 
 const searchProductValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_supplier: Joi.string().optional(),
   status_product: Joi.boolean().optional(),
   nm_product: Joi.string().max(100).optional(),
@@ -40,7 +40,7 @@ const searchProductValidation = Joi.object({
 
 const aktivitasStockValidation = Joi.object({
   page: Joi.number().min(1).positive().default(1),
-  size: Joi.number().min(1).positive().max(1000).default(10),
+  size: Joi.number().min(1).positive().max(10000).default(10),
   id_product: Joi.string().optional(),
   nm_produk: Joi.string().optional(),
   sort_by: Joi.array().optional(),

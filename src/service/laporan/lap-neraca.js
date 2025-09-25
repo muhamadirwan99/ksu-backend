@@ -24,13 +24,14 @@ async function laporanNeraca(month, year) {
     neracaLajurCurrent.akumulasi_penyusutan_gedung.neraca_akhir.kredit,
     neracaLajurCurrent.utang_dagang.neraca_akhir.kredit,
     neracaLajurCurrent.modal_tidak_tetap.neraca_akhir.kredit,
+    neracaLajurCurrent.utang_dari_pihak_ketiga.neraca_akhir.kredit,
     neracaLajurCurrent.utang_dari_sp.neraca_akhir.kredit,
     neracaLajurCurrent.usaha_lain_toko.neraca_akhir.kredit,
     neracaLajurCurrent.modal_disetor.neraca_akhir.kredit,
     neracaLajurCurrent.modal_unit_toko.neraca_akhir.kredit,
     neracaLajurCurrent.shu_th_2023.neraca_akhir.kredit,
     neracaLajurCurrent.shu_th_2024.neraca_akhir.kredit,
-    neracaLajurCurrent.shu_th_2025.neraca_akhir.kredit,
+    neracaLajurCurrent.shu_th_2025.neraca_akhir.kredit
   );
 
   const neracaPrevious = createNeracaModel(
@@ -46,13 +47,14 @@ async function laporanNeraca(month, year) {
     neracaLajurPrevious.akumulasi_penyusutan_gedung.neraca_akhir.kredit,
     neracaLajurPrevious.utang_dagang.neraca_akhir.kredit,
     neracaLajurPrevious.modal_tidak_tetap.neraca_akhir.kredit,
+    neracaLajurPrevious.utang_dari_pihak_ketiga.neraca_akhir.kredit,
     neracaLajurPrevious.utang_dari_sp.neraca_akhir.kredit,
     neracaLajurPrevious.usaha_lain_toko.neraca_akhir.kredit,
     neracaLajurPrevious.modal_disetor.neraca_akhir.kredit,
     neracaLajurPrevious.modal_unit_toko.neraca_akhir.kredit,
     neracaLajurPrevious.shu_th_2023.neraca_akhir.kredit,
     neracaLajurPrevious.shu_th_2024.neraca_akhir.kredit,
-    neracaLajurPrevious.shu_th_2025.neraca_akhir.kredit,
+    neracaLajurPrevious.shu_th_2025.neraca_akhir.kredit
   );
 
   return {

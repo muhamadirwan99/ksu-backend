@@ -11,6 +11,7 @@ function createNeracaModel(
   akumPenyusutanGedung,
   hutangDagang,
   modalTidakTetap,
+  utangPihakKetiga,
   utangDariSp,
   usahaLainToko,
   modalDisetor,
@@ -32,7 +33,7 @@ function createNeracaModel(
   const nilaiBukuAktiva = jumlahAktivaTetap - jumlahAkumPenyusutan;
   const jumlahAktivaLain = 0;
 
-  const jumlahHutangLancar = hutangDagang + modalTidakTetap;
+  const jumlahHutangLancar = hutangDagang + modalTidakTetap + utangPihakKetiga;
 
   const jumlahDanaModalShu =
     usahaLainToko +
@@ -70,6 +71,7 @@ function createNeracaModel(
     hutang_lancar: {
       hutang_dagang: hutangDagang,
       modal_tidak_tetap: modalTidakTetap,
+      utang_pihak_ketiga: utangPihakKetiga,
       jumlah: jumlahHutangLancar,
     },
     utang_dari_sp: {

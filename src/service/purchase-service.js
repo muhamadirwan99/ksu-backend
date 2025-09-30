@@ -21,27 +21,30 @@ const createPurchase = async (request) => {
     throw new Error("Invalid date format. Please use dd-MM-yyyy format.");
   }
 
-  // Simpan ke tabel Purchase
-  const newPurchase = await prismaClient.pembelian.create({
-    data: {
-      id_pembelian: await generatePurchaseId(parseDate),
-      tg_pembelian: request.tg_pembelian,
-      id_supplier: request.id_supplier,
-      nm_supplier: request.nm_supplier,
-      jumlah: request.jumlah,
-      total_harga_beli: request.total_harga_beli,
-      total_harga_jual: request.total_harga_jual,
-      jenis_pembayaran: request.jenis_pembayaran,
-      keterangan: request.keterangan,
-      created_at: generateDate(),
-    },
-  });
+  // Generate ID pembelian di luar transaction untuk menghindari konflik
+  const purchaseId = await generatePurchaseId(parseDate);
 
-  // tambahkan untuk menambahkan hutang apabila jenis_pembayaran == kredit
-  if (request.jenis_pembayaran === "kredit") {
-    // Gunakan transaction untuk memastikan atomicity
-    await prismaClient.$transaction(
-      async (tx) => {
+  // Gunakan transaction untuk memastikan semua operasi berhasil atau gagal bersama-sama
+  const result = await prismaClient.$transaction(
+    async (tx) => {
+      // 1. Simpan ke tabel Purchase
+      const newPurchase = await tx.pembelian.create({
+        data: {
+          id_pembelian: purchaseId,
+          tg_pembelian: request.tg_pembelian,
+          id_supplier: request.id_supplier,
+          nm_supplier: request.nm_supplier,
+          jumlah: request.jumlah,
+          total_harga_beli: request.total_harga_beli,
+          total_harga_jual: request.total_harga_jual,
+          jenis_pembayaran: request.jenis_pembayaran,
+          keterangan: request.keterangan,
+          created_at: generateDate(),
+        },
+      });
+
+      // 2. Tambahkan hutang dagang jika jenis pembayaran kredit
+      if (request.jenis_pembayaran === "kredit") {
         // Buat record hutang dagang
         await tx.hutangDagang.create({
           data: {
@@ -87,81 +90,84 @@ const createPurchase = async (request) => {
             updated_at: generateDate(),
           },
         });
-      },
-      {
-        isolationLevel: "ReadCommitted",
-        timeout: 10000,
       }
-    );
-  }
 
-  // Proses detail pembelian dan update tabel produk
-  const purchaseDetails = await Promise.all(
-    request.details.map(async (detail) => {
-      // Cek apakah produk sudah ada di tabel produk
-      let existingProduct = await prismaClient.product.findUnique({
-        where: {
-          id_product: detail.id_product,
-        },
+      // 3. Proses detail pembelian dan update tabel produk
+      const purchaseDetails = await Promise.all(
+        request.details.map(async (detail) => {
+          // Cek apakah produk sudah ada di tabel produk
+          let existingProduct = await tx.product.findUnique({
+            where: {
+              id_product: detail.id_product,
+            },
+          });
+
+          // Jika produk tidak ada, lempar error
+          if (!existingProduct) {
+            throw new Error(
+              `Product with ID ${detail.id_product} does not exist. Please add the product first.`
+            );
+          }
+
+          // Jika harga beli baru berbeda dari harga beli lama, hitung rata-rata harga beli
+          let hargaBeliBaru = detail.harga_beli;
+          if (existingProduct.harga_beli !== detail.harga_beli) {
+            const hargaBeliLama = existingProduct.harga_beli;
+            const jumlahLama = existingProduct.jumlah;
+
+            const totalQty = jumlahLama + detail.jumlah;
+            const totalHarga =
+              hargaBeliLama * jumlahLama + hargaBeliBaru * detail.jumlah;
+
+            // Rata-rata harga beli
+            hargaBeliBaru = totalHarga / totalQty;
+          }
+
+          // Update produk dengan harga beli baru (rata-rata), jumlah baru, dan harga jual baru
+          await tx.product.update({
+            where: {
+              id_product: detail.id_product,
+            },
+            data: {
+              harga_beli: hargaBeliBaru, // Harga beli baru yang sudah di-average
+              jumlah: existingProduct.jumlah + detail.jumlah, // Update jumlah produk
+              harga_jual: detail.harga_jual, // Update harga jual
+              updated_at: generateDate(),
+            },
+          });
+
+          // Return detail pembelian
+          return {
+            id_pembelian: newPurchase.id_pembelian,
+            id_product: detail.id_product,
+            nm_divisi: detail.nm_divisi,
+            nm_produk: detail.nm_produk,
+            harga_beli: detail.harga_beli, // Harga beli asli dari input, bukan hasil averaging
+            harga_jual: detail.harga_jual,
+            jumlah: detail.jumlah,
+            diskon: detail.diskon,
+            ppn: detail.ppn,
+            total_nilai_beli: detail.harga_beli * detail.jumlah, // Gunakan harga beli asli
+            total_nilai_jual: detail.total_nilai_jual,
+            created_at: generateDate(),
+          };
+        })
+      );
+
+      // 4. Simpan detail pembelian
+      await tx.detailPembelian.createMany({
+        data: purchaseDetails,
       });
 
-      // Jika produk tidak ada, lempar error (atau Anda bisa buat produk baru tergantung kebutuhan)
-      if (!existingProduct) {
-        throw new Error(
-          `Product with ID ${detail.id_product} does not exist. Please add the product first.`
-        );
-      }
-
-      // Jika harga beli baru berbeda dari harga beli lama, hitung rata-rata harga beli
-      let hargaBeliBaru = detail.harga_beli;
-      if (existingProduct.harga_beli !== detail.harga_beli) {
-        const hargaBeliLama = existingProduct.harga_beli;
-        const jumlahLama = existingProduct.jumlah;
-
-        const totalQty = jumlahLama + detail.jumlah;
-        const totalHarga =
-          hargaBeliLama * jumlahLama + hargaBeliBaru * detail.jumlah;
-
-        // Rata-rata harga beli
-        hargaBeliBaru = totalHarga / totalQty;
-      }
-
-      // Update produk dengan harga beli baru (rata-rata), jumlah baru, dan harga jual baru
-      await prismaClient.product.update({
-        where: {
-          id_product: detail.id_product,
-        },
-        data: {
-          harga_beli: hargaBeliBaru, // Harga beli baru yang sudah di-average
-          jumlah: existingProduct.jumlah + detail.jumlah, // Update jumlah produk
-          harga_jual: detail.harga_jual, // Update harga jual
-          updated_at: generateDate(),
-        },
-      });
-
-      // Simpan detail pembelian
-      return {
-        id_pembelian: newPurchase.id_pembelian,
-        id_product: detail.id_product,
-        nm_divisi: detail.nm_divisi,
-        nm_produk: detail.nm_produk,
-        harga_beli: detail.harga_beli, // Harga beli asli dari input, bukan hasil averaging
-        harga_jual: detail.harga_jual,
-        jumlah: detail.jumlah,
-        diskon: detail.diskon,
-        ppn: detail.ppn,
-        total_nilai_beli: detail.harga_beli * detail.jumlah, // Gunakan harga beli asli
-        total_nilai_jual: detail.total_nilai_jual,
-        created_at: generateDate(),
-      };
-    })
+      return newPurchase;
+    },
+    {
+      isolationLevel: "ReadCommitted",
+      timeout: 15000, // Increase timeout karena operasi yang kompleks
+    }
   );
 
-  await prismaClient.detailPembelian.createMany({
-    data: purchaseDetails,
-  });
-
-  return newPurchase;
+  return result;
 };
 
 const getDetailPurchase = async (request) => {
@@ -193,7 +199,7 @@ const getDetailPurchase = async (request) => {
   });
 
   if (!detailPurchase) {
-    throw new ResponseError("Purchase is not found");
+    throw new ResponseError("Detail purchase is not found");
   }
 
   return {
@@ -269,7 +275,7 @@ const removePurchase = async (request) => {
   });
 
   if (detailPurchase === 0) {
-    throw new ResponseError("Purchase is not found");
+    throw new ResponseError("Detail purchase is not found");
   }
 
   const existingDetailPurchase = await prismaClient.detailPembelian.findMany({

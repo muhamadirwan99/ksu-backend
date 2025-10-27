@@ -178,7 +178,7 @@ const rekonStockTake = async (request) => {
 
       productsInDivisi.forEach((product) => {
         const stockTake = latestStockTakes.find(
-          (st) => st.id_product === product.id_product,
+          (st) => st.id_product === product.id_product
         );
         const jumlahProduk = product.jumlah || 0;
         const jumlahStocktake = stockTake ? stockTake.stok_akhir || 0 : 0;
@@ -203,33 +203,33 @@ const rekonStockTake = async (request) => {
         selisih_harga_jual,
         selisih,
       };
-    }),
+    })
   );
 
   // **Filter berdasarkan isSelisih**
   if (is_selisih !== undefined) {
     listProduct = listProduct.filter(
-      (product) => product.is_selisih === is_selisih,
+      (product) => product.is_selisih === is_selisih
     );
   }
 
   // **Total Stock, Stock Take, dan Selisih**
   const totalStock = listProduct.reduce(
     (acc, product) => acc + product.stock,
-    0,
+    0
   );
   const totalStockTake = listProduct.reduce(
     (acc, product) => acc + product.stock_take,
-    0,
+    0
   );
   const totalSelisih = totalStockTake - totalStock;
   const totalHargaJualStock = listProduct.reduce(
     (acc, product) => acc + product.total_harga_jual_stock,
-    0,
+    0
   );
   const totalHargaJualStockTake = listProduct.reduce(
     (acc, product) => acc + product.total_harga_jual_stocktake,
-    0,
+    0
   );
   const totalSelisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
 
@@ -284,7 +284,7 @@ const detailRekonStockTake = async (request) => {
   let listProduct = await Promise.all(
     products.map(async (product) => {
       const stockTake = latestStockTakes.find(
-        (stockTake) => stockTake.id_product === product.id_product,
+        (stockTake) => stockTake.id_product === product.id_product
       );
 
       const jumlahProduk = product.jumlah;
@@ -296,6 +296,9 @@ const detailRekonStockTake = async (request) => {
       const totalHargaJualStockTake =
         jumlahStocktake !== "" ? jumlahStocktake * hargaJual : "";
 
+      const selisih = jumlahStocktake - jumlahProduk;
+      const isSelisih = jumlahStocktake != jumlahProduk;
+
       const selisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
 
       return {
@@ -306,17 +309,17 @@ const detailRekonStockTake = async (request) => {
         total_harga_jual_stock: totalHargaJualStock,
         total_harga_jual_stocktake: totalHargaJualStockTake,
         selisih_harga_jual: selisihHargaJual,
-        selisih: stockTake ? stockTake.selisih : "",
+        selisih: selisih,
         petugas: stockTake ? stockTake.username : "",
-        is_selisih: stockTake ? stockTake.selisih !== 0 : true,
+        is_selisih: isSelisih,
       };
-    }),
+    })
   );
 
   // **Filter berdasarkan isSelisih**
   if (is_selisih !== undefined) {
     listProduct = listProduct.filter(
-      (product) => product.is_selisih === is_selisih,
+      (product) => product.is_selisih === is_selisih
     );
   }
 

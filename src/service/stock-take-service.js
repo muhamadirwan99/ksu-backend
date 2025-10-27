@@ -301,6 +301,8 @@ const detailRekonStockTake = async (request) => {
 
       const selisihHargaJual = totalHargaJualStockTake - totalHargaJualStock;
 
+      const petugas = stockTake ? stockTake.username : "";
+
       return {
         id_product: product.id_product,
         nm_product: product.nm_product,
@@ -310,7 +312,8 @@ const detailRekonStockTake = async (request) => {
         total_harga_jual_stocktake: totalHargaJualStockTake,
         selisih_harga_jual: selisihHargaJual,
         selisih: selisih,
-        petugas: stockTake ? stockTake.username : "",
+        petugas: petugas,
+        is_done_stocktake: petugas ? true : false,
         is_selisih: isSelisih,
       };
     })

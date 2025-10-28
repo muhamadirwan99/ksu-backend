@@ -180,9 +180,9 @@ const rekonStockTake = async (request) => {
         const stockTake = latestStockTakes.find(
           (st) => st.id_product === product.id_product
         );
-        const jumlahProduk = product.jumlah || 0;
-        const jumlahStocktake = stockTake ? stockTake.stok_akhir || 0 : 0;
-        const hargaJual = product.harga_jual || 0;
+        const jumlahProduk = stockTake?.stok_awal ?? 0;
+        const jumlahStocktake = stockTake?.stok_akhir ?? 0;
+        const hargaJual = product.harga_jual ?? 0;
 
         stock += jumlahProduk;
         stock_take += jumlahStocktake;
@@ -287,10 +287,9 @@ const detailRekonStockTake = async (request) => {
         (stockTake) => stockTake.id_product === product.id_product
       );
 
-      const jumlahProduk = product.jumlah;
-      const jumlahStocktake = stockTake ? stockTake.stok_akhir : "";
-
-      const hargaJual = product.harga_jual || 0;
+      const jumlahProduk = stockTake?.stok_awal ?? 0;
+      const jumlahStocktake = stockTake?.stok_akhir ?? 0;
+      const hargaJual = product?.harga_jual ?? 0;
 
       const totalHargaJualStock = jumlahProduk * hargaJual;
       const totalHargaJualStockTake =

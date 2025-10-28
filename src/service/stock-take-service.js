@@ -260,7 +260,7 @@ const rekonStockTake = async (request) => {
 
 const detailRekonStockTake = async (request) => {
   request = validate(detailRekonStockTakeValidation, request);
-  const { page, size, is_selisih } = request;
+  const { page, size, is_selisih, is_done_stocktake } = request;
 
   // Ambil semua data stock take terbaru per id_product
   const latestStockTakes = await prismaClient.$queryRaw`
@@ -322,6 +322,12 @@ const detailRekonStockTake = async (request) => {
   if (is_selisih !== undefined) {
     listProduct = listProduct.filter(
       (product) => product.is_selisih === is_selisih
+    );
+  }
+
+  if (is_done_stocktake !== undefined) {
+    listProduct = listProduct.filter(
+      (product) => product.is_done_stocktake === is_done_stocktake
     );
   }
 

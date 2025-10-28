@@ -29,6 +29,7 @@ const detailRekonStockTakeValidation = Joi.object({
   size: Joi.number().min(1).positive().max(10000).default(10),
   id_divisi: Joi.string().max(10).required(),
   is_selisih: Joi.boolean().optional(),
+  is_done_stocktake: Joi.boolean().optional(),
 });
 
 export {

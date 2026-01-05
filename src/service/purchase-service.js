@@ -116,11 +116,20 @@ const createPurchase = async (request) => {
             const jumlahLama = existingProduct.jumlah;
 
             const totalQty = jumlahLama + detail.jumlah;
-            const totalHarga =
-              hargaBeliLama * jumlahLama + hargaBeliBaru * detail.jumlah;
 
-            // Rata-rata harga beli
-            hargaBeliBaru = totalHarga / totalQty;
+            // Pencegahan pembagian dengan nol atau stok negatif
+            if (totalQty <= 0) {
+              // Fallback: jika total stok 0 atau minus, gunakan harga beli terbaru saja
+              hargaBeliBaru = detail.harga_beli;
+            } else {
+              const totalHarga =
+                hargaBeliLama * jumlahLama + hargaBeliBaru * detail.jumlah;
+
+              // Rata-rata harga beli dengan pembulatan untuk menghindari floating point issue
+              const rawAvg = totalHarga / totalQty;
+              // Bulatkan ke bilangan bulat terdekat untuk menghindari desimal keriting
+              hargaBeliBaru = Math.round(rawAvg);
+            }
           }
 
           // Update produk dengan harga beli baru (rata-rata), jumlah baru, dan harga jual baru

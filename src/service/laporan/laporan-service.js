@@ -123,19 +123,45 @@ const getLaporanNeraca = async (request) => {
   return await laporanNeraca(request.month, request.year);
 };
 
+// Helper function to calculate percentage
+const calculatePercentage = (keuntungan, modal) => {
+  return modal > 0 ? Math.round((keuntungan / modal) * 100) : 0;
+};
+
+// Helper function to initialize payment method structure
+const initializePaymentMethodTotals = () => ({
+  TUNAI: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
+  QRIS: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
+  KREDIT: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
+});
+
 const getLaporanPenjualan = async (request) => {
   request = validate(dateValidation, request);
 
-  // Parse dates more carefully
-  const startDate = new Date(request.start_date);
-  const endDate = new Date(request.end_date);
+  // Parse dates - using string format to match database timezone
+  // Create dates at start of day (00:00:00) and end of day (23:59:59)
+  const startDate = new Date(`${request.start_date}T00:00:00.000Z`);
+  const endDate = new Date(`${request.end_date}T23:59:59.999Z`);
 
-  // Check if dates are valid
+  // Validate dates
   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
     throw new Error("Invalid date format. Please use YYYY-MM-DD format.");
   }
 
-  endDate.setHours(23, 59, 59, 999);
+  // Validate date range
+  if (startDate > endDate) {
+    throw new Error("Start date cannot be greater than end date.");
+  }
+
+  // Debug logging
+  console.log("=== LAPORAN PENJUALAN DEBUG ===");
+  console.log("Start Date:", startDate.toISOString());
+  console.log("End Date:", endDate.toISOString());
+  console.log("Request:", {
+    start_date: request.start_date,
+    end_date: request.end_date,
+    metode_pembayaran: request.metode_pembayaran,
+  });
 
   // Build where clause with optional payment method filter
   const whereClause = {
@@ -145,10 +171,12 @@ const getLaporanPenjualan = async (request) => {
     },
   };
 
-  // Add payment method filter if provided
-  if (request.metode_pembayaran) {
+  // Add payment method filter if provided (with null safety)
+  if (request.metode_pembayaran?.trim()) {
     whereClause.jenis_pembayaran = request.metode_pembayaran.toUpperCase();
   }
+
+  console.log("Where Clause:", JSON.stringify(whereClause, null, 2));
 
   // Get all sales data within the date range
   const salesData = await prismaClient.penjualan.findMany({
@@ -162,37 +190,85 @@ const getLaporanPenjualan = async (request) => {
     },
   });
 
-  // Group products by payment method and calculate totals
-  const productSummary = {};
-  const paymentMethodTotals = {
-    TUNAI: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
-    QRIS: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
-    KREDIT: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
-  };
+  console.log(`Total Sales Data Retrieved: ${salesData.length}`);
+  if (salesData.length > 0) {
+    console.log("Sample Sale:", {
+      id: salesData[0].id_penjualan,
+      created_at: salesData[0].created_at,
+      jenis_pembayaran: salesData[0].jenis_pembayaran,
+      detail_count: salesData[0].DetailPenjualan?.length,
+    });
+  }
 
+  // Initialize data structures
+  const productSummary = {};
+  const paymentMethodTotals = initializePaymentMethodTotals();
+
+  // Process sales data with null safety checks
   salesData.forEach((sale) => {
+    // Handle null/undefined payment method
+    if (!sale.jenis_pembayaran) {
+      console.warn(`Sale ${sale.id_penjualan} has no payment method`);
+      return;
+    }
+
     const paymentMethod = sale.jenis_pembayaran.toUpperCase();
 
+    // Skip if payment method is not recognized
+    const validPaymentMethods = ["TUNAI", "QRIS", "KREDIT"];
+    if (!validPaymentMethods.includes(paymentMethod)) {
+      console.warn(
+        `Unknown payment method: ${paymentMethod} for sale ${sale.id_penjualan}`
+      );
+      return;
+    }
+
+    // Check if DetailPenjualan exists
+    if (!sale.DetailPenjualan || sale.DetailPenjualan.length === 0) {
+      console.warn(`Sale ${sale.id_penjualan} has no detail items`);
+      return;
+    }
+
     sale.DetailPenjualan.forEach((detail) => {
+      // Null safety checks
+      if (!detail.nm_produk || !detail.id_product) {
+        console.warn(
+          `Detail item missing product info in sale ${sale.id_penjualan}`
+        );
+        return;
+      }
+
+      // Check if product data exists
+      if (!detail.product) {
+        console.warn(
+          `Product not found for ${detail.nm_produk} in sale ${sale.id_penjualan}`
+        );
+        return;
+      }
+
       const productName = detail.nm_produk;
       const productId = detail.id_product;
 
+      // Initialize product summary if not exists
       if (!productSummary[productName]) {
         productSummary[productName] = {
           id_product: productId,
-          TUNAI: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
-          QRIS: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
-          KREDIT: { jumlah: 0, modal: 0, hasil_penjualan: 0, keuntungan: 0 },
+          ...initializePaymentMethodTotals(),
         };
       }
 
-      const modal = parseFloat(detail.product.harga_beli) * detail.jumlah;
-      const hasilPenjualan = parseFloat(detail.total);
+      // Safe parsing with null/undefined checks
+      const hargaBeli = detail.product?.harga_beli ?? 0;
+      const jumlah = detail.jumlah ?? 0;
+      const total = detail.total ?? 0;
+
+      const modal = parseFloat(hargaBeli) * jumlah;
+      const hasilPenjualan = parseFloat(total);
       const keuntungan = hasilPenjualan - modal;
 
       // Update product summary by payment method
       if (productSummary[productName][paymentMethod]) {
-        productSummary[productName][paymentMethod].jumlah += detail.jumlah;
+        productSummary[productName][paymentMethod].jumlah += jumlah;
         productSummary[productName][paymentMethod].modal += modal;
         productSummary[productName][paymentMethod].hasil_penjualan +=
           hasilPenjualan;
@@ -201,7 +277,7 @@ const getLaporanPenjualan = async (request) => {
 
       // Update payment method totals
       if (paymentMethodTotals[paymentMethod]) {
-        paymentMethodTotals[paymentMethod].jumlah += detail.jumlah;
+        paymentMethodTotals[paymentMethod].jumlah += jumlah;
         paymentMethodTotals[paymentMethod].modal += modal;
         paymentMethodTotals[paymentMethod].hasil_penjualan += hasilPenjualan;
         paymentMethodTotals[paymentMethod].keuntungan += keuntungan;
@@ -212,15 +288,15 @@ const getLaporanPenjualan = async (request) => {
   // Format data for frontend
   const formattedData = [];
 
+  // Determine which payment methods to show
+  const methodsToShow = request.metode_pembayaran?.trim()
+    ? [request.metode_pembayaran.toUpperCase()]
+    : ["TUNAI", "QRIS", "KREDIT"];
+
+  // Add product rows
   Object.keys(productSummary).forEach((productName) => {
     const product = productSummary[productName];
 
-    // Determine which payment methods to show
-    const methodsToShow = request.metode_pembayaran
-      ? [request.metode_pembayaran.toUpperCase()]
-      : ["TUNAI", "QRIS", "KREDIT"];
-
-    // Add rows for each payment method that has data
     methodsToShow.forEach((method) => {
       if (product[method] && product[method].jumlah > 0) {
         formattedData.push({
@@ -231,22 +307,16 @@ const getLaporanPenjualan = async (request) => {
           modal: product[method].modal,
           hasil_penjualan: product[method].hasil_penjualan,
           keuntungan: product[method].keuntungan,
-          persentase:
-            product[method].modal > 0
-              ? Math.round(
-                  (product[method].keuntungan / product[method].modal) * 100
-                )
-              : 0,
+          persentase: calculatePercentage(
+            product[method].keuntungan,
+            product[method].modal
+          ),
         });
       }
     });
   });
 
   // Add totals for each payment method
-  const methodsToShow = request.metode_pembayaran
-    ? [request.metode_pembayaran.toUpperCase()]
-    : ["TUNAI", "QRIS", "KREDIT"];
-
   methodsToShow.forEach((method) => {
     if (paymentMethodTotals[method] && paymentMethodTotals[method].jumlah > 0) {
       formattedData.push({
@@ -256,46 +326,38 @@ const getLaporanPenjualan = async (request) => {
         modal: paymentMethodTotals[method].modal,
         hasil_penjualan: paymentMethodTotals[method].hasil_penjualan,
         keuntungan: paymentMethodTotals[method].keuntungan,
-        persentase:
-          paymentMethodTotals[method].modal > 0
-            ? Math.round(
-                (paymentMethodTotals[method].keuntungan /
-                  paymentMethodTotals[method].modal) *
-                  100
-              )
-            : 0,
+        persentase: calculatePercentage(
+          paymentMethodTotals[method].keuntungan,
+          paymentMethodTotals[method].modal
+        ),
       });
     }
   });
 
-  // Calculate totals based on filtered methods
-  const relevantMethods = request.metode_pembayaran
-    ? [request.metode_pembayaran.toUpperCase()]
-    : ["TUNAI", "QRIS", "KREDIT"];
-
+  // Calculate grand total
   const grandTotal = {
-    jumlah: relevantMethods.reduce(
+    jumlah: methodsToShow.reduce(
       (sum, method) => sum + (paymentMethodTotals[method]?.jumlah || 0),
       0
     ),
-    modal: relevantMethods.reduce(
+    modal: methodsToShow.reduce(
       (sum, method) => sum + (paymentMethodTotals[method]?.modal || 0),
       0
     ),
-    hasil_penjualan: relevantMethods.reduce(
+    hasil_penjualan: methodsToShow.reduce(
       (sum, method) =>
         sum + (paymentMethodTotals[method]?.hasil_penjualan || 0),
       0
     ),
-    keuntungan: relevantMethods.reduce(
+    keuntungan: methodsToShow.reduce(
       (sum, method) => sum + (paymentMethodTotals[method]?.keuntungan || 0),
       0
     ),
   };
 
-  // Add grand total only if we're showing multiple methods or have data
+  // Add grand total row
   if (!request.metode_pembayaran || grandTotal.jumlah > 0) {
-    const totalLabel = request.metode_pembayaran
+    const totalLabel = request.metode_pembayaran?.trim()
       ? `TOTAL PENJUALAN ${request.metode_pembayaran.toUpperCase()}`
       : "TOTAL PENJUALAN";
 
@@ -306,10 +368,7 @@ const getLaporanPenjualan = async (request) => {
       modal: grandTotal.modal,
       hasil_penjualan: grandTotal.hasil_penjualan,
       keuntungan: grandTotal.keuntungan,
-      persentase:
-        grandTotal.modal > 0
-          ? Math.round((grandTotal.keuntungan / grandTotal.modal) * 100)
-          : 0,
+      persentase: calculatePercentage(grandTotal.keuntungan, grandTotal.modal),
     });
   }
 

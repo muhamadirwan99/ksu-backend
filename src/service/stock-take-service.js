@@ -57,6 +57,25 @@ const searchStockTake = async (request) => {
     });
   }
 
+  if (request.month && request.year) {
+    // Format: DD-MM-YYYY, HH:MM:SS
+    const monthStr = String(request.month).padStart(2, "0");
+    const yearStr = String(request.year);
+
+    filters.push({
+      tg_stocktake: {
+        contains: `-${monthStr}-${yearStr}`,
+      },
+    });
+  } else if (request.year) {
+    // Filter hanya berdasarkan tahun
+    filters.push({
+      tg_stocktake: {
+        contains: `-${request.year}`,
+      },
+    });
+  }
+
   if (request?.is_selisih !== undefined) {
     filters.push({
       selisih: request.is_selisih ? { not: 0 } : { equals: 0 },

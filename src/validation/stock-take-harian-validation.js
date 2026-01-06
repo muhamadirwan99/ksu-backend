@@ -15,6 +15,8 @@ const searchStockTakeValidation = Joi.object({
   size: Joi.number().min(1).positive().max(10000).default(10),
   is_selisih: Joi.boolean().optional(),
   nm_product: Joi.string().max(100).optional(),
+  month: Joi.number().min(1).max(12).optional(),
+  year: Joi.number().min(2000).max(3000).optional(),
   sort_by: Joi.array().optional(),
   sort_order: Joi.array().optional(),
 });

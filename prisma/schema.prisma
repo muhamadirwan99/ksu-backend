@@ -323,22 +323,27 @@ model HutangDagang {
 }
 
 model StockTake {
-  id_stocktake Int       @id @default(autoincrement())
-  tg_stocktake String    @db.VarChar(20)
-  id_product   String    @db.VarChar(100)
-  nm_product   String    @db.VarChar(100)
-  stok_awal    Int
-  stok_akhir   Int
-  selisih      Int
-  username     String    @db.VarChar(100)
-  name         String    @db.VarChar(100)
-  created_at   DateTime  @db.Timestamp(6)
-  updated_at   DateTime? @db.Timestamp(6)
-  product      Product   @relation(fields: [id_product], references: [id_product])
-  user         User      @relation(fields: [username], references: [username])
+  id_stocktake   Int         @id @default(autoincrement())
+  tg_stocktake   String      @db.VarChar(20)
+  id_product     String      @db.VarChar(100)
+  nm_product     String      @db.VarChar(100)
+  stok_awal      Int
+  stok_akhir     Int
+  selisih        Int
+  username       String      @db.VarChar(100)
+  name           String      @db.VarChar(100)
+  id_tutup_kasir Int?
+  is_confirmed   Boolean     @default(false)
+  keterangan     String?     @db.Text
+  created_at     DateTime    @db.Timestamp(6)
+  updated_at     DateTime?   @db.Timestamp(6)
+  product        Product     @relation(fields: [id_product], references: [id_product])
+  user           User        @relation(fields: [username], references: [username])
+  tutup_kasir    TutupKasir? @relation(fields: [id_tutup_kasir], references: [id_tutup_kasir])
 
   @@index([id_product], map: "stocktake_id_product_fkey")
   @@index([username], map: "stocktake_username_fkey")
+  @@index([id_tutup_kasir], map: "stocktake_id_tutup_kasir_fkey")
   @@map("stocktake")
 }
 
@@ -407,23 +412,26 @@ enum JenisAset {
 }
 
 model TutupKasir {
-  id_tutup_kasir   Int       @id @default(autoincrement())
-  tg_tutup_kasir   String    @db.VarChar(20)
-  shift            String    @db.VarChar(20)
-  nama_kasir       String    @db.VarChar(100)
-  username         String    @db.VarChar(100)
-  tunai            Decimal   @db.Decimal(10, 2)
-  qris             Decimal   @db.Decimal(10, 2)
-  kredit           Decimal   @db.Decimal(10, 2)
-  total            Decimal   @db.Decimal(10, 2)
-  uang_tunai       Decimal   @db.Decimal(10, 2)
-  total_nilai_jual Decimal   @db.Decimal(10, 2)
-  total_nilai_beli Decimal   @db.Decimal(10, 2)
-  total_keuntungan Decimal   @db.Decimal(10, 2)
-  created_at       DateTime  @db.Timestamp(6)
-  updated_at       DateTime? @db.Timestamp(6)
+  id_tutup_kasir       Int         @id @default(autoincrement())
+  tg_tutup_kasir       String      @db.VarChar(20)
+  shift                String      @db.VarChar(20)
+  nama_kasir           String      @db.VarChar(100)
+  username             String      @db.VarChar(100)
+  tunai                Decimal     @db.Decimal(10, 2)
+  qris                 Decimal     @db.Decimal(10, 2)
+  kredit               Decimal     @db.Decimal(10, 2)
+  total                Decimal     @db.Decimal(10, 2)
+  uang_tunai           Decimal     @db.Decimal(10, 2)
+  total_nilai_jual     Decimal     @db.Decimal(10, 2)
+  total_nilai_beli     Decimal     @db.Decimal(10, 2)
+  total_keuntungan     Decimal     @db.Decimal(10, 2)
+  is_stocktake_done    Boolean     @default(false)
+  stocktake_completed_at DateTime? @db.Timestamp(6)
+  created_at           DateTime    @db.Timestamp(6)
+  updated_at           DateTime?   @db.Timestamp(6)
 
-  user User @relation(fields: [username], references: [username])
+  user      User        @relation(fields: [username], references: [username])
+  StockTake StockTake[]
 
   @@map("tutup_kasir")
 }

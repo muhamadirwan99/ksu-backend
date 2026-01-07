@@ -7,16 +7,100 @@ import {
   detailRekonStockTakeValidation,
   rekonStockTakeValidation,
   searchStockTakeValidation,
+  getDailySOProductsValidation,
+  batchSaveDailySOValidation,
+  checkSOStatusValidation,
 } from "../validation/stock-take-harian-validation.js";
+
+// ===== HELPER FUNCTIONS FOR BUSINESS LOGIC VALIDATION =====
+
+/**
+ * Check if Tutup Kasir has been done for the given date
+ */
+const checkTutupKasir = async (tanggal) => {
+  const tutupKasir = await prismaClient.tutupKasir.findFirst({
+    where: {
+      tg_tutup_kasir: {
+        contains: tanggal,
+      },
+    },
+  });
+
+  if (!tutupKasir) {
+    throw new ResponseError(
+      "Harap lakukan Tutup Kasir terlebih dahulu sebelum melakukan Stock Opname"
+    );
+  }
+
+  return tutupKasir;
+};
+
+/**
+ * Check if Stock Opname has already been done for the given date
+ */
+const checkSOStatus = async (tanggal) => {
+  const tutupKasir = await checkTutupKasir(tanggal);
+
+  if (tutupKasir.is_stocktake_done) {
+    throw new ResponseError(
+      "Stock Opname untuk tanggal ini sudah selesai dan dikonfirmasi"
+    );
+  }
+
+  return tutupKasir;
+};
+
+/**
+ * Validate that all sold products have been stock-taken
+ */
+const validateAllProductsDone = async (products, tanggal) => {
+  // Get products that were sold on the given date
+  const salesToday = await prismaClient.penjualan.findMany({
+    where: {
+      tg_penjualan: {
+        contains: tanggal,
+      },
+    },
+    include: {
+      DetailPenjualan: true,
+    },
+  });
+
+  // Extract unique product IDs that were sold
+  const soldProductIds = new Set();
+  salesToday.forEach((sale) => {
+    sale.DetailPenjualan.forEach((detail) => {
+      soldProductIds.add(detail.id_product);
+    });
+  });
+
+  const soldProductsCount = soldProductIds.size;
+
+  if (products.length !== soldProductsCount) {
+    throw new ResponseError(
+      `Semua produk yang terjual harus di-stock opname. Total produk terjual: ${soldProductsCount}, produk yang di-SO: ${products.length}`
+    );
+  }
+};
+
+// ===== END HELPER FUNCTIONS =====
 
 const createStockTake = async (request) => {
   request = validate(addStockTakeValidation, request);
 
+  // 1. Extract tanggal from tg_stocktake
+  const [tanggal] = request.tg_stocktake.split(", ");
+
+  // 2. Check if Tutup Kasir has been done (will throw error if not)
+  const tutupKasir = await checkSOStatus(tanggal);
+
+  // 3. Set created_at
   request.created_at = generateDate();
 
+  // 4. Calculate selisih
   request.selisih = request.stok_akhir - request.stok_awal;
 
-  //Update jumlah di table product
+  // 5. Validate product exists
   const product = await prismaClient.product.findUnique({
     where: {
       id_product: request.id_product,
@@ -27,18 +111,26 @@ const createStockTake = async (request) => {
     throw new ResponseError("Product is not found");
   }
 
-  await prismaClient.product.update({
-    where: {
-      id_product: request.id_product,
-    },
-    data: {
-      jumlah: request.stok_akhir,
-      updated_at: generateDate(),
-    },
-  });
+  // 6. Use transaction to ensure data consistency
+  return await prismaClient.$transaction(async (prisma) => {
+    // Update product jumlah
+    await prisma.product.update({
+      where: {
+        id_product: request.id_product,
+      },
+      data: {
+        jumlah: request.stok_akhir,
+        updated_at: generateDate(),
+      },
+    });
 
-  return prismaClient.stockTake.create({
-    data: request,
+    // Create stocktake record with id_tutup_kasir
+    return prisma.stockTake.create({
+      data: {
+        ...request,
+        id_tutup_kasir: tutupKasir.id_tutup_kasir,
+      },
+    });
   });
 };
 
@@ -365,9 +457,339 @@ const detailRekonStockTake = async (request) => {
   };
 };
 
+/**
+ * Get list of products for daily stock opname
+ * Grouped by divisi with status information
+ * Only includes products that were sold on the given date
+ */
+const getDailySOProducts = async (request) => {
+  request = validate(getDailySOProductsValidation, request);
+
+  const [tanggal] = request.tg_stocktake.split(", ");
+
+  // Check if Tutup Kasir has been done
+  const tutupKasir = await checkTutupKasir(tanggal);
+
+  // Get products that were sold today by querying sales
+  // Get all sales for today
+  const salesToday = await prismaClient.penjualan.findMany({
+    where: {
+      tg_penjualan: {
+        contains: tanggal,
+      },
+    },
+    include: {
+      DetailPenjualan: {
+        include: {
+          product: {
+            include: {
+              divisi: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Extract unique products that were sold
+  const soldProductsMap = new Map();
+  salesToday.forEach((sale) => {
+    sale.DetailPenjualan.forEach((detail) => {
+      if (!soldProductsMap.has(detail.id_product)) {
+        soldProductsMap.set(detail.id_product, detail.product);
+      }
+    });
+  });
+
+  // Convert to array
+  const soldProducts = Array.from(soldProductsMap.values());
+
+  // If no products sold today, return empty result
+  if (soldProducts.length === 0) {
+    return {
+      id_tutup_kasir: tutupKasir.id_tutup_kasir,
+      tg_stocktake: request.tg_stocktake,
+      is_stocktake_done: tutupKasir.is_stocktake_done,
+      summary: {
+        total_products: 0,
+        completed: 0,
+        remaining: 0,
+        progress_percentage: 0,
+      },
+      divisi_list: [],
+    };
+  }
+
+  // Get stock take records for today
+  const stockTakesToday = await prismaClient.stockTake.findMany({
+    where: {
+      tg_stocktake: request.tg_stocktake,
+    },
+  });
+
+  // Create a map for quick lookup
+  const stockTakeMap = stockTakesToday.reduce((acc, st) => {
+    acc[st.id_product] = st;
+    return acc;
+  }, {});
+
+  // Group products by divisi
+  const productsByDivisi = {};
+  soldProducts.forEach((product) => {
+    const divisiId = product.id_divisi;
+    if (!productsByDivisi[divisiId]) {
+      productsByDivisi[divisiId] = {
+        id_divisi: divisiId,
+        nm_divisi: product.divisi.nm_divisi,
+        products: [],
+      };
+    }
+
+    const stockTake = stockTakeMap[product.id_product];
+    productsByDivisi[divisiId].products.push({
+      id_product: product.id_product,
+      nm_product: product.nm_product,
+      stok_sistem: product.jumlah,
+      stok_fisik: stockTake ? stockTake.stok_akhir : null,
+      selisih: stockTake ? stockTake.selisih : null,
+      is_done: !!stockTake,
+      petugas: stockTake ? stockTake.username : null,
+      keterangan: stockTake ? stockTake.keterangan : null,
+    });
+  });
+
+  // Convert to array
+  const divisiList = Object.values(productsByDivisi);
+
+  // Calculate summary
+  const totalProducts = soldProducts.length;
+  const completedProducts = stockTakesToday.filter((st) =>
+    soldProductsMap.has(st.id_product)
+  ).length;
+  const remainingProducts = totalProducts - completedProducts;
+  const progressPercentage =
+    totalProducts > 0
+      ? ((completedProducts / totalProducts) * 100).toFixed(2)
+      : 0;
+
+  return {
+    id_tutup_kasir: tutupKasir.id_tutup_kasir,
+    tg_stocktake: request.tg_stocktake,
+    is_stocktake_done: tutupKasir.is_stocktake_done,
+    summary: {
+      total_products: totalProducts,
+      completed: completedProducts,
+      remaining: remainingProducts,
+      progress_percentage: parseFloat(progressPercentage),
+    },
+    divisi_list: divisiList,
+  };
+};
+
+/**
+ * Batch save daily stock opname for multiple products
+ * Updates all products and marks tutup kasir as complete
+ */
+const batchSaveDailySO = async (request) => {
+  request = validate(batchSaveDailySOValidation, request);
+
+  const [tanggal] = request.tg_stocktake.split(", ");
+
+  // 1. Check if Tutup Kasir exists and SO not done yet
+  const tutupKasir = await checkSOStatus(tanggal);
+
+  // 2. Validate all sold products must be included
+  await validateAllProductsDone(request.products, tanggal);
+
+  // 3. Validate all products exist
+  const productIds = request.products.map((p) => p.id_product);
+  const existingProducts = await prismaClient.product.findMany({
+    where: {
+      id_product: {
+        in: productIds,
+      },
+    },
+  });
+
+  if (existingProducts.length !== request.products.length) {
+    throw new ResponseError("Beberapa produk tidak ditemukan di database");
+  }
+
+  // 4. Use transaction to save all stock takes and update products
+  const result = await prismaClient.$transaction(async (prisma) => {
+    const createdStockTakes = [];
+    const updates = [];
+
+    // Process each product
+    for (const productData of request.products) {
+      const selisih = productData.stok_akhir - productData.stok_awal;
+
+      // Update product jumlah
+      const updatePromise = prisma.product.update({
+        where: {
+          id_product: productData.id_product,
+        },
+        data: {
+          jumlah: productData.stok_akhir,
+          updated_at: generateDate(),
+        },
+      });
+      updates.push(updatePromise);
+
+      // Check if stock take already exists for this product today
+      const existingStockTake = await prisma.stockTake.findFirst({
+        where: {
+          id_product: productData.id_product,
+          tg_stocktake: request.tg_stocktake,
+        },
+      });
+
+      let stockTakePromise;
+      if (existingStockTake) {
+        // Update existing
+        stockTakePromise = prisma.stockTake.update({
+          where: {
+            id_stocktake: existingStockTake.id_stocktake,
+          },
+          data: {
+            stok_awal: productData.stok_awal,
+            stok_akhir: productData.stok_akhir,
+            selisih: selisih,
+            is_confirmed: true,
+            keterangan: productData.keterangan || null,
+            updated_at: generateDate(),
+          },
+        });
+      } else {
+        // Create new
+        stockTakePromise = prisma.stockTake.create({
+          data: {
+            tg_stocktake: request.tg_stocktake,
+            id_product: productData.id_product,
+            nm_product: productData.nm_product,
+            stok_awal: productData.stok_awal,
+            stok_akhir: productData.stok_akhir,
+            selisih: selisih,
+            username: request.username,
+            name: request.name,
+            id_tutup_kasir: request.id_tutup_kasir,
+            is_confirmed: true,
+            keterangan: productData.keterangan || null,
+            created_at: generateDate(),
+          },
+        });
+      }
+      createdStockTakes.push(stockTakePromise);
+    }
+
+    // Execute all updates and creates
+    await Promise.all(updates);
+    const stockTakes = await Promise.all(createdStockTakes);
+
+    // 5. Mark Tutup Kasir as stock opname done
+    await prisma.tutupKasir.update({
+      where: {
+        id_tutup_kasir: request.id_tutup_kasir,
+      },
+      data: {
+        is_stocktake_done: true,
+        stocktake_completed_at: generateDate(),
+        updated_at: generateDate(),
+      },
+    });
+
+    return {
+      total_products: stockTakes.length,
+      id_tutup_kasir: request.id_tutup_kasir,
+      completed_at: generateDate(),
+    };
+  });
+
+  return result;
+};
+
+/**
+ * Check SO status for a given date
+ */
+const checkSOStatusOnly = async (request) => {
+  request = validate(checkSOStatusValidation, request);
+
+  const [tanggal] = request.tg_stocktake.split(", ");
+
+  // Check if Tutup Kasir exists
+  const tutupKasir = await prismaClient.tutupKasir.findFirst({
+    where: {
+      tg_tutup_kasir: {
+        contains: tanggal,
+      },
+    },
+  });
+
+  if (!tutupKasir) {
+    return {
+      is_tutup_kasir_done: false,
+      is_stocktake_done: false,
+      message: "Tutup Kasir belum dilakukan untuk tanggal ini",
+    };
+  }
+
+  // Get products that were sold on the given date
+  const salesToday = await prismaClient.penjualan.findMany({
+    where: {
+      tg_penjualan: {
+        contains: tanggal,
+      },
+    },
+    include: {
+      DetailPenjualan: true,
+    },
+  });
+
+  // Extract unique product IDs that were sold
+  const soldProductIds = new Set();
+  salesToday.forEach((sale) => {
+    sale.DetailPenjualan.forEach((detail) => {
+      soldProductIds.add(detail.id_product);
+    });
+  });
+
+  const totalSoldProducts = soldProductIds.size;
+
+  // Count completed stock takes for today (only for sold products)
+  const stockTakesToday = await prismaClient.stockTake.findMany({
+    where: {
+      tg_stocktake: request.tg_stocktake,
+    },
+  });
+
+  const completedCount = stockTakesToday.filter((st) =>
+    soldProductIds.has(st.id_product)
+  ).length;
+
+  return {
+    is_tutup_kasir_done: true,
+    is_stocktake_done: tutupKasir.is_stocktake_done,
+    id_tutup_kasir: tutupKasir.id_tutup_kasir,
+    tg_tutup_kasir: tutupKasir.tg_tutup_kasir,
+    shift: tutupKasir.shift,
+    stocktake_completed_at: tutupKasir.stocktake_completed_at,
+    progress: {
+      completed: completedCount,
+      total: totalSoldProducts,
+      percentage:
+        totalSoldProducts > 0
+          ? ((completedCount / totalSoldProducts) * 100).toFixed(2)
+          : 0,
+    },
+  };
+};
+
 export default {
   createStockTake,
   searchStockTake,
   rekonStockTake,
   detailRekonStockTake,
+  getDailySOProducts,
+  batchSaveDailySO,
+  checkSOStatusOnly,
 };

@@ -34,9 +34,40 @@ const detailRekonStockTakeValidation = Joi.object({
   is_done_stocktake: Joi.boolean().optional(),
 });
 
+const getDailySOProductsValidation = Joi.object({
+  tg_stocktake: Joi.string().required(),
+  id_tutup_kasir: Joi.number().optional(),
+});
+
+const batchSaveDailySOValidation = Joi.object({
+  tg_stocktake: Joi.string().required(),
+  id_tutup_kasir: Joi.number().required(),
+  username: Joi.string().max(100).required(),
+  name: Joi.string().max(100).required(),
+  products: Joi.array()
+    .items(
+      Joi.object({
+        id_product: Joi.string().max(100).required(),
+        nm_product: Joi.string().max(100).required(),
+        stok_awal: Joi.number().required(),
+        stok_akhir: Joi.number().required(),
+        keterangan: Joi.string().optional().allow(""),
+      })
+    )
+    .min(1)
+    .required(),
+});
+
+const checkSOStatusValidation = Joi.object({
+  tg_stocktake: Joi.string().required(),
+});
+
 export {
   addStockTakeValidation,
   searchStockTakeValidation,
   rekonStockTakeValidation,
   detailRekonStockTakeValidation,
+  getDailySOProductsValidation,
+  batchSaveDailySOValidation,
+  checkSOStatusValidation,
 };

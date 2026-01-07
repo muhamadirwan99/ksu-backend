@@ -1,6 +1,7 @@
 # 📋 Stock Opname Harian API Documentation
 
 ## Overview
+
 API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock Opname hanya dapat dilakukan setelah Tutup Kasir selesai.
 
 ---
@@ -24,9 +25,11 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ## 📡 API Endpoints
 
 ### 1. Check SO Status
+
 **Endpoint:** `POST /api/stock/check-so-status`
 
 **Request Body:**
+
 ```json
 {
   "tg_stocktake": "07-01-2026, 19:00"
@@ -34,6 +37,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Success (200):**
+
 ```json
 {
   "success": true,
@@ -55,6 +59,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Error (400):**
+
 ```json
 {
   "success": false,
@@ -70,6 +75,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ---
 
 ### 2. Get Products for Daily SO
+
 **Endpoint:** `POST /api/stock/get-products-for-daily-so`
 
 **Description:** Mendapatkan daftar produk **yang terjual di hari tersebut** untuk di-SO, dikelompokkan per divisi dengan status progress.
@@ -77,6 +83,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ⚠️ **Important:** Hanya produk yang terjual di hari yang sama yang perlu di-stock opname, bukan semua produk aktif.
 
 **Request Body:**
+
 ```json
 {
   "tg_stocktake": "07-01-2026, 19:00",
@@ -85,6 +92,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Success (200):**
+
 ```json
 {
   "success": true,
@@ -137,6 +145,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Error (400):**
+
 ```json
 {
   "success": false,
@@ -147,11 +156,13 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ---
 
 ### 3. Batch Save Daily SO
+
 **Endpoint:** `POST /api/stock/batch-save-daily-so`
 
 **Description:** Menyimpan SO untuk semua produk sekaligus. Akan update jumlah stock di produk, simpan data SO, dan mark tutup kasir sebagai complete.
 
 **Request Body:**
+
 ```json
 {
   "tg_stocktake": "07-01-2026, 19:00",
@@ -185,6 +196,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Success (201):**
+
 ```json
 {
   "success": true,
@@ -198,6 +210,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Error (400):**
+
 ```json
 {
   "success": false,
@@ -206,6 +219,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Error (400):**
+
 ```json
 {
   "success": false,
@@ -216,11 +230,13 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ---
 
 ### 4. Create Stock Take (Single Product)
+
 **Endpoint:** `POST /api/stock/create-stock-opname`
 
 **Description:** Untuk menyimpan SO per produk (single). Sekarang dengan validasi Tutup Kasir.
 
 **Request Body:**
+
 ```json
 {
   "tg_stocktake": "07-01-2026, 19:00",
@@ -234,6 +250,7 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ```
 
 **Response Success (200):**
+
 ```json
 {
   "success": true,
@@ -261,13 +278,17 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ## 🗄️ Database Changes
 
 ### Tabel `tutup_kasir`
+
 **Kolom Baru:**
+
 - `is_stocktake_done` (BOOLEAN, default: false) - Flag SO sudah selesai
 - `stocktake_completed_at` (TIMESTAMP, nullable) - Waktu SO diselesaikan
 - Relasi ke tabel `stocktake`
 
 ### Tabel `stocktake`
+
 **Kolom Baru:**
+
 - `id_tutup_kasir` (INT, nullable) - Foreign key ke tutup_kasir
 - `is_confirmed` (BOOLEAN, default: false) - Flag konfirmasi SO
 - `keterangan` (TEXT, nullable) - Catatan/keterangan SO
@@ -277,30 +298,37 @@ API untuk sistem Stock Opname Harian yang terintegrasi dengan Tutup Kasir. Stock
 ## ⚠️ Business Rules
 
 ### 1. Validasi Tutup Kasir
+
 - SO hanya dapat dilakukan SETELAH Tutup Kasir
 - Jika belum tutup kasir, akan error: "Harap lakukan Tutup Kasir terlebih dahulu"
 
 ### 2. Validasi SO Sudah Selesai
+
 - Jika `is_stocktake_done = true`, tidak bisa SO lagi
 - Error: "Stock Opname untuk tanggal ini sudah selesai dan dikonfirmasi"
 
 ### 3. Validasi All Products
+
 - Pada batch save, SEMUA produk **yang terjual di hari tersebut** harus di-SO
 - Hanya produk yang ada di transaksi penjualan hari itu yang perlu di-SO
 - Jika kurang, error dengan detail berapa yang kurang
 
 ### 4. Transaction Safety
+
 - Semua operasi menggunakan database transaction
 - Jika ada error, semua perubahan di-rollback
 
 ### 5. Auto Update Stock
+
 - Setiap SO akan update `jumlah` di tabel `product`
 - Menggunakan `stok_akhir` dari hasil SO
 
 ---
 
 ## 🔐 Authorization
+
 Semua endpoint membutuhkan:
+
 - Header: `Authorization: Bearer {token}`
 - User harus login
 - Role harus punya akses `sts_stocktake_harian = true`
@@ -344,14 +372,14 @@ POST /api/stock/batch-save-daily-so
 
 ## 🐛 Error Handling
 
-| Error Code | Message | Cause |
-|------------|---------|-------|
-| 400 | Harap lakukan Tutup Kasir terlebih dahulu... | Tutup Kasir belum dilakukan |
-| 400 | Stock Opname untuk tanggal ini sudah selesai... | SO sudah dikonfirmasi |
-| 400 | Semua produk yang terjual harus di-stock opname... | Tidak semua produk terjual di-SO |
-| 400 | Beberapa produk tidak ditemukan... | Product ID tidak valid |
-| 404 | Product is not found | Product tidak ada |
-| 401 | Unauthorized | Token tidak valid |
+| Error Code | Message                                            | Cause                            |
+| ---------- | -------------------------------------------------- | -------------------------------- |
+| 400        | Harap lakukan Tutup Kasir terlebih dahulu...       | Tutup Kasir belum dilakukan      |
+| 400        | Stock Opname untuk tanggal ini sudah selesai...    | SO sudah dikonfirmasi            |
+| 400        | Semua produk yang terjual harus di-stock opname... | Tidak semua produk terjual di-SO |
+| 400        | Beberapa produk tidak ditemukan...                 | Product ID tidak valid           |
+| 404        | Product is not found                               | Product tidak ada                |
+| 401        | Unauthorized                                       | Token tidak valid                |
 
 ---
 

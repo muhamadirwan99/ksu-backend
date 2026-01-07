@@ -13,15 +13,19 @@
 ### 3 New API Endpoints:
 
 1. **Check SO Status**
+
    ```
    POST /api/stock/check-so-status
    ```
+
    Cek apakah tutup kasir sudah dilakukan dan progress SO
 
 2. **Get Products for Daily SO**
+
    ```
    POST /api/stock/get-products-for-daily-so
    ```
+
    Get list produk **yang terjual di hari tersebut** untuk di-SO (grouped by divisi)
 
    ⚠️ **Hanya produk yang terjual** di hari itu yang perlu di-SO
@@ -38,38 +42,38 @@
 
 ```javascript
 // 1. Check Status
-const status = await fetch('/api/stock/check-so-status', {
-  method: 'POST',
+const status = await fetch("/api/stock/check-so-status", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
-  },
-  body: JSON.stringify({
-    tg_stocktake: "07-01-2026, 19:00"
-  })
-});
-
-// 2. Get Products List
-const products = await fetch('/api/stock/get-products-for-daily-so', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_TOKEN",
   },
   body: JSON.stringify({
     tg_stocktake: "07-01-2026, 19:00",
-    id_tutup_kasir: 123
-  })
+  }),
+});
+
+// 2. Get Products List
+const products = await fetch("/api/stock/get-products-for-daily-so", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_TOKEN",
+  },
+  body: JSON.stringify({
+    tg_stocktake: "07-01-2026, 19:00",
+    id_tutup_kasir: 123,
+  }),
 });
 
 // 3. User melakukan counting fisik...
 
 // 4. Batch Save
-const result = await fetch('/api/stock/batch-save-daily-so', {
-  method: 'POST',
+const result = await fetch("/api/stock/batch-save-daily-so", {
+  method: "POST",
   headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer YOUR_TOKEN'
+    "Content-Type": "application/json",
+    Authorization: "Bearer YOUR_TOKEN",
   },
   body: JSON.stringify({
     tg_stocktake: "07-01-2026, 19:00",
@@ -82,11 +86,11 @@ const result = await fetch('/api/stock/batch-save-daily-so', {
         nm_product: "Beras Premium 5kg",
         stok_awal: 100,
         stok_akhir: 98,
-        keterangan: "2 karung bocor"
+        keterangan: "2 karung bocor",
       },
       // ... semua produk aktif
-    ]
-  })
+    ],
+  }),
 });
 ```
 
@@ -105,10 +109,12 @@ const result = await fetch('/api/stock/batch-save-daily-so', {
 ## 🗄️ Database Changes
 
 ### `tutup_kasir` table:
+
 - ✅ `is_stocktake_done` (Boolean)
 - ✅ `stocktake_completed_at` (Timestamp)
 
 ### `stocktake` table:
+
 - ✅ `id_tutup_kasir` (FK to tutup_kasir)
 - ✅ `is_confirmed` (Boolean)
 - ✅ `keterangan` (Text)
@@ -138,6 +144,7 @@ curl -X POST http://localhost:3000/api/stock/get-products-for-daily-so \
 ## 📝 Files Changed
 
 ### Backend:
+
 - ✅ `prisma/schema.prisma` - Database schema
 - ✅ `src/validation/stock-take-harian-validation.js` - Validation
 - ✅ `src/service/stock-take-service.js` - Business logic
@@ -145,6 +152,7 @@ curl -X POST http://localhost:3000/api/stock/get-products-for-daily-so \
 - ✅ `src/route/routes/stock-take-route.js` - Routes
 
 ### Documentation:
+
 - ✅ `docs/STOCKTAKE_HARIAN_API.md` - Full API docs
 - ✅ `docs/STOCKTAKE_HARIAN_IMPLEMENTATION.md` - Implementation summary
 - ✅ `test-stocktake-harian.js` - Testing guide
@@ -175,12 +183,15 @@ curl -X POST http://localhost:3000/api/stock/get-products-for-daily-so \
 ## 🐛 Common Issues
 
 **"Harap lakukan Tutup Kasir terlebih dahulu"**
+
 - Solution: Lakukan tutup kasir dulu
 
 **"Stock Opname sudah selesai dan dikonfirmasi"**
+
 - Solution: SO sudah selesai, tidak bisa ubah lagi
 
 **"Semua produk yang terjual harus di-stock opname"**
+
 - Solution: Ada produk yang terjual tapi belum di-SO, cek list produk yang missing
 
 ---
@@ -188,6 +199,7 @@ curl -X POST http://localhost:3000/api/stock/get-products-for-daily-so \
 ## 📞 Support
 
 Jika ada masalah, cek:
+
 1. Error logs di `logs/`
 2. Database query di MySQL
 3. API documentation lengkap di `STOCKTAKE_HARIAN_API.md`

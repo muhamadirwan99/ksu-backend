@@ -1,0 +1,502 @@
+{
+  "info": {
+    "name": "Stocktake V2 API Collection",
+    "description": "Advanced Inventory Counting System - KSU Backend",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_AUTH_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "ST-20260108-143025",
+      "type": "string"
+    },
+    {
+      "key": "itemId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Session Management",
+      "item": [
+        {
+          "name": "Create Stocktake Session (Harian)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stocktake_type\": \"HARIAN\",\n  \"id_tutup_kasir\": 1,\n  \"notes_kasir\": \"Stocktake shift pagi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Stocktake Session (Bulanan)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stocktake_type\": \"BULANAN\",\n  \"id_tutup_kasir\": 1,\n  \"notes_kasir\": \"Stocktake bulanan Januari 2026\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Stocktake Sessions (List)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions?page=1&limit=20&status=DRAFT",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "DRAFT"
+                },
+                {
+                  "key": "stocktake_type",
+                  "value": "HARIAN",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Session Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Stocktake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/submit",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}", "submit"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"notes_kasir\": \"Semua item sudah dihitung dengan teliti\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Review - Approve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}", "review"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"APPROVE\",\n  \"notes_reviewer\": \"Data valid, siap difinalize\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Review - Request Revision",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/review",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}", "review"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"REQUEST_REVISION\",\n  \"notes_reviewer\": \"Ada selisih mencurigakan, mohon hitung ulang\",\n  \"revision_items\": [\n    {\n      \"id_stocktake_item\": 5,\n      \"flag_reason\": \"Selisih terlalu besar (-50 unit)\"\n    },\n    {\n      \"id_stocktake_item\": 12,\n      \"flag_reason\": \"Mohon verifikasi ulang\"\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Finalize Stocktake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/finalize",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "stocktake",
+                "v2",
+                "sessions",
+                "{{sessionId}}",
+                "finalize"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmation\": true,\n  \"notes_reviewer\": \"Stock master updated successfully\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Cancel Stocktake",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}", "cancel"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancel_reason\": \"Ada masalah sistem, stocktake akan dilakukan ulang besok pagi\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Adjustment Logs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/adjustments",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "stocktake",
+                "v2",
+                "sessions",
+                "{{sessionId}}",
+                "adjustments"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Item Management",
+      "item": [
+        {
+          "name": "Get Stocktake Items",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/items?page=1&limit=50&is_counted=false",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "sessions", "{{sessionId}}", "items"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "is_counted",
+                  "value": "false"
+                },
+                {
+                  "key": "is_high_risk",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "is_flagged",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "has_variance",
+                  "value": "true",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Single Item (Blind Count)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/items/{{itemId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "items", "{{itemId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stok_fisik\": 48,\n  \"notes\": \"Ada 2 bungkus rusak\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Batch Update Items",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/sessions/{{sessionId}}/items/batch",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "stocktake",
+                "v2",
+                "sessions",
+                "{{sessionId}}",
+                "items",
+                "batch"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"id_stocktake_item\": 1,\n      \"stok_fisik\": 48,\n      \"notes\": \"OK\"\n    },\n    {\n      \"id_stocktake_item\": 2,\n      \"stok_fisik\": 100\n    },\n    {\n      \"id_stocktake_item\": 3,\n      \"stok_fisik\": 75,\n      \"notes\": \"Ada 5 yang expired\"\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "High Risk Products",
+      "item": [
+        {
+          "name": "Get High Risk Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/high-risk-products?is_active=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "high-risk-products"],
+              "query": [
+                {
+                  "key": "is_active",
+                  "value": "true"
+                },
+                {
+                  "key": "category",
+                  "value": "rokok",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add High Risk Product",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/high-risk-products",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "high-risk-products"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id_product\": \"P001\",\n  \"category\": \"rokok\",\n  \"reason\": \"Produk dengan nilai tinggi dan rawan pencurian\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update High Risk Product",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/high-risk-products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "high-risk-products", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"kopi premium\",\n  \"reason\": \"Stok kritis, perlu akurasi tinggi\",\n  \"is_active\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete High Risk Product",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/stocktake/v2/high-risk-products/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["stocktake", "v2", "high-risk-products", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

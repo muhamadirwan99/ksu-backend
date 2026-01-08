@@ -8,73 +8,73 @@ const cashInOutRoute = () => {
   // Cash In Out API
   userRouter.post(
     "/api/cash-in-out/create-cash",
-    cashInOutController.createCashInOut,
+    cashInOutController.createCashInOut
   );
   userRouter.post(
     "/api/cash-in-out/detail-cash",
-    cashInOutController.getCashInOut,
+    cashInOutController.getCashInOut
   );
   userRouter.post(
     "/api/cash-in-out/update-cash",
-    cashInOutController.updateCashInOut,
+    cashInOutController.updateCashInOut
   );
   userRouter.post(
     "/api/cash-in-out/remove-cash",
-    cashInOutController.removeCashInOut,
+    cashInOutController.removeCashInOut
   );
   userRouter.post(
     "/api/cash-in-out/list-cash",
-    cashInOutController.listCashInOut,
+    cashInOutController.listCashInOut
   );
 
   // Reference Cash In Out API
   userRouter.post(
     "/api/cash-in-out/create-ref-cash",
-    refCashInOutController.createCash,
+    refCashInOutController.createCash
   );
   userRouter.post(
     "/api/cash-in-out/update-ref-cash",
-    refCashInOutController.updateCash,
+    refCashInOutController.updateCash
   );
   userRouter.post(
     "/api/cash-in-out/remove-ref-cash",
-    refCashInOutController.removeCash,
+    refCashInOutController.removeCash
   );
   userRouter.post(
     "/api/cash-in-out/list-ref-cash",
-    refCashInOutController.listCash,
+    refCashInOutController.listCash
   );
   userRouter.post(
     "/api/cash-in-out/create-jenis-cash",
-    jenisCashInOutController.createJenisCash,
+    jenisCashInOutController.createJenisCash
   );
   userRouter.post(
     "/api/cash-in-out/update-jenis-cash",
-    jenisCashInOutController.updateJenisCash,
+    jenisCashInOutController.updateJenisCash
   );
   userRouter.post(
     "/api/cash-in-out/remove-jenis-cash",
-    jenisCashInOutController.removeJenisCash,
+    jenisCashInOutController.removeJenisCash
   );
   userRouter.post(
     "/api/cash-in-out/list-jenis-cash",
-    jenisCashInOutController.listJenisCash,
+    jenisCashInOutController.listJenisCash
   );
   userRouter.post(
     "/api/cash-in-out/create-detail-cash",
-    detailCashInOutController.createDetailCash,
+    detailCashInOutController.createDetailCash
   );
   userRouter.post(
     "/api/cash-in-out/update-detail-cash",
-    detailCashInOutController.updateDetailCash,
+    detailCashInOutController.updateDetailCash
   );
   userRouter.post(
     "/api/cash-in-out/remove-detail-cash",
-    detailCashInOutController.removeDetailCash,
+    detailCashInOutController.removeDetailCash
   );
   userRouter.post(
     "/api/cash-in-out/list-detail-cash",
-    detailCashInOutController.listDetailCash,
+    detailCashInOutController.listDetailCash
   );
 };
 

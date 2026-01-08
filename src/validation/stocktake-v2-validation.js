@@ -13,8 +13,7 @@ const createStocktakeSessionValidation = Joi.object({
     "any.required": "Tipe stocktake wajib diisi",
     "any.only": "Tipe stocktake hanya boleh HARIAN atau BULANAN",
   }),
-  id_tutup_kasir: Joi.number().integer().positive().required().messages({
-    "any.required": "ID Tutup Kasir wajib diisi",
+  id_tutup_kasir: Joi.number().integer().positive().optional().messages({
     "number.base": "ID Tutup Kasir harus berupa angka",
     "number.positive": "ID Tutup Kasir harus positif",
   }),

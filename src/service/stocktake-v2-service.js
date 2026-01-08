@@ -22,19 +22,46 @@ const generateStocktakeSessionId = () => {
 // VALIDATION: Check Prerequisites
 // ========================================
 const validateStocktakePrerequisites = async (idTutupKasir) => {
-  // 1. Validasi Tutup Kasir exists
-  const tutupKasir = await prismaClient.tutupKasir.findUnique({
-    where: { id_tutup_kasir: idTutupKasir },
-  });
+  let tutupKasir;
 
-  if (!tutupKasir) {
-    throw new ResponseError("Data Tutup Kasir tidak ditemukan", {});
+  // Jika tidak ada idTutupKasir, ambil tutup kasir terbaru hari ini
+  if (!idTutupKasir) {
+    const today = generateDate();
+    // Format DD-MM-YYYY untuk match dengan format di database
+    const todayPrefix = format(today, "dd-MM-yyyy");
+
+    tutupKasir = await prismaClient.tutupKasir.findFirst({
+      where: {
+        tg_tutup_kasir: {
+          startsWith: todayPrefix, // Match dengan format DD-MM-YYYY
+        },
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+
+    if (!tutupKasir) {
+      throw new ResponseError(
+        "Tidak ada data Tutup Kasir untuk hari ini. Silakan tutup kasir terlebih dahulu.",
+        {}
+      );
+    }
+  } else {
+    // 1. Validasi Tutup Kasir exists by ID
+    tutupKasir = await prismaClient.tutupKasir.findUnique({
+      where: { id_tutup_kasir: idTutupKasir },
+    });
+
+    if (!tutupKasir) {
+      throw new ResponseError("Data Tutup Kasir tidak ditemukan", {});
+    }
   }
 
   // 2. Cek apakah sudah ada stocktake untuk shift ini yang masih aktif
   const existingStocktake = await prismaClient.stocktakeSession.findFirst({
     where: {
-      id_tutup_kasir: idTutupKasir,
+      id_tutup_kasir: tutupKasir.id_tutup_kasir,
       status: {
         in: ["DRAFT", "SUBMITTED", "REVISION"],
       },
@@ -216,7 +243,15 @@ const generateBulananToDoList = async () => {
 const createStocktakeSession = async (request, user) => {
   const { stocktake_type, id_tutup_kasir, notes_kasir } = request;
 
+  if (user.id_role !== "ROLE001" && user.id_role !== "ROLE004") {
+    throw new ResponseError(
+      "Anda tidak memiliki akses untuk membuat stocktake",
+      {}
+    );
+  }
+
   // Validate prerequisites
+  // Jika id_tutup_kasir tidak dikirim, akan otomatis ambil tutup kasir terbaru hari ini
   const tutupKasir = await validateStocktakePrerequisites(id_tutup_kasir);
 
   // Generate session ID
@@ -257,7 +292,7 @@ const createStocktakeSession = async (request, user) => {
         id_stocktake_session: sessionId,
         stocktake_type,
         status: "DRAFT",
-        id_tutup_kasir,
+        id_tutup_kasir: tutupKasir.id_tutup_kasir, // Menggunakan ID dari tutup kasir yang didapat
         shift: tutupKasir.shift,
         tg_stocktake: generateDate(),
         username_kasir: user.username,

@@ -554,12 +554,12 @@ const updateStocktakeItem = async (request, user) => {
   }
 
   // Validasi user (harus kasir yang sama)
-  if (item.session.username_kasir !== user.username) {
-    throw new ResponseError(
-      "Anda tidak memiliki akses untuk mengupdate item ini",
-      {}
-    );
-  }
+  // if (item.session.username_kasir !== user.username) {
+  //   throw new ResponseError(
+  //     "Anda tidak memiliki akses untuk mengupdate item ini",
+  //     {}
+  //   );
+  // }
 
   // Calculate selisih
   const selisih = stok_fisik - item.stok_sistem;
@@ -622,12 +622,12 @@ const batchUpdateStocktakeItems = async (request, user) => {
     );
   }
 
-  if (session.username_kasir !== user.username) {
-    throw new ResponseError(
-      "Anda tidak memiliki akses untuk mengupdate items ini",
-      {}
-    );
-  }
+  // if (session.username_kasir !== user.username) {
+  //   throw new ResponseError(
+  //     "Anda tidak memiliki akses untuk mengupdate items ini",
+  //     {}
+  //   );
+  // }
 
   // Batch update dalam transaction
   const result = await prismaClient.$transaction(async (prisma) => {
@@ -715,9 +715,9 @@ const submitStocktake = async (request, user) => {
   }
 
   // Validasi user
-  if (session.username_kasir !== user.username) {
-    throw new ResponseError("Anda tidak memiliki akses", {});
-  }
+  // if (session.username_kasir !== user.username) {
+  //   throw new ResponseError("Anda tidak memiliki akses", {});
+  // }
 
   // Validasi status
   if (!["DRAFT", "REVISION"].includes(session.status)) {

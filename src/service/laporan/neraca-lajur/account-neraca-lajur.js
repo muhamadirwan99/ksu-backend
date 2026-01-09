@@ -24,7 +24,7 @@ async function kas() {
       const cashSales = await getCurrentMonthSale("tunai");
       const totalCurrentMonthSale = cashSales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
 
       // Retur penjualan
@@ -38,8 +38,8 @@ async function kas() {
 
       const pengeluaran = await Promise.all(
         cashOutCodes.map((id) =>
-          getTotalCashInOutByDateRange(id, startDate, endDate),
-        ),
+          getTotalCashInOutByDateRange(id, startDate, endDate)
+        )
       );
 
       const totalPengeluaran = pengeluaran.reduce((acc, curr) => acc + curr, 0);
@@ -47,7 +47,7 @@ async function kas() {
       const hutangAnggota = await getHutangAnggota();
       const totalHutangAnggota = hutangAnggota.reduce(
         (sum, hutang) => sum + parseFloat(hutang.nominal),
-        0,
+        0
       );
 
       return (
@@ -62,7 +62,7 @@ async function kas() {
       const cashPurchases = await getCurrentMonthPurchase("tunai");
       const totalCurrentMonthPurchase = cashPurchases.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
 
       // Semua pengeluaran dari kas
@@ -79,12 +79,14 @@ async function kas() {
         CASH_OUT_CODES.HONOR_PENGAWAS,
         CASH_OUT_CODES.PEMBAYARAN_HUTANG_PIHAK_KETIGA,
         CASH_OUT_CODES.TAGIHAN_LISTRIK,
+        CASH_OUT_CODES.TRANSFER_KE_BRI,
+        CASH_OUT_CODES.TRANSFER_KE_BNI,
       ];
 
       const pengeluaran = await Promise.all(
         cashOutCodes.map((id) =>
-          getTotalCashInOutByDateRange(id, startDate, endDate),
-        ),
+          getTotalCashInOutByDateRange(id, startDate, endDate)
+        )
       );
 
       const totalPengeluaran = pengeluaran.reduce((acc, curr) => acc + curr, 0);
@@ -92,7 +94,7 @@ async function kas() {
       const hutangDagang = await getHutangDagang();
       const totalHutangDagang = hutangDagang.reduce(
         (sum, hutang) => sum + parseFloat(hutang.nominal),
-        0,
+        0
       );
 
       return totalCurrentMonthPurchase + totalPengeluaran + totalHutangDagang;
@@ -106,16 +108,28 @@ async function bankBri() {
     includeNeracaAwal: true,
     getDebit: async () => {
       const qrisSales = await getCurrentMonthSale("qris");
-      return qrisSales.reduce(
+      const totalQrisSales = qrisSales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
+
+      const cashOutCodes = [CASH_OUT_CODES.TRANSFER_KE_BRI];
+
+      const pengeluaran = await Promise.all(
+        cashOutCodes.map((id) =>
+          getTotalCashInOutByDateRange(id, startDate, endDate)
+        )
+      );
+
+      const totalPengeluaran = pengeluaran.reduce((acc, curr) => acc + curr, 0);
+
+      return totalQrisSales + totalPengeluaran;
     },
     getKredit: async () => {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PENARIKAN_DARI_BRI,
         startDate,
-        endDate,
+        endDate
       );
     },
   });
@@ -126,17 +140,25 @@ async function bankBni() {
     akun: "BANK BNI",
     includeNeracaAwal: true,
     getDebit: async () => {
-      return await getTotalCashInOutByDateRange(
+      const cashOutCodes = [
         CASH_OUT_CODES.TENANT,
-        startDate,
-        endDate,
+        CASH_OUT_CODES.TRANSFER_KE_BNI,
+      ];
+
+      const pengeluaran = await Promise.all(
+        cashOutCodes.map((id) =>
+          getTotalCashInOutByDateRange(id, startDate, endDate)
+        )
       );
+
+      const totalPengeluaran = pengeluaran.reduce((acc, curr) => acc + curr, 0);
+      return totalPengeluaran;
     },
     getKredit: async () => {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PENARIKAN_DARI_BNI,
         startDate,
-        endDate,
+        endDate
       );
     },
   });
@@ -150,14 +172,14 @@ async function piutangDagang() {
       const kreditSales = await getCurrentMonthSale("kredit");
       return kreditSales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
     },
     getKredit: async () => {
       const hutangAnggota = await getHutangAnggota();
       return hutangAnggota.reduce(
         (sum, hutang) => sum + parseFloat(hutang.nominal),
-        0,
+        0
       );
     },
   });
@@ -176,7 +198,7 @@ async function persediaan() {
 
       const totalPembelian = [...cashPurchases, ...creditPurchases].reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
 
       const totalReturPenjualan = 0; // Placeholder (belum ada)
@@ -268,7 +290,7 @@ async function akumPenyGedung() {
           select: {
             penyusutan_bulan: true,
           },
-        },
+        }
       );
 
       return parseFloat(bebanPenyusutanGedung?.penyusutan_bulan) || 0;
@@ -284,7 +306,7 @@ async function modalTidakTetap() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.TAGIHAN_LISTRIK,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -367,7 +389,7 @@ async function utangDagang() {
 
       const totalHutangDagang = hutangDagang.reduce(
         (sum, hutang) => sum + parseFloat(hutang.nominal),
-        0,
+        0
       );
       const returCredit = await getTotalRetur("kredit", startDate, endDate);
 
@@ -378,7 +400,7 @@ async function utangDagang() {
 
       return purchases.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
     },
   });
@@ -392,14 +414,14 @@ async function utangPihakKetiga() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PEMBAYARAN_HUTANG_PIHAK_KETIGA,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.HUTANG_PIHAK_KETIGA,
         startDate,
-        endDate,
+        endDate
       );
     },
   });
@@ -422,7 +444,7 @@ async function penjualanTunai() {
       const sales = await getCurrentMonthSale("tunai");
       return sales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
     },
   });
@@ -436,7 +458,7 @@ async function penjualanQris() {
       const sales = await getCurrentMonthSale("qris");
       return sales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
     },
   });
@@ -450,7 +472,7 @@ async function penjualanKredit() {
       const sales = await getCurrentMonthSale("kredit");
       return sales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_jual),
-        0,
+        0
       );
     },
   });
@@ -469,7 +491,7 @@ async function hargaPokokPenjualan() {
       const allSales = [...cashSales, ...qrisSales, ...kreditSales];
       return allSales.reduce(
         (sum, sale) => sum + parseFloat(sale.total_nilai_beli),
-        0,
+        0
       );
     },
     getKredit: async () => 0,
@@ -492,7 +514,7 @@ async function pendapatanSewa() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.TENANT,
         startDate,
-        endDate,
+        endDate
       );
     },
   });
@@ -506,7 +528,7 @@ async function pendapatanLainLain() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PENDAPATAN_LAIN_LAIN,
         startDate,
-        endDate,
+        endDate
       );
     },
   });
@@ -519,7 +541,7 @@ async function pembelianTunai() {
       const purchases = await getCurrentMonthPurchase("tunai");
       return purchases.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
     },
     getKredit: async () => 0,
@@ -533,7 +555,7 @@ async function pembelianKredit() {
       const purchases = await getCurrentMonthPurchase("kredit");
       return purchases.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
     },
     getKredit: async () => 0,
@@ -555,11 +577,11 @@ async function hargaPokokPembelian() {
 
       let total = purchasesCash.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
       total += purchasesCredit.reduce(
         (sum, p) => sum + parseFloat(p.total_harga_beli),
-        0,
+        0
       );
 
       return total;
@@ -587,7 +609,7 @@ async function bebanGaji() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.BEBAN_GAJI,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -601,7 +623,7 @@ async function uangMakan() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.UANG_MAKAN_KARYAWAN,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -615,7 +637,7 @@ async function thrKaryawan() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.THR_KARYAWAN,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -629,7 +651,7 @@ async function bebanAdmUmum() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.BEBAN_ADM_UMUM,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -643,7 +665,7 @@ async function bebanPerlengkapanToko() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.BEBAN_PERLENGKAPAN,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -684,7 +706,7 @@ async function bebanPenyusutanGedung() {
           select: {
             penyusutan_bulan: true,
           },
-        },
+        }
       );
 
       return parseFloat(bebanPenyusutanGedung?.penyusutan_bulan) || 0;
@@ -700,7 +722,7 @@ async function pemeliharaanInventaris() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PEMELIHARAAN_INVENTARIS,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -714,7 +736,7 @@ async function pemeliharaanGedung() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.PEMELIHARAAN_GEDUNG,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -728,7 +750,7 @@ async function pengeluaranLainLain() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.LAIN_LAIN,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -750,7 +772,7 @@ async function honorPengurus() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.HONOR_PENGURUS,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,
@@ -764,7 +786,7 @@ async function honorPengawas() {
       return await getTotalCashInOutByDateRange(
         CASH_OUT_CODES.HONOR_PENGAWAS,
         startDate,
-        endDate,
+        endDate
       );
     },
     getKredit: async () => 0,

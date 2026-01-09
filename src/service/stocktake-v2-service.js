@@ -104,6 +104,7 @@ const generateHarianToDoList = async (idTutupKasir, shift) => {
           nm_product: true,
           jumlah: true,
           harga_beli: true,
+          harga_jual: true,
           divisi: {
             select: {
               nm_divisi: true,

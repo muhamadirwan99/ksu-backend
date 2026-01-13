@@ -92,6 +92,7 @@ class BackupScheduler {
   // Jadwal pembersihan backup lama (setiap Senin jam 3 pagi)
   startCleanupScheduler() {
     // Cron: 0 20 * * 1 = setiap Senin jam 20:00 UTC (03:00 WIB)
+    // Menghapus file backup yang lebih dari 30 hari
     const task = cron.schedule(
       "0 20 * * 1",
       async () => {
@@ -113,7 +114,7 @@ class BackupScheduler {
     this.tasks.set("cleanup", task);
     task.start();
     logInfo(
-      "Scheduler pembersihan backup diaktifkan (setiap Senin jam 03:00 WIB)"
+      "Scheduler pembersihan backup diaktifkan (setiap Senin jam 03:00 WIB, hapus file > 30 hari)"
     );
   }
 

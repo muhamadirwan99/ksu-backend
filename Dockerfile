@@ -28,11 +28,18 @@ RUN npx prisma generate --schema=prisma/schema.prisma
 # Create backup and logs directories
 RUN mkdir -p /app/backups /app/logs
 
-# Run Prisma migration with a timestamped name for the migration
-# RUN TIMESTAMP=$(date +%Y%m%d%H%M%S) && npx prisma migrate dev --schema=./prisma/schema.prisma --name ${TIMESTAMP}-auto-migration
+# Create entrypoint script
+RUN echo '#!/bin/sh\n\
+set -e\n\
+echo "Applying database migrations..."\n\
+npx prisma migrate deploy --schema=./prisma/schema.prisma\n\
+echo "Migrations applied successfully!"\n\
+echo "Starting application..."\n\
+exec npm start' > /app/docker-entrypoint.sh && \
+    chmod +x /app/docker-entrypoint.sh
 
 # Expose the application port
 EXPOSE 3000
 
-# Start the server
-CMD ["npm", "start"]
+# Use entrypoint to run migrations before starting app
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -113,23 +113,26 @@ model Supplier {
 }
 
 model Product {
-  id_product       String            @id @db.VarChar(100)
-  nm_product       String            @db.VarChar(100)
-  id_divisi        String            @db.VarChar(3)
-  id_supplier      String            @db.VarChar(10)
-  harga_jual       Decimal           @db.Decimal(10, 2)
-  harga_beli       Decimal           @db.Decimal(10, 2)
+  id_product       String                       @id @db.VarChar(100)
+  nm_product       String                       @db.VarChar(100)
+  id_divisi        String                       @db.VarChar(3)
+  id_supplier      String                       @db.VarChar(10)
+  harga_jual       Decimal                      @db.Decimal(10, 2)
+  harga_beli       Decimal                      @db.Decimal(10, 2)
   status_product   Boolean
   jumlah           Int
-  keterangan       String?           @db.VarChar(255)
-  created_at       DateTime          @db.Timestamp(6)
-  updated_at       DateTime?         @db.Timestamp(6)
+  keterangan       String?                      @db.VarChar(255)
+  created_at       DateTime                     @db.Timestamp(6)
+  updated_at       DateTime?                    @db.Timestamp(6)
   detail_pembelian DetailPembelian[]
   DetailPenjualan  DetailPenjualan[]
-  divisi           Divisi            @relation(fields: [id_divisi], references: [id_divisi])
-  supplier         Supplier          @relation(fields: [id_supplier], references: [id_supplier])
+  divisi           Divisi                       @relation(fields: [id_divisi], references: [id_divisi])
+  supplier         Supplier                     @relation(fields: [id_supplier], references: [id_supplier])
   StockTake        StockTake[]
   DetailRetur      DetailRetur[]
+  // Stocktake V2 Relations
+  StocktakeItems   StocktakeItem[]
+  HighRiskProducts StocktakeHighRiskProduct[]
 
   @@index([id_divisi], map: "products_id_divisi_fkey")
   @@index([id_supplier], map: "products_id_supplier_fkey")
@@ -407,23 +410,25 @@ enum JenisAset {
 }
 
 model TutupKasir {
-  id_tutup_kasir   Int       @id @default(autoincrement())
-  tg_tutup_kasir   String    @db.VarChar(20)
-  shift            String    @db.VarChar(20)
-  nama_kasir       String    @db.VarChar(100)
-  username         String    @db.VarChar(100)
-  tunai            Decimal   @db.Decimal(10, 2)
-  qris             Decimal   @db.Decimal(10, 2)
-  kredit           Decimal   @db.Decimal(10, 2)
-  total            Decimal   @db.Decimal(10, 2)
-  uang_tunai       Decimal   @db.Decimal(10, 2)
-  total_nilai_jual Decimal   @db.Decimal(10, 2)
-  total_nilai_beli Decimal   @db.Decimal(10, 2)
-  total_keuntungan Decimal   @db.Decimal(10, 2)
-  created_at       DateTime  @db.Timestamp(6)
-  updated_at       DateTime? @db.Timestamp(6)
+  id_tutup_kasir   Int                  @id @default(autoincrement())
+  tg_tutup_kasir   String               @db.VarChar(20)
+  shift            String               @db.VarChar(20)
+  nama_kasir       String               @db.VarChar(100)
+  username         String               @db.VarChar(100)
+  tunai            Decimal              @db.Decimal(10, 2)
+  qris             Decimal              @db.Decimal(10, 2)
+  kredit           Decimal              @db.Decimal(10, 2)
+  total            Decimal              @db.Decimal(10, 2)
+  uang_tunai       Decimal              @db.Decimal(10, 2)
+  total_nilai_jual Decimal              @db.Decimal(10, 2)
+  total_nilai_beli Decimal              @db.Decimal(10, 2)
+  total_keuntungan Decimal              @db.Decimal(10, 2)
+  created_at       DateTime             @db.Timestamp(6)
+  updated_at       DateTime?            @db.Timestamp(6)
 
-  user User @relation(fields: [username], references: [username])
+  user             User                 @relation(fields: [username], references: [username])
+  // Stocktake V2 Relation
+  stocktakeSessions StocktakeSession[]
 
   @@map("tutup_kasir")
 }
@@ -500,4 +505,164 @@ model HasilUsaha {
   @@unique([bulan_tahun]) // Mencegah duplikasi per akun per bulan
   @@index([bulan_tahun]) // Mempercepat query berdasarkan bulan
   @@map("hasil_usaha")
+}
+
+// ========================================
+// STOCKTAKE V2 MODULE - Advanced Inventory Counting System
+// ========================================
+
+// Enum untuk tipe stocktake
+enum StocktakeType {
+  HARIAN  // Daily Smart Cycle Count - hanya barang bergerak + high risk
+  BULANAN // Monthly Wall-to-Wall - semua produk aktif
+}
+
+// Enum untuk status workflow stocktake
+enum StocktakeStatus {
+  DRAFT     // Kasir sedang melakukan blind count
+  SUBMITTED // Data sudah dikirim ke manajer untuk review
+  REVISION  // Manajer minta hitung ulang
+  COMPLETED // Finalize - stok sudah diupdate
+  CANCELLED // Dibatalkan
+}
+
+// Master table untuk sesi stocktake
+model StocktakeSession {
+  id_stocktake_session String           @id @db.VarChar(30) // Format: ST-YYYYMMDD-HHMMSS
+  stocktake_type       StocktakeType // HARIAN atau BULANAN
+  status               StocktakeStatus  @default(DRAFT)
+  
+  // Relasi ke Tutup Kasir untuk validasi sales cutoff
+  id_tutup_kasir       Int // Foreign key ke TutupKasir
+  shift                String           @db.VarChar(20) // Shift terkait
+  tg_stocktake         DateTime         @db.Timestamp(6) // Tanggal stocktake
+  
+  // User yang terlibat
+  username_kasir       String           @db.VarChar(100) // Kasir yang melakukan count
+  nama_kasir           String           @db.VarChar(100)
+  username_reviewer    String?          @db.VarChar(100) // Manajer yang review
+  nama_reviewer        String?          @db.VarChar(100)
+  
+  // Metadata
+  total_items          Int              @default(0) // Total produk yang harus dihitung
+  total_counted        Int              @default(0) // Total produk yang sudah dihitung
+  total_variance       Int              @default(0) // Total selisih (absolut)
+  
+  // Notes & timestamps
+  notes_kasir          String?          @db.Text // Catatan dari kasir
+  notes_reviewer       String?          @db.Text // Catatan dari reviewer
+  submitted_at         DateTime?        @db.Timestamp(6)
+  reviewed_at          DateTime?        @db.Timestamp(6)
+  completed_at         DateTime?        @db.Timestamp(6)
+  created_at           DateTime         @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?        @updatedAt @db.Timestamp(6)
+  
+  // Relations
+  items                StocktakeItem[]
+  adjustmentLogs       StocktakeAdjustmentLog[]
+  tutupKasir           TutupKasir       @relation(fields: [id_tutup_kasir], references: [id_tutup_kasir])
+  
+  @@index([id_tutup_kasir])
+  @@index([stocktake_type])
+  @@index([status])
+  @@index([tg_stocktake])
+  @@map("stocktake_sessions_v2")
+}
+
+// Detail item per produk dalam satu sesi stocktake
+model StocktakeItem {
+  id_stocktake_item    Int              @id @default(autoincrement())
+  id_stocktake_session String           @db.VarChar(30)
+  id_product           String           @db.VarChar(100)
+  
+  // Data produk (snapshot)
+  nm_product           String           @db.VarChar(100)
+  nm_divisi            String           @db.VarChar(100)
+  
+  // Harga (snapshot saat stocktake dibuat - untuk kalkulasi valuasi)
+  harga_beli           Decimal          @default(0) @db.Decimal(10, 2) // HPP/Cost
+  harga_jual           Decimal          @default(0) @db.Decimal(10, 2) // Selling Price
+  
+  // Stok system vs physical count
+  stok_sistem          Int // Stok di database saat stocktake dimulai
+  stok_fisik           Int? // Input dari kasir (nullable karena masih proses count)
+  selisih              Int              @default(0) // stok_fisik - stok_sistem
+  
+  // Status item
+  is_counted           Boolean          @default(false) // Sudah dihitung atau belum
+  is_flagged           Boolean          @default(false) // Di-flag untuk review/hitung ulang
+  flag_reason          String?          @db.Text // Alasan kenapa di-flag
+  
+  // Metadata untuk smart counting
+  is_high_risk         Boolean          @default(false) // Termasuk barang high risk atau tidak
+  has_transaction      Boolean          @default(false) // Ada transaksi di shift ini atau tidak
+  
+  // Notes
+  notes                String?          @db.Text
+  
+  // Timestamps
+  counted_at           DateTime?        @db.Timestamp(6) // Kapan item ini dihitung
+  created_at           DateTime         @default(now()) @db.Timestamp(6)
+  updated_at           DateTime?        @updatedAt @db.Timestamp(6)
+  
+  // Relations
+  session              StocktakeSession @relation(fields: [id_stocktake_session], references: [id_stocktake_session], onDelete: Cascade)
+  product              Product          @relation(fields: [id_product], references: [id_product])
+  
+  @@index([id_stocktake_session])
+  @@index([id_product])
+  @@index([is_counted])
+  @@index([is_flagged])
+  @@unique([id_stocktake_session, id_product]) // Satu produk hanya muncul sekali per sesi
+  @@map("stocktake_items_v2")
+}
+
+// Configurable list untuk produk high risk yang WAJIB dihitung di stocktake harian
+model StocktakeHighRiskProduct {
+  id_high_risk Int       @id @default(autoincrement())
+  id_product   String    @db.VarChar(100)
+  nm_product   String    @db.VarChar(100)
+  category     String?   @db.VarChar(100) // Kategori: rokok, kopi, gas, dll (opsional)
+  reason       String?   @db.Text // Alasan kenapa ini high risk
+  is_active    Boolean   @default(true) // Bisa di-nonaktifkan tanpa hapus record
+  created_at   DateTime  @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @updatedAt @db.Timestamp(6)
+  
+  // Relation
+  product      Product   @relation(fields: [id_product], references: [id_product])
+  
+  @@unique([id_product]) // Satu produk hanya muncul sekali
+  @@index([is_active])
+  @@index([category])
+  @@map("stocktake_high_risk_products")
+}
+
+// Log untuk setiap adjustment stok yang terjadi setelah stocktake di-finalize
+model StocktakeAdjustmentLog {
+  id_adjustment        Int              @id @default(autoincrement())
+  id_stocktake_session String           @db.VarChar(30)
+  id_product           String           @db.VarChar(100)
+  nm_product           String           @db.VarChar(100)
+  
+  // Adjustment detail
+  stok_before          Int // Stok sebelum adjustment
+  stok_after           Int // Stok setelah adjustment
+  adjustment_qty       Int // Jumlah adjustment (bisa + atau -)
+  
+  // Value impact (untuk accounting)
+  harga_beli           Decimal          @db.Decimal(10, 2)
+  nilai_adjustment     Decimal          @db.Decimal(10, 2) // adjustment_qty * harga_beli
+  
+  // Metadata
+  adjustment_reason    String           @db.Text // Reason: "Stocktake Physical Count Variance"
+  adjusted_by          String           @db.VarChar(100) // Username reviewer yang finalize
+  adjusted_at          DateTime         @default(now()) @db.Timestamp(6)
+  
+  // Relations
+  session              StocktakeSession @relation(fields: [id_stocktake_session], references: [id_stocktake_session])
+  
+  @@index([id_stocktake_session])
+  @@index([id_product])
+  @@index([adjusted_at])
+  @@map("stocktake_adjustment_logs")
 }

@@ -25,13 +25,17 @@ const calculateDepreciation = async (year) => {
     ? parseFloat(lastYearInventaris.nilai_aset_akhir)
     : 149185956; // Default for 2024
 
-  const persenBerkurangInventaris = 1.55846 / 100; // Persentase berkurang inventaris
+  const persenBerkurangInventaris = lastYearInventaris
+    ? parseFloat(lastYearInventaris.persentase_penyusutan) / 100
+    : 2.94 / 100; // Default for 2024 - carry forward from previous year
 
   const bebanPenyusutanGedung = lastYearGedung
     ? parseFloat(lastYearGedung.nilai_aset_akhir)
     : 154878130; // Default for 2024
 
-  const persenBertambahGedung = 3.379 / 100; // Persentase bertambah gedung
+  const persenBertambahGedung = lastYearGedung
+    ? parseFloat(lastYearGedung.persentase_penyusutan) / 100
+    : 11.32 / 100; // Default for 2024 - carry forward from previous year
 
   // Calculate the depreciation values
   const totalPenyusutanInventaris =
@@ -43,8 +47,10 @@ const calculateDepreciation = async (year) => {
     bebanPenyusutanInventaris - totalPenyusutanInventaris;
   const nilaiAsetAkhirGedung = bebanPenyusutanGedung + totalPenyusutanGedung;
 
-  const penyusutanInventarisPerBulan = totalPenyusutanInventaris / 12;
-  const penyusutanGedungPerBulan = totalPenyusutanGedung / 12;
+  const penyusutanInventarisPerBulan =
+    Math.round((nilaiAsetAkhirInventaris / 12) * 100) / 100;
+  const penyusutanGedungPerBulan =
+    Math.round((nilaiAsetAkhirGedung / 12) * 100) / 100;
 
   // Check if records for this year already exist, and skip storing new records if they do
   const existingInventaris = await prismaClient.penyusutanAset.findFirst({
@@ -63,7 +69,7 @@ const calculateDepreciation = async (year) => {
 
   if (existingInventaris && existingGedung) {
     throw new Error(
-      `Depreciation records for this year (${year}) already exist`,
+      `Depreciation records for this year (${year}) already exist`
     );
   }
 

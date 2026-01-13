@@ -55,19 +55,19 @@ fi
 print_header "Checking environment configuration..."
 if [ ! -f ".env" ] && [ ! -f "docker/production.env" ]; then
     print_error "Environment file not found. Please create .env or docker/production.env"
-    print_warning "Required variables: DATABASE_URL, NODE_ENV, JWT_SECRET_KEY"
+    print_warning "Required variables: DATABASE_URL_NEW, NODE_ENV, JWT_SECRET_KEY"
     exit 1
 fi
 
-# Verify DATABASE_URL is set
+# Verify DATABASE_URL_NEW is set
 if [ -f ".env" ]; then
     source .env
 elif [ -f "docker/production.env" ]; then
     source docker/production.env
 fi
 
-if [ -z "$DATABASE_URL" ]; then
-    print_error "DATABASE_URL is not set in environment file"
+if [ -z "$DATABASE_URL_NEW" ]; then
+    print_error "DATABASE_URL_NEW is not set in environment file"
     exit 1
 fi
 print_status "Environment configuration verified ✓"
@@ -75,7 +75,7 @@ print_status "Environment configuration verified ✓"
 # Confirmation prompt for production deployment
 if [ "$FORCE_DEPLOY" = false ]; then
     print_warning "⚠️  You are about to deploy to PRODUCTION environment"
-    print_warning "⚠️  Database: ${DATABASE_URL%%@*}@***"
+    print_warning "⚠️  Database: ${DATABASE_URL_NEW%%@*}@***"
     echo -n "Continue with deployment? (yes/no): "
     read -r CONFIRM
     if [ "$CONFIRM" != "yes" ]; then
@@ -95,13 +95,13 @@ if [ "$SKIP_BACKUP" = false ]; then
     BACKUP_FILE="backups/pre-deploy-$(date +%Y%m%d-%H%M%S).sql"
     print_status "Creating backup to $BACKUP_FILE..."
     
-    # Extract database credentials from DATABASE_URL
+    # Extract database credentials from DATABASE_URL_NEW
     if command -v mysqldump &> /dev/null; then
-        # Parse DATABASE_URL format: mysql://user:pass@host:port/dbname
-        DB_USER=$(echo $DATABASE_URL | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
-        DB_PASS=$(echo $DATABASE_URL | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
-        DB_HOST=$(echo $DATABASE_URL | sed -n 's/.*@\([^:]*\):.*/\1/p')
-        DB_NAME=$(echo $DATABASE_URL | sed -n 's/.*\/\([^?]*\).*/\1/p')
+        # Parse DATABASE_URL_NEW format: mysql://user:pass@host:port/dbname
+        DB_USER=$(echo $DATABASE_URL_NEW | sed -n 's/.*:\/\/\([^:]*\):.*/\1/p')
+        DB_PASS=$(echo $DATABASE_URL_NEW | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+        DB_HOST=$(echo $DATABASE_URL_NEW | sed -n 's/.*@\([^:]*\):.*/\1/p')
+        DB_NAME=$(echo $DATABASE_URL_NEW | sed -n 's/.*\/\([^?]*\).*/\1/p')
         
         mkdir -p backups
         if mysqldump -h "$DB_HOST" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > "$BACKUP_FILE" 2>/dev/null; then

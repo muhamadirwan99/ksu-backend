@@ -6,7 +6,7 @@ const register = async (req, res, next) => {
     const result = await userService.register(req.body);
     const responses = new ResponseSuccess(
       "User succes registered",
-      result,
+      result
     ).getResponse();
     res.status(200).json(responses);
   } catch (e) {
@@ -19,7 +19,7 @@ const login = async (req, res, next) => {
     const result = await userService.login(req.body);
     const responses = new ResponseSuccess(
       "Login success",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -34,7 +34,7 @@ const get = async (req, res, next) => {
     const result = await userService.get(username);
     const responses = new ResponseSuccess(
       "Success get detail user",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -52,7 +52,7 @@ const update = async (req, res, next) => {
     const result = await userService.update(request);
     const responses = new ResponseSuccess(
       "Success update user",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -67,7 +67,7 @@ const removeUser = async (req, res, next) => {
     const result = await userService.removeUser(username);
     const responses = new ResponseSuccess(
       "Success remove user",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);
@@ -89,10 +89,10 @@ const logout = async (req, res, next) => {
 
 const listUsers = async (req, res, next) => {
   try {
-    const result = await userService.searchUser(req.body);
+    const result = await userService.searchUser(req.body, req.user);
     const responses = new ResponseSuccess(
       "Success get list users",
-      result,
+      result
     ).getResponse();
 
     res.status(200).json(responses);

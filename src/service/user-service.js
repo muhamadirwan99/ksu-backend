@@ -63,7 +63,7 @@ const login = async (request) => {
 
   const isPasswordValid = await bcrypt.compare(
     loginRequest.password,
-    user.password,
+    user.password
   );
   if (!isPasswordValid) {
     throw new ResponseError("Username or password wrong", {});
@@ -197,7 +197,7 @@ const logout = async (username) => {
   });
 };
 
-const searchUser = async (request) => {
+const searchUser = async (request, user) => {
   request = validate(searchUserValidation, request);
 
   // 1 ((page - 1) * size) = 0
@@ -205,6 +205,16 @@ const searchUser = async (request) => {
   const skip = (request.page - 1) * request.size;
 
   const filters = [];
+
+  if (user.id_role !== "ROLE001") {
+    filters.push({
+      role: {
+        role_name: {
+          not: "ADMIN",
+        },
+      },
+    });
+  }
 
   if (request.username) {
     filters.push({

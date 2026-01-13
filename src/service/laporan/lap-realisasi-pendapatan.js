@@ -2,13 +2,27 @@ import { prismaClient } from "../../application/database.js";
 import { logger } from "../../application/logging.js";
 
 async function hasilUsahaWaserda(tahun) {
-  // Ambil total penjualan tiap bulan (Januari - Desember) untuk tahun target
-  const penjualanPerBulan = await Promise.all(
-    Array.from({ length: 12 }, (_, index) => {
-      const bulanAwal = new Date(tahun, index, 1); // Awal bulan
-      const bulanAkhir = new Date(tahun, index + 1, 1); // Awal bulan berikutnya
+  // Ambil total penjualan dan pembelian tiap bulan (Januari - Desember) untuk tahun target
+  // Menggunakan Date.UTC untuk konsistensi dengan lap-hasil-usaha.js
+  const dataPerBulan = await Promise.all(
+    Array.from({ length: 12 }, async (_, index) => {
+      // Gunakan UTC untuk memastikan konsistensi dengan lap-hasil-usaha
+      const bulanAwal = new Date(Date.UTC(tahun, index, 1)); // Awal bulan
+      const bulanAkhir = new Date(Date.UTC(tahun, index + 1, 1)); // Awal bulan berikutnya
 
-      return prismaClient.penjualan.aggregate({
+      // Hitung bulan sebelumnya untuk persediaan awal
+      let bulanSebelumnya, akhirBulanSebelumnya;
+      if (index === 0) {
+        // Januari: ambil Desember tahun lalu
+        bulanSebelumnya = new Date(Date.UTC(tahun - 1, 11, 1));
+        akhirBulanSebelumnya = new Date(Date.UTC(tahun, 0, 1));
+      } else {
+        bulanSebelumnya = new Date(Date.UTC(tahun, index - 1, 1));
+        akhirBulanSebelumnya = new Date(Date.UTC(tahun, index, 1));
+      }
+
+      // Ambil data penjualan bulan ini (semua jenis pembayaran)
+      const penjualan = await prismaClient.penjualan.aggregate({
         where: {
           created_at: {
             gte: bulanAwal,
@@ -19,17 +33,127 @@ async function hasilUsahaWaserda(tahun) {
           total_nilai_jual: true,
         },
       });
-    }),
+
+      // Ambil data pembelian bulan ini (HANYA tunai dan kredit, seperti di lap-hasil-usaha.js)
+      const pembelianTunai = await prismaClient.pembelian.aggregate({
+        where: {
+          created_at: {
+            gte: bulanAwal,
+            lt: bulanAkhir,
+          },
+          jenis_pembayaran: "tunai",
+        },
+        _sum: {
+          total_harga_beli: true,
+        },
+      });
+
+      const pembelianKredit = await prismaClient.pembelian.aggregate({
+        where: {
+          created_at: {
+            gte: bulanAwal,
+            lt: bulanAkhir,
+          },
+          jenis_pembayaran: "kredit",
+        },
+        _sum: {
+          total_harga_beli: true,
+        },
+      });
+
+      // Ambil data pembelian bulan lalu (untuk persediaan awal)
+      const pembelianTunaiBulanLalu = await prismaClient.pembelian.aggregate({
+        where: {
+          created_at: {
+            gte: bulanSebelumnya,
+            lt: akhirBulanSebelumnya,
+          },
+          jenis_pembayaran: "tunai",
+        },
+        _sum: {
+          total_harga_beli: true,
+        },
+      });
+
+      const pembelianKreditBulanLalu = await prismaClient.pembelian.aggregate({
+        where: {
+          created_at: {
+            gte: bulanSebelumnya,
+            lt: akhirBulanSebelumnya,
+          },
+          jenis_pembayaran: "kredit",
+        },
+        _sum: {
+          total_harga_beli: true,
+        },
+      });
+
+      // Ambil data retur bulan ini
+      const retur = await prismaClient.retur.aggregate({
+        where: {
+          created_at: {
+            gte: bulanAwal,
+            lt: bulanAkhir,
+          },
+        },
+        _sum: {
+          total_nilai_beli: true,
+        },
+      });
+
+      return {
+        penjualan,
+        pembelianTunai,
+        pembelianKredit,
+        pembelianTunaiBulanLalu,
+        pembelianKreditBulanLalu,
+        retur,
+      };
+    })
   );
 
-  // Format hasil penjualan per bulan
-  // Kembalikan response
-  return penjualanPerBulan.map((penjualan, index) => ({
-    bulan: new Date(tahun, index, 1).toLocaleString("id-ID", {
-      month: "long",
-    }),
-    total_nilai_jual: parseFloat(penjualan._sum.total_nilai_jual) || 0,
-  }));
+  // Format hasil penjualan per bulan dengan hasil usaha kotor
+  // Menggunakan rumus PERSIS SAMA dengan lap-hasil-usaha.js (line 336-348):
+  // persediaanAwal = totalLastMonthCashPurchase + totalLastMonthCreditPurchase
+  // netPurchaseCurrent = totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase - returCurrent
+  // readyToSellCurrent = persediaanAwal + netPurchaseCurrent
+  // totalSalesCurrent = readyToSellCurrent - (totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase)
+  // grossProfitCurrent = totalCurrentMonthSale - totalSalesCurrent
+  return dataPerBulan.map((data, index) => {
+    const totalNilaiJual =
+      parseFloat(data.penjualan._sum.total_nilai_jual) || 0;
+
+    // Hitung total pembelian bulan ini (tunai + kredit) seperti di lap-hasil-usaha.js
+    const totalCurrentMonthCashPurchase =
+      parseFloat(data.pembelianTunai._sum.total_harga_beli) || 0;
+    const totalCurrentMonthCreditPurchase =
+      parseFloat(data.pembelianKredit._sum.total_harga_beli) || 0;
+    const pembelianBulanIni =
+      totalCurrentMonthCashPurchase + totalCurrentMonthCreditPurchase;
+
+    // Hitung persediaan awal (pembelian bulan lalu: tunai + kredit)
+    const totalLastMonthCashPurchase =
+      parseFloat(data.pembelianTunaiBulanLalu._sum.total_harga_beli) || 0;
+    const totalLastMonthCreditPurchase =
+      parseFloat(data.pembelianKreditBulanLalu._sum.total_harga_beli) || 0;
+    const persediaanAwal =
+      totalLastMonthCashPurchase + totalLastMonthCreditPurchase;
+
+    const returBulanIni = parseFloat(data.retur._sum.total_nilai_beli) || 0;
+
+    // Rumus PERSIS dari lap-hasil-usaha.js (line 336-348)
+    const netPurchaseCurrent = pembelianBulanIni - returBulanIni;
+    const readyToSellCurrent = persediaanAwal + netPurchaseCurrent;
+    const totalSalesCurrent = readyToSellCurrent - pembelianBulanIni;
+    const hasilUsahaKotor = totalNilaiJual - totalSalesCurrent;
+
+    return {
+      bulan: new Date(tahun, index, 1).toLocaleString("id-ID", {
+        month: "long",
+      }),
+      total_nilai_jual: hasilUsahaKotor,
+    };
+  });
 }
 
 async function returPembelian(tahun) {
@@ -50,7 +174,7 @@ async function returPembelian(tahun) {
           total_nilai_beli: true,
         },
       });
-    }),
+    })
   );
 
   // Format hasil retur per bulan
@@ -82,7 +206,7 @@ async function getCashInOutPerBulan(tahun, id_detail) {
         });
 
         return parseFloat(result?._sum?.nominal) || 0;
-      }),
+      })
     );
 
     // Format hasil cash in out per bulan
@@ -110,7 +234,7 @@ async function getPenyusutanPerBulan(tahun, jenisAsset) {
         });
 
         return parseFloat(result?._sum?.penyusutan_bulan) || 0;
-      }),
+      })
     );
 
     // Format hasil cash in out per bulan
@@ -139,25 +263,25 @@ async function laporanPendapatan(tahun) {
         hasilUsaha.total_nilai_jual -
         returPembelianResult[index].total_nilai_beli +
         pendapatanLainlainResult[index].nominal,
-    }),
+    })
   );
 
-  // Jumlahkan hasil usaha waserda dari bulan Januari - Desember
+  // Jumlahkan hasil usaha kotor dari bulan Januari - Desember (BUKAN total_nilai_jual!)
   const totalHasilUsahaWaserda = hasilUsahaWaserdaResult.reduce(
     (acc, curr) => acc + curr.total_nilai_jual,
-    0,
+    0
   );
 
   // Jumlahkan retur pembelian dari bulan Januari - Desember
   const totalReturPembelian = returPembelianResult.reduce(
     (acc, curr) => acc + curr.total_nilai_beli,
-    0,
+    0
   );
 
   // Jumlahkan pendapatan lain-lain dari bulan Januari - Desember
   const totalPendapatanLainlain = pendapatanLainlainResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   // Totalkan totalhasilusaha, totalretur, dan totalpendapatanlainlain
@@ -189,13 +313,13 @@ async function laporanPengeluaran(tahun) {
   const bebanGajiResult = await getCashInOutPerBulan(tahun, 5);
   const totalBebanGaji = bebanGajiResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const uangMakanResult = await getCashInOutPerBulan(tahun, 6);
   const totalUangMakan = uangMakanResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const thrResult = await getCashInOutPerBulan(tahun, 7);
@@ -204,43 +328,43 @@ async function laporanPengeluaran(tahun) {
   const bebanAdmUmumResult = await getCashInOutPerBulan(tahun, 8);
   const totalBebanAdmUmum = bebanAdmUmumResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const bebanPerlengkapanResult = await getCashInOutPerBulan(tahun, 9);
   const totalBebanPerlengkapan = bebanPerlengkapanResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const bebanPenyusutanInventarisResult = await getPenyusutanPerBulan(
     tahun,
-    "inventaris",
+    "inventaris"
   );
   const totalBebanPenyusutanInventaris = bebanPenyusutanInventarisResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const bebanPenyusutanGedungResult = await getPenyusutanPerBulan(
     tahun,
-    "gedung",
+    "gedung"
   );
   const totalBebanPenyusutanGedung = bebanPenyusutanGedungResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const pemeliharaanInventarisResult = await getCashInOutPerBulan(tahun, 10);
   const totalPemeliharaanInventaris = pemeliharaanInventarisResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   const pemeliharaanGedungResult = await getCashInOutPerBulan(tahun, 11);
   const totalPemeliharaanGedung = pemeliharaanGedungResult.reduce(
     (acc, curr) => acc + curr.nominal,
-    0,
+    0
   );
 
   // Totalkan total pengeluaran perbulan
@@ -261,7 +385,7 @@ async function laporanPengeluaran(tahun) {
   // Totalkan total pengeluaran
   const totalPengeluaran = totalPengeluaranPerBulan.reduce(
     (acc, curr) => acc + curr.total_pengeluaran,
-    0,
+    0
   );
 
   return {

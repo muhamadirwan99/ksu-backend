@@ -26,9 +26,20 @@ const validateStocktakePrerequisites = async (idTutupKasir) => {
 
   // Jika tidak ada idTutupKasir, ambil tutup kasir terbaru hari ini
   if (!idTutupKasir) {
-    const today = generateDate();
-    // Format DD-MM-YYYY untuk match dengan format di database
-    const todayPrefix = format(today, "dd-MM-yyyy");
+    // 1. Ambil waktu saat ini (Realtime Server)
+    const now = new Date();
+
+    // 2. Format langsung ke Timezone Jakarta (Asia/Jakarta)
+    // Ini otomatis menghandle GMT+7, Kabisat, dll dengan akurat.
+    // Output toLocaleDateString 'id-ID' biasanya "21/01/2026", kita replace '/' jadi '-'
+    const todayPrefix = now
+      .toLocaleDateString("id-ID", {
+        timeZone: "Asia/Jakarta",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-");
 
     tutupKasir = await prismaClient.tutupKasir.findFirst({
       where: {
@@ -44,7 +55,7 @@ const validateStocktakePrerequisites = async (idTutupKasir) => {
     if (!tutupKasir) {
       throw new ResponseError(
         "Tidak ada data Tutup Kasir untuk hari ini. Silakan tutup kasir terlebih dahulu.",
-        {}
+        {},
       );
     }
   } else {
@@ -71,7 +82,7 @@ const validateStocktakePrerequisites = async (idTutupKasir) => {
   if (existingStocktake) {
     throw new ResponseError(
       `Sudah ada stocktake aktif untuk shift ini (ID: ${existingStocktake.id_stocktake_session}, Status: ${existingStocktake.status})`,
-      {}
+      {},
     );
   }
 
@@ -189,7 +200,7 @@ const generateHarianToDoList = async (idTutupKasir, shift) => {
           },
         },
       },
-    }
+    },
   );
 
   highRiskProducts.forEach((hrp) => {
@@ -247,7 +258,7 @@ const createStocktakeSession = async (request, user) => {
   if (user.id_role !== "ROLE001" && user.id_role !== "ROLE004") {
     throw new ResponseError(
       "Anda tidak memiliki akses untuk membuat stocktake",
-      {}
+      {},
     );
   }
 
@@ -281,7 +292,7 @@ const createStocktakeSession = async (request, user) => {
   if (todoList.length === 0) {
     throw new ResponseError(
       "Tidak ada produk yang perlu dihitung. Pastikan ada transaksi atau produk aktif.",
-      {}
+      {},
     );
   }
 
@@ -373,7 +384,7 @@ const getStocktakeSessionDetails = async (sessionId, user) => {
 
   const totalVariance = stats.reduce(
     (sum, s) => sum + Math.abs(s._sum.selisih || 0),
-    0
+    0,
   );
 
   // Get all items for valuasi calculation
@@ -426,7 +437,7 @@ const getStocktakeSessionDetails = async (sessionId, user) => {
       flagged_items: flaggedItems,
       total_variance: totalVariance,
       progress_percentage: ((countedItems / session.total_items) * 100).toFixed(
-        2
+        2,
       ),
     },
     valuasi_summary: {
@@ -550,7 +561,7 @@ const updateStocktakeItem = async (request, user) => {
   if (!["DRAFT", "REVISION"].includes(item.session.status)) {
     throw new ResponseError(
       `Tidak dapat mengupdate item. Status session: ${item.session.status}`,
-      {}
+      {},
     );
   }
 
@@ -619,7 +630,7 @@ const batchUpdateStocktakeItems = async (request, user) => {
   if (!["DRAFT", "REVISION"].includes(session.status)) {
     throw new ResponseError(
       `Tidak dapat mengupdate items. Status session: ${session.status}`,
-      {}
+      {},
     );
   }
 
@@ -636,7 +647,7 @@ const batchUpdateStocktakeItems = async (request, user) => {
 
     for (const item of items) {
       const dbItem = dbItems.find(
-        (i) => i.id_stocktake_item === item.id_stocktake_item
+        (i) => i.id_stocktake_item === item.id_stocktake_item,
       );
       const selisih = item.stok_fisik - dbItem.stok_sistem;
 
@@ -724,7 +735,7 @@ const submitStocktake = async (request, user) => {
   if (!["DRAFT", "REVISION"].includes(session.status)) {
     throw new ResponseError(
       `Tidak dapat submit. Status saat ini: ${session.status}`,
-      {}
+      {},
     );
   }
 
@@ -739,7 +750,7 @@ const submitStocktake = async (request, user) => {
   if (uncountedItems > 0) {
     throw new ResponseError(
       `Masih ada ${uncountedItems} item yang belum dihitung`,
-      {}
+      {},
     );
   }
 
@@ -775,7 +786,7 @@ const reviewStocktake = async (request, user) => {
   if (session.status !== "SUBMITTED") {
     throw new ResponseError(
       `Tidak dapat review. Status saat ini: ${session.status}`,
-      {}
+      {},
     );
   }
 
@@ -853,7 +864,7 @@ const finalizeStocktake = async (request, user) => {
   if (!["SUBMITTED"].includes(session.status)) {
     throw new ResponseError(
       `Tidak dapat finalize. Status saat ini: ${session.status}. Session harus di-review dulu.`,
-      {}
+      {},
     );
   }
 
@@ -950,7 +961,7 @@ const cancelStocktake = async (request, user) => {
   if (session.status === "COMPLETED") {
     throw new ResponseError(
       "Tidak dapat membatalkan stocktake yang sudah completed",
-      {}
+      {},
     );
   }
 
@@ -1108,7 +1119,7 @@ const getHighRiskProducts = async (filters = {}) => {
       orderBy: {
         nm_product: "asc",
       },
-    }
+    },
   );
 
   return highRiskProducts;

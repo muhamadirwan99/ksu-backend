@@ -5,148 +5,101 @@ import { logInfo, logError } from "../application/logging.js";
 class BackupScheduler {
   constructor() {
     this.tasks = new Map();
+    // Setting default timezone agar tidak perlu konversi manual ke UTC
+    this.timezone = "Asia/Jakarta";
   }
 
-  // Jadwal backup harian (setiap hari jam 2 pagi)
-  startDailyBackup() {
-    // Cron: 0 19 * * * = setiap hari jam 19:00 UTC (02:00 WIB)
-    const task = cron.schedule(
-      "0 19 * * *",
-      async () => {
-        try {
-          logInfo("Memulai backup otomatis harian");
-          const result = await backupService.createDatabaseBackup();
-          logInfo(`Backup otomatis harian berhasil: ${result.fileName}`);
-        } catch (error) {
-          logError("Error backup otomatis harian", error);
-        }
-      },
-      {
-        scheduled: false,
-      }
-    );
-
-    this.tasks.set("daily", task);
-    task.start();
-    logInfo("Scheduler backup harian diaktifkan (setiap hari jam 02:00 WIB)");
-  }
-
-  // Jadwal backup mingguan (setiap Minggu jam 1 pagi)
-  startWeeklyBackup() {
-    // Cron: 0 18 * * 0 = setiap Minggu jam 18:00 UTC (01:00 WIB)
-    const task = cron.schedule(
-      "0 18 * * 0",
-      async () => {
-        try {
-          logInfo("Memulai backup otomatis mingguan");
-          const result = await backupService.createDatabaseBackup();
-          logInfo(`Backup otomatis mingguan berhasil: ${result.fileName}`);
-
-          // Bersihkan backup lama (lebih dari 30 hari)
-          await backupService.cleanOldBackups(30);
-        } catch (error) {
-          logError(`Error backup otomatis mingguan: ${error.message}`);
-        }
-      },
-      {
-        scheduled: false,
-      }
-    );
-
-    this.tasks.set("weekly", task);
-    task.start();
-    logInfo(
-      "Scheduler backup mingguan diaktifkan (setiap Minggu jam 01:00 WIB)"
-    );
-  }
-
-  // Jadwal backup bulanan (tanggal 1 setiap bulan jam 1 pagi)
-  startMonthlyBackup() {
-    // Cron: 0 18 1 * * = tanggal 1 setiap bulan jam 18:00 UTC (01:00 WIB)
-    const task = cron.schedule(
-      "0 18 1 * *",
-      async () => {
-        try {
-          logInfo("Memulai backup otomatis bulanan");
-          const result = await backupService.createDatabaseBackup();
-          logInfo(`Backup otomatis bulanan berhasil: ${result.fileName}`);
-
-          // Bersihkan backup lama (lebih dari 90 hari)
-          await backupService.cleanOldBackups(90);
-        } catch (error) {
-          logError(`Error backup otomatis bulanan: ${error.message}`);
-        }
-      },
-      {
-        scheduled: false,
-      }
-    );
-
-    this.tasks.set("monthly", task);
-    task.start();
-    logInfo(
-      "Scheduler backup bulanan diaktifkan (tanggal 1 setiap bulan jam 01:00 WIB)"
-    );
-  }
-
-  // Jadwal pembersihan backup lama (setiap Senin jam 3 pagi)
-  startCleanupScheduler() {
-    // Cron: 0 20 * * 1 = setiap Senin jam 20:00 UTC (03:00 WIB)
-    // Menghapus file backup yang lebih dari 30 hari
-    const task = cron.schedule(
-      "0 20 * * 1",
-      async () => {
-        try {
-          logInfo("Memulai pembersihan backup lama otomatis");
-          const result = await backupService.cleanOldBackups(30);
-          logInfo(
-            `Pembersihan backup lama selesai: ${result.deletedCount} file dihapus`
-          );
-        } catch (error) {
-          logError(`Error pembersihan backup lama otomatis: ${error.message}`);
-        }
-      },
-      {
-        scheduled: false,
-      }
-    );
-
-    this.tasks.set("cleanup", task);
-    task.start();
-    logInfo(
-      "Scheduler pembersihan backup diaktifkan (setiap Senin jam 03:00 WIB, hapus file > 30 hari)"
-    );
-  }
-
-  // Jadwal backup custom dengan interval
-  startCustomBackup(cronExpression, taskName = "custom") {
+  /**
+   * Private Helper untuk membuat task cron dengan aman dan rapi
+   */
+  _scheduleTask(taskName, cronExpression, callback) {
+    // Hentikan task lama jika ada (untuk menghindari duplikasi)
     if (this.tasks.has(taskName)) {
       this.stopTask(taskName);
+    }
+
+    // Validasi cron expression
+    if (!cron.validate(cronExpression)) {
+      logError(`Invalid cron expression for ${taskName}: ${cronExpression}`);
+      return;
     }
 
     const task = cron.schedule(
       cronExpression,
       async () => {
         try {
-          logInfo(`Memulai backup otomatis custom (${taskName})`);
-          const result = await backupService.createDatabaseBackup();
-          logInfo(`Backup otomatis custom berhasil: ${result.fileName}`);
+          await callback();
         } catch (error) {
-          logError(
-            `Error backup otomatis custom (${taskName}): ${error.message}`
-          );
+          logError(`Error pada scheduler ${taskName}:`, error);
         }
       },
       {
-        scheduled: false,
-      }
+        scheduled: false, // Kita start manual di bawah
+        timezone: this.timezone, // KUNCI: Pakai timezone Jakarta
+      },
     );
 
     this.tasks.set(taskName, task);
     task.start();
     logInfo(
-      `Scheduler backup custom diaktifkan: ${taskName} (${cronExpression})`
+      `Scheduler '${taskName}' aktif. Jadwal: ${cronExpression} (${this.timezone})`,
     );
+  }
+
+  // ==========================================
+  // PUBLIC METHODS
+  // ==========================================
+
+  // Jadwal backup harian (Setiap hari jam 02:00 WIB)
+  startDailyBackup() {
+    // Tidak perlu ubah ke UTC (19:00). Cukup tulis jam 2 pagi.
+    this._scheduleTask("daily", "0 2 * * *", async () => {
+      logInfo("Memulai backup otomatis harian");
+      const result = await backupService.createDatabaseBackup();
+      logInfo(`Backup harian berhasil: ${result.fileName}`);
+    });
+  }
+
+  // Jadwal backup mingguan (Setiap Minggu jam 01:00 WIB)
+  startWeeklyBackup() {
+    this._scheduleTask("weekly", "0 1 * * 0", async () => {
+      logInfo("Memulai backup otomatis mingguan");
+      const result = await backupService.createDatabaseBackup();
+      logInfo(`Backup mingguan berhasil: ${result.fileName}`);
+
+      // Bersihkan backup lama (> 30 hari) setelah backup sukses
+      await backupService.cleanOldBackups(30);
+    });
+  }
+
+  // Jadwal backup bulanan (Tanggal 1 jam 01:00 WIB)
+  startMonthlyBackup() {
+    this._scheduleTask("monthly", "0 1 1 * *", async () => {
+      logInfo("Memulai backup otomatis bulanan");
+      const result = await backupService.createDatabaseBackup();
+      logInfo(`Backup bulanan berhasil: ${result.fileName}`);
+
+      // Bersihkan backup lama (> 90 hari)
+      await backupService.cleanOldBackups(90);
+    });
+  }
+
+  // Jadwal pembersihan khusus (Setiap Senin jam 03:00 WIB)
+  startCleanupScheduler() {
+    this._scheduleTask("cleanup", "0 3 * * 1", async () => {
+      logInfo("Memulai pembersihan backup lama otomatis (Weekly Cleanup)");
+      const result = await backupService.cleanOldBackups(30);
+      logInfo(`Pembersihan selesai: ${result.deletedCount} file dihapus`);
+    });
+  }
+
+  // Jadwal backup custom
+  startCustomBackup(cronExpression, taskName = "custom") {
+    this._scheduleTask(taskName, cronExpression, async () => {
+      logInfo(`Memulai backup custom (${taskName})`);
+      const result = await backupService.createDatabaseBackup();
+      logInfo(`Backup custom berhasil: ${result.fileName}`);
+    });
   }
 
   // Hentikan task tertentu
@@ -163,10 +116,10 @@ class BackupScheduler {
 
   // Hentikan semua task
   stopAllTasks() {
-    this.tasks.forEach((task, name) => {
+    for (const [name, task] of this.tasks) {
       task.stop();
       logInfo(`Scheduler ${name} dihentikan`);
-    });
+    }
     this.tasks.clear();
     logInfo("Semua scheduler backup dihentikan");
   }
@@ -174,12 +127,12 @@ class BackupScheduler {
   // Dapatkan status semua task
   getTasksStatus() {
     const status = {};
-    this.tasks.forEach((task, name) => {
+    for (const [name, task] of this.tasks) {
       status[name] = {
-        running: task.running,
-        scheduled: task.scheduled,
+        running: true, // task.running di node-cron kadang tidak reliable, tapi jika ada di map berarti active
+        timezone: this.timezone,
       };
-    });
+    }
     return status;
   }
 
@@ -189,18 +142,18 @@ class BackupScheduler {
     this.startWeeklyBackup();
     this.startMonthlyBackup();
     this.startCleanupScheduler();
-    logInfo("Semua scheduler backup default telah diaktifkan");
+    logInfo("Semua scheduler backup default telah diinisialisasi");
   }
 
-  // Test backup sekarang (untuk testing)
+  // Test backup manual
   async runBackupNow() {
     try {
-      logInfo("Menjalankan backup test manual");
+      logInfo("Menjalankan backup manual (Test)");
       const result = await backupService.createDatabaseBackup();
-      logInfo(`Backup test berhasil: ${result.fileName}`);
+      logInfo(`Backup manual berhasil: ${result.fileName}`);
       return result;
     } catch (error) {
-      logError(`Error backup test: ${error.message}`);
+      logError("Error backup manual:", error);
       throw error;
     }
   }

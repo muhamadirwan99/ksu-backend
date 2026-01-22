@@ -20,6 +20,7 @@ import {
   updateHighRiskProduct,
   deleteHighRiskProduct,
   getHighRiskProducts,
+  verifyStockSystem,
 } from "../../controller/stocktake-v2-controller.js";
 
 const stocktakeV2Route = () => {
@@ -109,6 +110,14 @@ const stocktakeV2Route = () => {
     "/api/stocktake/v2/high-risk-products/:id",
     deleteHighRiskProduct
   );
+
+  // ========================================
+  // AUDIT & VERIFICATION ROUTES
+  // ========================================
+
+  // Verify stock system (audit trail)
+  // GET /api/stocktake/v2/verify-stock/:id_product?end_date=2026-01-22
+  userRouter.get("/api/stocktake/v2/verify-stock/:id_product", verifyStockSystem);
 };
 
 export default stocktakeV2Route;

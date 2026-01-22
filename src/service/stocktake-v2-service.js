@@ -1142,6 +1142,373 @@ const getAdjustmentLogs = async (sessionId) => {
 };
 
 // ========================================
+// SERVICE: AUDIT TRAIL - Verify Stock System
+// Untuk membuktikan stok sistem akurat berdasarkan history transaksi
+// ========================================
+const verifyStockSystem = async (idProduct, endDate = null) => {
+  // 1. Get product info
+  const product = await prismaClient.product.findUnique({
+    where: { id_product: idProduct },
+    include: {
+      divisi: true,
+    },
+  });
+
+  if (!product) {
+    throw new ResponseError("Produk tidak ditemukan", {});
+  }
+
+  const cutoffDate = endDate ? new Date(endDate) : new Date();
+
+  // 2. Get last stocktake before cutoff date (as starting point)
+  const lastStocktake = await prismaClient.stocktakeItem.findFirst({
+    where: {
+      id_product: idProduct,
+      is_counted: true,
+      counted_at: {
+        lte: cutoffDate,
+      },
+      session: {
+        status: "COMPLETED",
+      },
+    },
+    include: {
+      session: true,
+    },
+    orderBy: {
+      counted_at: "desc",
+    },
+  });
+
+  let startingStock = 0;
+  let startingDate = null;
+
+  if (lastStocktake) {
+    startingStock = lastStocktake.stok_fisik;
+    startingDate = lastStocktake.counted_at;
+  }
+
+  // Date range for transactions
+  const transactionStartDate = startingDate || new Date("2020-01-01");
+
+  // 3. Get all purchases (IN) - Detail Pembelian
+  const purchases = await prismaClient.detailPembelian.findMany({
+    where: {
+      id_product: idProduct,
+      pembelian: {
+        created_at: {
+          gt: transactionStartDate,
+          lte: cutoffDate,
+        },
+      },
+    },
+    include: {
+      pembelian: {
+        select: {
+          id_pembelian: true,
+          tg_pembelian: true,
+          created_at: true,
+        },
+      },
+    },
+    orderBy: {
+      pembelian: {
+        created_at: "asc",
+      },
+    },
+  });
+
+  // 4. Get all sales (OUT) - Detail Penjualan
+  const sales = await prismaClient.detailPenjualan.findMany({
+    where: {
+      id_product: idProduct,
+      penjualan: {
+        created_at: {
+          gt: transactionStartDate,
+          lte: cutoffDate,
+        },
+      },
+    },
+    include: {
+      penjualan: {
+        select: {
+          id_penjualan: true,
+          tg_penjualan: true,
+          created_at: true,
+          username: true,
+          jenis_pembayaran: true,
+        },
+      },
+    },
+    orderBy: {
+      penjualan: {
+        created_at: "asc",
+      },
+    },
+  });
+
+  // 5. Get all returns (IN) - Detail Retur
+  const returns = await prismaClient.detailRetur.findMany({
+    where: {
+      id_product: idProduct,
+      retur: {
+        created_at: {
+          gt: transactionStartDate,
+          lte: cutoffDate,
+        },
+      },
+    },
+    include: {
+      retur: {
+        select: {
+          id_retur: true,
+          tg_retur: true,
+          created_at: true,
+          keterangan: true,
+        },
+      },
+    },
+    orderBy: {
+      retur: {
+        created_at: "asc",
+      },
+    },
+  });
+
+  // 6. Get all approved stock adjustments from stocktake
+  const stockAdjustments = await prismaClient.stocktakeItem.findMany({
+    where: {
+      id_product: idProduct,
+      is_counted: true,
+      counted_at: {
+        gt: transactionStartDate,
+        lte: cutoffDate,
+      },
+      session: {
+        status: "COMPLETED",
+      },
+    },
+    include: {
+      session: {
+        select: {
+          id_stocktake_session: true,
+          created_at: true,
+          completed_at: true,
+          username_reviewer: true,
+          nama_reviewer: true,
+        },
+      },
+    },
+    orderBy: {
+      counted_at: "asc",
+    },
+  });
+
+  // 7. Build transaction history timeline
+  const transactionHistory = [];
+  let runningStock = startingStock;
+
+  // Add starting point
+  transactionHistory.push({
+    sequence: 0,
+    timestamp: startingDate || transactionStartDate,
+    type: "STOCK_OPNAME",
+    reference: lastStocktake
+      ? lastStocktake.session.id_stocktake_session
+      : "SISTEM_AWAL",
+    description: "Stok Awal (dari Stock Opname sebelumnya)",
+    qty_in: 0,
+    qty_out: 0,
+    qty_adjustment: 0,
+    stock_before: 0,
+    stock_after: startingStock,
+    running_stock: runningStock,
+    performed_by: lastStocktake?.session.username_reviewer || "SISTEM",
+    notes: lastStocktake
+      ? `Hasil stock opname yang sudah diapprove`
+      : "Stok awal sistem (belum ada stock opname sebelumnya)",
+  });
+
+  let sequence = 1;
+
+  // Merge all transactions and sort by timestamp
+  const allTransactions = [
+    ...purchases.map((p) => ({
+      timestamp: p.pembelian.created_at,
+      type: "PEMBELIAN",
+      data: p,
+    })),
+    ...sales.map((s) => ({
+      timestamp: s.penjualan.created_at,
+      type: "PENJUALAN",
+      data: s,
+    })),
+    ...returns.map((r) => ({
+      timestamp: r.retur.created_at,
+      type: "RETUR",
+      data: r,
+    })),
+    ...stockAdjustments.map((a) => ({
+      timestamp: a.counted_at,
+      type: "ADJUSTMENT",
+      data: a,
+    })),
+  ].sort((a, b) => a.timestamp - b.timestamp);
+
+  // Process each transaction
+  allTransactions.forEach((transaction) => {
+    const stockBefore = runningStock;
+    let qtyIn = 0;
+    let qtyOut = 0;
+    let qtyAdjustment = 0;
+    let description = "";
+    let reference = "";
+    let performedBy = "";
+    let notes = "";
+
+    switch (transaction.type) {
+      case "PEMBELIAN":
+        qtyIn = transaction.data.jumlah;
+        runningStock += qtyIn;
+        reference = transaction.data.pembelian.id_pembelian;
+        description = `Pembelian @ Rp ${parseFloat(transaction.data.harga_beli).toLocaleString("id-ID")}`;
+        performedBy = "ADMIN/KASIR"; // Pembelian tidak punya field username
+        notes = `Total: Rp ${(parseFloat(transaction.data.harga_beli) * qtyIn).toLocaleString("id-ID")}`;
+        break;
+
+      case "PENJUALAN":
+        qtyOut = transaction.data.jumlah;
+        runningStock -= qtyOut;
+        reference = transaction.data.penjualan.id_penjualan;
+        description = `Penjualan (${transaction.data.penjualan.jenis_pembayaran}) @ Rp ${parseFloat(transaction.data.harga).toLocaleString("id-ID")}`;
+        performedBy = transaction.data.penjualan.username;
+        notes = `Total: Rp ${(parseFloat(transaction.data.harga) * qtyOut).toLocaleString("id-ID")}`;
+        break;
+
+      case "RETUR":
+        qtyIn = transaction.data.jumlah;
+        runningStock += qtyIn;
+        reference = transaction.data.retur.id_retur;
+        description = `Retur Pembelian`;
+        performedBy = "ADMIN/KASIR"; // Retur tidak punya field username
+        notes = `Keterangan: ${transaction.data.retur.keterangan || "-"}`;
+        break;
+
+      case "ADJUSTMENT":
+        // Stock adjustment from approved stocktake
+        const expectedStock = runningStock;
+        const actualStock = transaction.data.stok_fisik;
+        qtyAdjustment = actualStock - expectedStock;
+        runningStock = actualStock; // Set to actual counted stock
+        reference = transaction.data.session.id_stocktake_session;
+        description = `Stock Opname Adjustment`;
+        performedBy = transaction.data.session.username_reviewer || "REVIEWER";
+        notes =
+          qtyAdjustment === 0
+            ? "Stok cocok, tidak ada penyesuaian"
+            : `Selisih: ${qtyAdjustment > 0 ? "+" : ""}${qtyAdjustment} (Expected: ${expectedStock}, Actual: ${actualStock})`;
+        break;
+    }
+
+    transactionHistory.push({
+      sequence: sequence++,
+      timestamp: transaction.timestamp,
+      type: transaction.type,
+      reference,
+      description,
+      qty_in: qtyIn,
+      qty_out: qtyOut,
+      qty_adjustment: qtyAdjustment,
+      stock_before: stockBefore,
+      stock_after: runningStock,
+      running_stock: runningStock,
+      performed_by: performedBy,
+      notes,
+    });
+  });
+
+  // 8. Calculate summary
+  const totalPurchases = purchases.reduce(
+    (sum, p) => sum + (p.jumlah || 0),
+    0,
+  );
+  const totalSales = sales.reduce((sum, s) => sum + (s.jumlah || 0), 0);
+  const totalReturns = returns.reduce((sum, r) => sum + (r.jumlah || 0), 0);
+  const totalAdjustments = stockAdjustments.reduce(
+    (sum, a) => sum + (a.selisih || 0),
+    0,
+  );
+
+  const calculatedStock =
+    startingStock + totalPurchases - totalSales + totalReturns;
+  const finalStockAfterAdjustments = calculatedStock + totalAdjustments;
+
+  // 9. Compare with current system stock
+  const currentSystemStock = product.jumlah || 0;
+  const isStockMatched = finalStockAfterAdjustments === currentSystemStock;
+
+  return {
+    product_info: {
+      id_product: product.id_product,
+      nm_product: product.nm_product,
+      nm_divisi: product.divisi?.nm_divisi || "-",
+      harga_beli: parseFloat(product.harga_beli),
+      harga_jual: parseFloat(product.harga_jual),
+      current_system_stock: currentSystemStock,
+    },
+    audit_period: {
+      start_date: transactionStartDate,
+      end_date: cutoffDate,
+      total_days: Math.ceil(
+        (cutoffDate - transactionStartDate) / (1000 * 60 * 60 * 24),
+      ),
+    },
+    starting_stock: {
+      quantity: startingStock,
+      date: startingDate,
+      reference: lastStocktake
+        ? lastStocktake.session.id_stocktake_session
+        : "SISTEM_AWAL",
+      notes: lastStocktake
+        ? "Dari stock opname terakhir yang diapprove"
+        : "Belum ada stock opname sebelumnya, menggunakan stok awal sistem",
+    },
+    transaction_summary: {
+      total_purchases: totalPurchases,
+      total_purchase_transactions: purchases.length,
+      total_sales: totalSales,
+      total_sale_transactions: sales.length,
+      total_returns: totalReturns,
+      total_return_transactions: returns.length,
+      total_adjustments: totalAdjustments,
+      total_adjustment_events: stockAdjustments.length,
+    },
+    stock_calculation: {
+      starting_stock: startingStock,
+      plus_purchases: totalPurchases,
+      minus_sales: totalSales,
+      plus_returns: totalReturns,
+      calculated_stock_before_adjustments: calculatedStock,
+      plus_minus_adjustments: totalAdjustments,
+      final_calculated_stock: finalStockAfterAdjustments,
+      current_system_stock: currentSystemStock,
+      is_matched: isStockMatched,
+      difference: currentSystemStock - finalStockAfterAdjustments,
+    },
+    transaction_history: transactionHistory,
+    verification_result: {
+      is_stock_verified: isStockMatched,
+      message: isStockMatched
+        ? "✅ Stok sistem AKURAT! Sesuai dengan history transaksi."
+        : `⚠️ Terdapat selisih ${currentSystemStock - finalStockAfterAdjustments} antara stok sistem dan kalkulasi transaksi. Perlu investigasi lebih lanjut.`,
+      recommendation: isStockMatched
+        ? "Stok sistem dapat dipercaya. Data akurat berdasarkan audit trail."
+        : "Periksa kemungkinan: (1) Transaksi yang belum tercatat, (2) Manual adjustment langsung ke database, (3) Bug sistem, (4) Data corruption.",
+    },
+  };
+};
+
+// ========================================
 // EXPORTS
 // ========================================
 export default {
@@ -1160,4 +1527,5 @@ export default {
   deleteHighRiskProduct,
   getHighRiskProducts,
   getAdjustmentLogs,
+  verifyStockSystem,
 };

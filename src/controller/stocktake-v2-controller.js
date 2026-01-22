@@ -383,6 +383,30 @@ const getHighRiskProducts = async (req, res, next) => {
 };
 
 // ========================================
+// CONTROLLER: Verify Stock System (Audit Trail)
+// GET /api/stocktake/v2/verify-stock/:id_product
+// ========================================
+const verifyStockSystem = async (req, res, next) => {
+  try {
+    const { id_product } = req.params;
+    const { end_date } = req.query; // Optional: untuk audit sampai tanggal tertentu
+
+    const result = await stocktakeV2Service.verifyStockSystem(
+      id_product,
+      end_date
+    );
+
+    const response = new ResponseSuccess(
+      "Stock verification completed successfully",
+      result
+    ).getResponse();
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ========================================
 // EXPORTS
 // ========================================
 export {
@@ -401,4 +425,5 @@ export {
   updateHighRiskProduct,
   deleteHighRiskProduct,
   getHighRiskProducts,
+  verifyStockSystem,
 };

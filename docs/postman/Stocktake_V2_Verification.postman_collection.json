@@ -1,0 +1,201 @@
+{
+  "info": {
+    "name": "Stocktake V2 - Stock Verification",
+    "description": "API Collection untuk verifikasi stok sistem dan audit trail",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "stocktake-v2-verification"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Verify Stock System - KAPAL API",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/verify-stock/8991002135376",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "verify-stock", "8991002135376"]
+        },
+        "description": "Verifikasi stok sistem untuk produk KAPAL API SPECIAL MIX SACH.\n\nMenampilkan:\n- Audit trail lengkap semua transaksi\n- Kalkulasi running stock\n- Perbandingan dengan stok sistem\n- Verification result (akurat atau tidak)"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Verify Stock System - With End Date",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/verify-stock/8991002135376?end_date=2026-01-21",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "verify-stock", "8991002135376"],
+          "query": [
+            {
+              "key": "end_date",
+              "value": "2026-01-21",
+              "description": "Tanggal cutoff untuk audit (YYYY-MM-DD)"
+            }
+          ]
+        },
+        "description": "Verifikasi stok sistem sampai tanggal tertentu.\n\nBerguna untuk:\n- Audit retrospektif\n- Investigasi selisih di tanggal tertentu\n- Historical stock verification"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Verify Stock - Product Example 1",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/verify-stock/{{product_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "verify-stock", "{{product_id}}"]
+        },
+        "description": "Ganti {{product_id}} dengan ID produk yang ingin diverifikasi.\n\nContoh ID produk:\n- 8991002135376 (KAPAL API)\n- 161467 (AMIDIS)\n- 00040938 (LUMRING BASRENG)\n- AB01 (ANITA BAKERY)"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Stocktake Sessions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/sessions?status=APPROVED&limit=10",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "sessions"],
+          "query": [
+            {
+              "key": "status",
+              "value": "APPROVED",
+              "description": "Filter by status: DRAFT, SUBMITTED, APPROVED, REVISION, CANCELLED"
+            },
+            {
+              "key": "limit",
+              "value": "10",
+              "description": "Jumlah data per page"
+            }
+          ]
+        },
+        "description": "List semua stocktake sessions.\n\nBerguna untuk:\n- Cari session ID untuk audit\n- Lihat history stock opname yang sudah diapprove"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Get Stocktake Session Details",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/sessions/{{session_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "sessions", "{{session_id}}"]
+        },
+        "description": "Detail session stock opname tertentu.\n\nContoh session_id:\n- ST-20260122-043705\n- ST-20260121-180000"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Get Stocktake Items",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/sessions/{{session_id}}/items?is_high_risk=true",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "sessions", "{{session_id}}", "items"],
+          "query": [
+            {
+              "key": "is_high_risk",
+              "value": "true",
+              "description": "Filter high risk products only"
+            }
+          ]
+        },
+        "description": "List items dalam session stock opname.\n\nFilter options:\n- is_high_risk: true/false\n- is_counted: true/false\n- is_flagged: true/false\n- nm_divisi: nama divisi"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Get Adjustment Logs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/stocktake/v2/sessions/{{session_id}}/adjustments",
+          "host": ["{{base_url}}"],
+          "path": ["api", "stocktake", "v2", "sessions", "{{session_id}}", "adjustments"]
+        },
+        "description": "History adjustment untuk session tertentu.\n\nBerguna untuk:\n- Audit trail perubahan stok\n- Investigasi siapa yang mengubah apa"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "your_jwt_token_here",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "8991002135376",
+      "type": "string"
+    },
+    {
+      "key": "session_id",
+      "value": "ST-20260122-043705",
+      "type": "string"
+    }
+  ]
+}

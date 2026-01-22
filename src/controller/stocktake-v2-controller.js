@@ -27,18 +27,18 @@ import { ResponseSuccess } from "../utils/response-success.js";
 const createStocktakeSession = async (req, res, next) => {
   try {
     const validated = await createStocktakeSessionValidation.validateAsync(
-      req.body
+      req.body,
     );
     const user = req.user; // From auth middleware
 
     const result = await stocktakeV2Service.createStocktakeSession(
       validated,
-      user
+      user,
     );
 
     const response = new ResponseSuccess(
       "Stocktake session created successfully",
-      result
+      result,
     ).getResponse();
     res.status(201).json(response);
   } catch (error) {
@@ -53,14 +53,14 @@ const createStocktakeSession = async (req, res, next) => {
 const getStocktakeSessions = async (req, res, next) => {
   try {
     const validated = await getStocktakeSessionsValidation.validateAsync(
-      req.query
+      req.query,
     );
 
     const result = await stocktakeV2Service.getStocktakeSessions(validated);
 
     const response = new ResponseSuccess(
       "Stocktake sessions retrieved successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -79,12 +79,12 @@ const getStocktakeSessionDetails = async (req, res, next) => {
 
     const result = await stocktakeV2Service.getStocktakeSessionDetails(
       sessionId,
-      user
+      user,
     );
 
     const response = new ResponseSuccess(
       "Stocktake session details retrieved successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -107,7 +107,7 @@ const getStocktakeItems = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Stocktake items retrieved successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -130,12 +130,12 @@ const updateStocktakeItem = async (req, res, next) => {
 
     const result = await stocktakeV2Service.updateStocktakeItem(
       validated,
-      user
+      user,
     );
 
     const response = new ResponseSuccess(
       "Stocktake item updated successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -150,18 +150,18 @@ const updateStocktakeItem = async (req, res, next) => {
 const batchUpdateStocktakeItems = async (req, res, next) => {
   try {
     const validated = await batchUpdateStocktakeItemsValidation.validateAsync(
-      req.body
+      req.body,
     );
     const user = req.user;
 
     const result = await stocktakeV2Service.batchUpdateStocktakeItems(
       validated,
-      user
+      user,
     );
 
     const response = new ResponseSuccess(
       "Stocktake items batch updated successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -186,7 +186,7 @@ const submitStocktake = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Stocktake submitted successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -211,7 +211,7 @@ const reviewStocktake = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Stocktake reviewed successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -236,7 +236,7 @@ const finalizeStocktake = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Stocktake finalized successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -261,7 +261,7 @@ const cancelStocktake = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Stocktake cancelled successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -281,7 +281,7 @@ const getAdjustmentLogs = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "Adjustment logs retrieved successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -298,14 +298,14 @@ const getAdjustmentLogs = async (req, res, next) => {
 const addHighRiskProduct = async (req, res, next) => {
   try {
     const validated = await addHighRiskProductValidation.validateAsync(
-      req.body
+      req.body,
     );
 
     const result = await stocktakeV2Service.addHighRiskProduct(validated);
 
     const response = new ResponseSuccess(
       "High risk product added successfully",
-      result
+      result,
     ).getResponse();
     res.status(201).json(response);
   } catch (error) {
@@ -327,7 +327,7 @@ const updateHighRiskProduct = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "High risk product updated successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -346,12 +346,12 @@ const deleteHighRiskProduct = async (req, res, next) => {
     });
 
     const result = await stocktakeV2Service.deleteHighRiskProduct(
-      validated.id_high_risk
+      validated.id_high_risk,
     );
 
     const response = new ResponseSuccess(
       "High risk product deleted successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -374,7 +374,7 @@ const getHighRiskProducts = async (req, res, next) => {
 
     const response = new ResponseSuccess(
       "High risk products retrieved successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {
@@ -393,12 +393,12 @@ const verifyStockSystem = async (req, res, next) => {
 
     const result = await stocktakeV2Service.verifyStockSystem(
       id_product,
-      end_date
+      end_date,
     );
 
     const response = new ResponseSuccess(
       "Stock verification completed successfully",
-      result
+      result,
     ).getResponse();
     res.status(200).json(response);
   } catch (error) {

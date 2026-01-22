@@ -17,22 +17,24 @@ curl -X GET "http://localhost:3000/api/stocktake/v2/verify-stock/8991002135376" 
 ### Bagian Penting yang Harus Dilihat:
 
 #### A. Stok Calculation (Bukti Matematis)
+
 ```json
 {
   "stock_calculation": {
-    "starting_stock": 15,           // Stok awal (dari opname terakhir)
-    "plus_purchases": 35,           // Total pembelian setelah opname
-    "minus_sales": 24,              // Total penjualan setelah opname
-    "plus_returns": 0,              // Total retur (barang kembali)
-    "calculated_stock": 26,         // Hasil kalkulasi: 15 + 35 - 24 = 26
-    "current_system_stock": 26,     // Stok di sistem saat ini
-    "is_matched": true,             // ✅ COCOK!
-    "difference": 0                 // Tidak ada selisih
+    "starting_stock": 15, // Stok awal (dari opname terakhir)
+    "plus_purchases": 35, // Total pembelian setelah opname
+    "minus_sales": 24, // Total penjualan setelah opname
+    "plus_returns": 0, // Total retur (barang kembali)
+    "calculated_stock": 26, // Hasil kalkulasi: 15 + 35 - 24 = 26
+    "current_system_stock": 26, // Stok di sistem saat ini
+    "is_matched": true, // ✅ COCOK!
+    "difference": 0 // Tidak ada selisih
   }
 }
 ```
 
 **Penjelasan ke User:**
+
 ```
 Stok awal (dari opname terakhir):  15 pcs
 + Pembelian baru:                   35 pcs
@@ -69,6 +71,7 @@ TRANSAKSI TERAKHIR:
 ```
 
 #### C. Verification Result
+
 ```json
 {
   "verification_result": {
@@ -84,25 +87,30 @@ TRANSAKSI TERAKHIR:
 ### Jika User Masih Tidak Percaya:
 
 **Tanya:**
+
 > "Coba lihat transaksi ini satu per satu. Mana yang salah?"
 
 **Tunjukkan:**
+
 1. Nota pembelian (cross-check dengan transaksi PEMBELIAN di history)
 2. Struk penjualan (cross-check dengan transaksi PENJUALAN di history)
 3. Hasil opname sebelumnya (cross-check dengan STOCK_OPNAME di history)
 
 **Ajak:**
+
 > "Kita cek bareng-bareng, transaksi mana yang tidak sesuai?"
 
 ### Jika Stok Fisik Benar-benar = 0:
 
 **Kemungkinan:**
+
 1. **Produk hilang/dicuri** (26 pcs)
 2. **Salah hitung fisik** (hitung ulang)
 3. **Produk dipindah** ke lokasi lain tapi tidak tercatat
 4. **Expired/rusak** dan dibuang tanpa dicatat di sistem
 
 **Solusi:**
+
 - Lakukan **investigasi fisik**
 - Cek **CCTV** jika produk hilang
 - **Stock opname ulang** dengan saksi
@@ -118,6 +126,7 @@ POST /api/stocktake/v2/sessions/ST-xxx/finalize
 ```
 
 Sistem akan:
+
 - Update stok master: 26 → 0
 - Catat adjustment log: -26 pcs
 - Simpan alasan: "Produk hilang/dicuri"
@@ -155,11 +164,13 @@ Buat halaman "Verifikasi Stok" dengan tampilan:
 ## 🎯 Tips Komunikasi dengan User
 
 ### ❌ JANGAN:
+
 - "Sistemnya pasti benar, kamu yang salah hitung!"
 - "Data di database enggak mungkin salah"
 - "Ini teknologi, pasti akurat"
 
 ### ✅ LAKUKAN:
+
 - "Mari kita cek bareng-bareng transaksinya"
 - "Ini data lengkap dari sistem, coba kita cross-check"
 - "Kita punya audit trail lengkap, lihat satu per satu yuk"

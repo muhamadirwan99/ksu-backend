@@ -37,49 +37,49 @@ const stocktakeV2Route = () => {
   // Get specific session details
   userRouter.get(
     "/api/stocktake/v2/sessions/:sessionId",
-    getStocktakeSessionDetails
+    getStocktakeSessionDetails,
   );
 
   // Get items for a session
   userRouter.get(
     "/api/stocktake/v2/sessions/:sessionId/items",
-    getStocktakeItems
+    getStocktakeItems,
   );
 
   // Batch update multiple items
   userRouter.patch(
     "/api/stocktake/v2/sessions/:sessionId/items/batch",
-    batchUpdateStocktakeItems
+    batchUpdateStocktakeItems,
   );
 
   // Submit stocktake (Kasir -> Reviewer)
   userRouter.post(
     "/api/stocktake/v2/sessions/:sessionId/submit",
-    submitStocktake
+    submitStocktake,
   );
 
   // Review stocktake (Manajer)
   userRouter.post(
     "/api/stocktake/v2/sessions/:sessionId/review",
-    reviewStocktake
+    reviewStocktake,
   );
 
   // Finalize stocktake (Update stock master)
   userRouter.post(
     "/api/stocktake/v2/sessions/:sessionId/finalize",
-    finalizeStocktake
+    finalizeStocktake,
   );
 
   // Cancel stocktake
   userRouter.post(
     "/api/stocktake/v2/sessions/:sessionId/cancel",
-    cancelStocktake
+    cancelStocktake,
   );
 
   // Get adjustment logs for a session
   userRouter.get(
     "/api/stocktake/v2/sessions/:sessionId/adjustments",
-    getAdjustmentLogs
+    getAdjustmentLogs,
   );
 
   // ========================================
@@ -102,13 +102,13 @@ const stocktakeV2Route = () => {
   // Update high risk product
   userRouter.patch(
     "/api/stocktake/v2/high-risk-products/:id",
-    updateHighRiskProduct
+    updateHighRiskProduct,
   );
 
   // Delete high risk product
   userRouter.delete(
     "/api/stocktake/v2/high-risk-products/:id",
-    deleteHighRiskProduct
+    deleteHighRiskProduct,
   );
 
   // ========================================
@@ -117,7 +117,10 @@ const stocktakeV2Route = () => {
 
   // Verify stock system (audit trail)
   // GET /api/stocktake/v2/verify-stock/:id_product?end_date=2026-01-22
-  userRouter.get("/api/stocktake/v2/verify-stock/:id_product", verifyStockSystem);
+  userRouter.get(
+    "/api/stocktake/v2/verify-stock/:id_product",
+    verifyStockSystem,
+  );
 };
 
 export default stocktakeV2Route;

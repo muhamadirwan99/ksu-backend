@@ -143,7 +143,14 @@
         "url": {
           "raw": "{{base_url}}/api/stocktake/v2/sessions/{{session_id}}/items?is_high_risk=true",
           "host": ["{{base_url}}"],
-          "path": ["api", "stocktake", "v2", "sessions", "{{session_id}}", "items"],
+          "path": [
+            "api",
+            "stocktake",
+            "v2",
+            "sessions",
+            "{{session_id}}",
+            "items"
+          ],
           "query": [
             {
               "key": "is_high_risk",
@@ -169,7 +176,14 @@
         "url": {
           "raw": "{{base_url}}/api/stocktake/v2/sessions/{{session_id}}/adjustments",
           "host": ["{{base_url}}"],
-          "path": ["api", "stocktake", "v2", "sessions", "{{session_id}}", "adjustments"]
+          "path": [
+            "api",
+            "stocktake",
+            "v2",
+            "sessions",
+            "{{session_id}}",
+            "adjustments"
+          ]
         },
         "description": "History adjustment untuk session tertentu.\n\nBerguna untuk:\n- Audit trail perubahan stok\n- Investigasi siapa yang mengubah apa"
       },

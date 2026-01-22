@@ -1,11 +1,13 @@
 # 📋 Panduan Verifikasi Stok Sistem
 
 ## 🎯 Tujuan
+
 Fungsi ini dibuat untuk **membuktikan bahwa stok sistem akurat** dengan menampilkan **audit trail lengkap** dari semua transaksi yang mempengaruhi stok produk.
 
 ## 🔍 Cara Kerja
 
 Sistem akan:
+
 1. **Mengambil stok awal** dari stock opname terakhir yang sudah diapprove
 2. **Menelusuri semua transaksi** (pembelian, penjualan, retur, adjustment) secara kronologis
 3. **Menghitung running stock** setelah setiap transaksi
@@ -19,10 +21,12 @@ GET /api/stocktake/v2/verify-stock/:id_product?end_date=YYYY-MM-DD
 ```
 
 ### Parameters:
+
 - `id_product` (required): ID produk yang ingin diverifikasi
 - `end_date` (optional): Tanggal cutoff untuk audit (default: hari ini)
 
 ### Headers:
+
 ```
 Authorization: Bearer <token>
 ```
@@ -32,22 +36,25 @@ Authorization: Bearer <token>
 ### Case 1: User Tidak Percaya Stok Sistem = 26
 
 **Situasi:**
+
 ```json
 {
   "id_product": "8991002135376",
   "nm_product": "KAPAL API SPECIAL MIX SACH",
   "stok_sistem": 26,
-  "stok_fisik": 0,  // User hitung manual
+  "stok_fisik": 0, // User hitung manual
   "selisih": -26
 }
 ```
 
 **Request:**
+
 ```bash
 GET /api/stocktake/v2/verify-stock/8991002135376
 ```
 
 **Response Example:**
+
 ```json
 {
   "success": true,
@@ -199,23 +206,30 @@ GET /api/stocktake/v2/verify-stock/8991002135376
 ## 📊 Penjelasan Output
 
 ### 1. **Product Info**
+
 Informasi dasar produk yang diverifikasi.
 
 ### 2. **Audit Period**
+
 Periode waktu yang diaudit (dari stock opname terakhir sampai sekarang).
 
 ### 3. **Starting Stock**
+
 Stok awal berdasarkan stock opname terakhir yang sudah diapprove.
 
 ### 4. **Transaction Summary**
+
 Ringkasan total transaksi:
+
 - Total pembelian: +40 pcs (dari 2 transaksi)
 - Total penjualan: -24 pcs (dari 18 transaksi)
 - Total retur: 0 pcs
 - Total adjustment: 0 pcs
 
 ### 5. **Stock Calculation**
+
 Kalkulasi matematika:
+
 ```
 Stok Awal:          10
 + Pembelian:        40
@@ -228,7 +242,9 @@ Stok Awal:          10
 ```
 
 ### 6. **Transaction History**
+
 Timeline detail semua transaksi dengan:
+
 - Urutan (sequence)
 - Timestamp
 - Jenis transaksi (IN/OUT)
@@ -239,21 +255,26 @@ Timeline detail semua transaksi dengan:
 - Catatan tambahan
 
 ### 7. **Verification Result**
+
 Kesimpulan audit:
+
 - ✅ **AKURAT**: Stok sistem cocok dengan kalkulasi
 - ⚠️ **ADA SELISIH**: Perlu investigasi lebih lanjut
 
 ## 🔧 Cara Membuktikan ke User
 
 ### Langkah 1: Panggil API
+
 ```bash
 GET /api/stocktake/v2/verify-stock/8991002135376
 ```
 
 ### Langkah 2: Tunjukkan Bukti
+
 Tampilkan ke user:
 
 **A. Ringkasan Kalkulasi:**
+
 ```
 Stok Awal (15 Jan):     10 pcs
 + Pembelian:            40 pcs
@@ -264,20 +285,21 @@ Stok Awal (15 Jan):     10 pcs
 **B. Transaction History:**
 Tampilkan timeline transaksi dalam tabel:
 
-| No | Tanggal | Jenis | Ref | Qty | Running Stock | Petugas |
-|----|---------|-------|-----|-----|---------------|---------|
-| 0 | 15 Jan | Opname | ST-xxx | - | 10 | admin |
-| 1 | 16 Jan | Pembelian | BL-001 | +20 | 30 | admin |
-| 2 | 16 Jan | Penjualan | JL-005 | -3 | 27 | KASIR1 |
-| 3 | 17 Jan | Pembelian | BL-002 | +20 | 47 | admin |
-| ... | ... | ... | ... | ... | ... | ... |
-| 25 | 21 Jan | Penjualan | JL-032 | -2 | **26** ✅ | KASIR1 |
+| No  | Tanggal | Jenis     | Ref    | Qty | Running Stock | Petugas |
+| --- | ------- | --------- | ------ | --- | ------------- | ------- |
+| 0   | 15 Jan  | Opname    | ST-xxx | -   | 10            | admin   |
+| 1   | 16 Jan  | Pembelian | BL-001 | +20 | 30            | admin   |
+| 2   | 16 Jan  | Penjualan | JL-005 | -3  | 27            | KASIR1  |
+| 3   | 17 Jan  | Pembelian | BL-002 | +20 | 47            | admin   |
+| ... | ...     | ...       | ...    | ... | ...           | ...     |
+| 25  | 21 Jan  | Penjualan | JL-032 | -2  | **26** ✅     | KASIR1  |
 
 **C. Kesimpulan:**
+
 ```
 ✅ Stok sistem = 26 pcs BENAR!
    Sesuai dengan semua transaksi yang tercatat.
-   
+
    Jika stok fisik = 0, kemungkinan:
    1. Produk hilang/dicuri
    2. Salah hitung fisik
@@ -296,12 +318,13 @@ Jika `is_matched: false`, cek:
 4. **Bug sistem** atau data corruption
 
 ### Rekomendasi:
+
 ```json
 {
-  "recommendation": "Periksa kemungkinan: 
-    (1) Transaksi yang belum tercatat, 
-    (2) Manual adjustment langsung ke database, 
-    (3) Bug sistem, 
+  "recommendation": "Periksa kemungkinan:
+    (1) Transaksi yang belum tercatat,
+    (2) Manual adjustment langsung ke database,
+    (3) Bug sistem,
     (4) Data corruption."
 }
 ```
@@ -317,6 +340,7 @@ Jika `is_matched: false`, cek:
 ## 🎯 Kesimpulan
 
 Dengan fungsi **verifyStockSystem**, Anda bisa:
+
 - ✅ Membuktikan stok sistem akurat dengan **data faktual**
 - ✅ Menunjukkan **transparansi penuh** kepada user
 - ✅ Menemukan **anomali** jika ada transaksi yang tidak tercatat

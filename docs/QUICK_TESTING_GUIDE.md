@@ -16,11 +16,13 @@ docs/postman/
 ### 1. Import ke Postman
 
 **Option A: Via Postman UI**
+
 1. Buka Postman
 2. Klik **Import** → Pilih file `Stocktake_V2_Verification.postman_collection.json`
 3. Klik **Import** → Pilih file `Stocktake_Development.postman_environment.json`
 
 **Option B: Via Command Line**
+
 ```bash
 # Copy URL collection
 curl -o collection.json https://your-repo/docs/postman/Stocktake_V2_Verification.postman_collection.json
@@ -34,6 +36,7 @@ newman run collection.json -e environment.json
 ### 2. Login & Get Token
 
 **Request:**
+
 ```bash
 POST http://localhost:3000/api/users/login
 Content-Type: application/json
@@ -45,6 +48,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -61,12 +65,14 @@ Content-Type: application/json
 ### 3. Verify Stock (Main Feature!)
 
 **Request:**
+
 ```bash
 GET http://localhost:3000/api/stocktake/v2/verify-stock/8991002135376
 Authorization: Bearer {{access_token}}
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -117,10 +123,13 @@ Authorization: Bearer {{access_token}}
 ## 🎯 Test Cases
 
 ### Case 1: Stok Akurat (Expected)
+
 ```bash
 GET /api/stocktake/v2/verify-stock/8991002135376
 ```
+
 **Expected:**
+
 - `is_matched: true`
 - `difference: 0`
 - `message: "✅ Stok sistem AKURAT!"`
@@ -128,10 +137,13 @@ GET /api/stocktake/v2/verify-stock/8991002135376
 ---
 
 ### Case 2: Stok Tidak Match (Anomaly)
+
 ```bash
 GET /api/stocktake/v2/verify-stock/{product_with_issue}
 ```
+
 **Expected:**
+
 - `is_matched: false`
 - `difference: ±X`
 - `message: "⚠️ Terdapat selisih..."`
@@ -141,20 +153,26 @@ GET /api/stocktake/v2/verify-stock/{product_with_issue}
 ---
 
 ### Case 3: Historical Verification
+
 ```bash
 GET /api/stocktake/v2/verify-stock/8991002135376?end_date=2026-01-21
 ```
+
 **Expected:**
+
 - Audit sampai tanggal 21 Jan saja
 - Berguna untuk forensic analysis
 
 ---
 
 ### Case 4: Product Tanpa Stock Opname
+
 ```bash
 GET /api/stocktake/v2/verify-stock/{new_product_id}
 ```
+
 **Expected:**
+
 - `starting_stock: 0`
 - `notes: "Belum ada stock opname sebelumnya"`
 
@@ -163,6 +181,7 @@ GET /api/stocktake/v2/verify-stock/{new_product_id}
 ## 🔍 Debugging Tips
 
 ### ✅ Check 1: Token Valid?
+
 ```bash
 # Jika response 401 Unauthorized
 # → Login ulang dan get new token
@@ -170,12 +189,14 @@ POST /api/users/login
 ```
 
 ### ✅ Check 2: Product Exists?
+
 ```bash
 # Verify product ID di database
 GET /api/products/{product_id}
 ```
 
 ### ✅ Check 3: Ada Transaksi?
+
 ```bash
 # Check transaction summary di response
 "transaction_summary": {
@@ -186,6 +207,7 @@ GET /api/products/{product_id}
 ```
 
 ### ✅ Check 4: Stock Opname Ada?
+
 ```bash
 GET /api/stocktake/v2/sessions?status=APPROVED
 # Check apakah ada session yang sudah APPROVED
@@ -196,6 +218,7 @@ GET /api/stocktake/v2/sessions?status=APPROVED
 ## 📊 Interpret Results
 
 ### ✅ Stok Akurat
+
 ```json
 {
   "is_matched": true,
@@ -203,11 +226,13 @@ GET /api/stocktake/v2/sessions?status=APPROVED
   "message": "✅ Stok sistem AKURAT!"
 }
 ```
+
 **Action:** Tunjukkan ke user bahwa sistem benar
 
 ---
 
 ### ⚠️ Stok Tidak Match
+
 ```json
 {
   "is_matched": false,
@@ -215,7 +240,9 @@ GET /api/stocktake/v2/sessions?status=APPROVED
   "message": "⚠️ Terdapat selisih -5 antara stok sistem dan kalkulasi..."
 }
 ```
-**Action:** 
+
+**Action:**
+
 1. Check `transaction_history` untuk anomali
 2. Cari transaksi yang tidak tercatat
 3. Investigasi manual adjustment
@@ -226,6 +253,7 @@ GET /api/stocktake/v2/sessions?status=APPROVED
 ## 💡 Pro Tips
 
 ### Tip 1: Save Common Product IDs
+
 ```javascript
 // Di Postman environment, tambahkan:
 {
@@ -240,26 +268,31 @@ GET /api/stocktake/v2/verify-stock/{{kapal_api}}
 ```
 
 ### Tip 2: Automated Testing
+
 ```javascript
 // Di Tests tab Postman:
 pm.test("Stock is verified", function () {
-    const data = pm.response.json().data;
-    pm.expect(data.stock_calculation.is_matched).to.be.true;
+  const data = pm.response.json().data;
+  pm.expect(data.stock_calculation.is_matched).to.be.true;
 });
 
 pm.test("No difference", function () {
-    const data = pm.response.json().data;
-    pm.expect(data.stock_calculation.difference).to.equal(0);
+  const data = pm.response.json().data;
+  pm.expect(data.stock_calculation.difference).to.equal(0);
 });
 ```
 
 ### Tip 3: Export to CSV
+
 ```javascript
 // Transaction history to CSV for analysis
 const transactions = pm.response.json().data.transaction_history;
-const csv = transactions.map(t => 
-  `${t.sequence},${t.timestamp},${t.type},${t.qty_in},${t.qty_out},${t.running_stock}`
-).join('\n');
+const csv = transactions
+  .map(
+    (t) =>
+      `${t.sequence},${t.timestamp},${t.type},${t.qty_in},${t.qty_out},${t.running_stock}`,
+  )
+  .join("\n");
 console.log(csv);
 ```
 
@@ -300,19 +333,19 @@ curl -X GET http://localhost:3000/api/stocktake/v2/verify-stock/8991002135376 \
 2. Select "Verify Stock System - KAPAL API" request
 3. Click "Send"
 4. Show hasil di Pretty view:
-   
+
    "Lihat bapak/ibu, ini data lengkapnya:"
-   
+
    → Point ke stock_calculation:
      "Stok awal: 15
       Pembelian: +35
       Penjualan: -24
       Hasil: 26 ✅ Sama dengan sistem!"
-   
+
    → Point ke transaction_history:
      "Ini semua transaksinya, ada 25 transaksi
       Bisa dicek satu per satu"
-   
+
    → Point ke verification_result:
      "Sistem bilang: STOK AKURAT ✅"
 
@@ -323,13 +356,13 @@ curl -X GET http://localhost:3000/api/stocktake/v2/verify-stock/8991002135376 \
 
 ## 🆘 Quick Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| 401 Unauthorized | Login ulang, token expired |
-| 404 Not Found | Product ID salah, cek database |
-| 500 Server Error | Check server logs di terminal |
-| Empty response | Belum ada data, create session dulu |
-| Token di-reject | Pastikan format: `Bearer {token}` |
+| Issue            | Solution                            |
+| ---------------- | ----------------------------------- |
+| 401 Unauthorized | Login ulang, token expired          |
+| 404 Not Found    | Product ID salah, cek database      |
+| 500 Server Error | Check server logs di terminal       |
+| Empty response   | Belum ada data, create session dulu |
+| Token di-reject  | Pastikan format: `Bearer {token}`   |
 
 ---
 

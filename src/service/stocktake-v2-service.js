@@ -1428,10 +1428,7 @@ const verifyStockSystem = async (idProduct, endDate = null) => {
   });
 
   // 8. Calculate summary
-  const totalPurchases = purchases.reduce(
-    (sum, p) => sum + (p.jumlah || 0),
-    0,
-  );
+  const totalPurchases = purchases.reduce((sum, p) => sum + (p.jumlah || 0), 0);
   const totalSales = sales.reduce((sum, s) => sum + (s.jumlah || 0), 0);
   const totalReturns = returns.reduce((sum, r) => sum + (r.jumlah || 0), 0);
   const totalAdjustments = stockAdjustments.reduce(

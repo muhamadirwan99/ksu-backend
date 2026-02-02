@@ -5,58 +5,110 @@ import { generateDate } from "../utils/generate-date.js";
 import laporanService from "./laporan/laporan-service.js";
 
 const getDashboardIncome = async () => {
-  // Mendapatkan tanggal hari ini dalam WIB
-  const today = generateDate();
-  const todayUTC = new Date(); // Current UTC time
+  /**
+   * PENTING: CARA KERJA TIMEZONE GMT+7
+   * ===================================
+   *
+   * 1. generateDate() menambah 7 jam ke UTC saat menyimpan data
+   *    Contoh: Tanggal 2 Feb 2026 pukul 10:00 WIB
+   *            → disimpan sebagai: 2026-02-02T10:00:00.000Z (bukan 2026-02-02T03:00:00.000Z)
+   *
+   * 2. Database menyimpan data dengan offset +7 jam sudah ter-apply
+   *    Transaksi tanggal 2 Feb WIB → created_at antara 2026-02-02T00:00:00Z sampai 2026-02-02T23:59:59Z
+   *
+   * 3. Query yang BENAR: Langsung pakai UTC date TANPA kurang/tambah offset
+   *    ✅ BENAR: Query 2026-02-02T00:00:00.000Z to 2026-02-02T23:59:59.999Z
+   *    ❌ SALAH: Query 2026-02-01T17:00:00.000Z to 2026-02-02T16:59:59.999Z (ini akan ambil data tanggal 1 juga!)
+   *
+   * 4. Kenapa? Karena data sudah disimpan dengan +7 jam offset, jadi tidak perlu dikurangi lagi
+   *
+   * Ringkasan: generateDate() sudah handle timezone, query tinggal pakai date UTC langsung!
+   */
 
-  // Untuk dashboard, kita ingin menghitung transaksi berdasarkan tanggal actual di UTC
-  // bukan berdasarkan timezone conversion
+  // Mendapatkan tanggal hari ini dalam WIB (sudah ada offset +7 jam)
+  const todayWIB = generateDate();
 
-  // Dapatkan tanggal hari ini dan kemarin dalam UTC
-  const todayUTCDate = {
-    year: todayUTC.getUTCFullYear(),
-    month: todayUTC.getUTCMonth(),
-    day: todayUTC.getUTCDate(),
+  // Dapatkan komponen tanggal untuk hari ini (WIB)
+  const todayWIBDate = {
+    year: todayWIB.getUTCFullYear(),
+    month: todayWIB.getUTCMonth(),
+    day: todayWIB.getUTCDate(),
   };
 
-  const yesterdayUTC = new Date(todayUTC.getTime() - 24 * 60 * 60 * 1000);
-  const yesterdayUTCDate = {
-    year: yesterdayUTC.getUTCFullYear(),
-    month: yesterdayUTC.getUTCMonth(),
-    day: yesterdayUTC.getUTCDate(),
+  // Kemarin (WIB) - kurangi 1 hari dari todayWIB
+  const yesterdayWIB = new Date(todayWIB.getTime() - 24 * 60 * 60 * 1000);
+  const yesterdayWIBDate = {
+    year: yesterdayWIB.getUTCFullYear(),
+    month: yesterdayWIB.getUTCMonth(),
+    day: yesterdayWIB.getUTCDate(),
   };
 
-  // Range untuk mengambil data dari 2 hari terakhir
-  const twoDaysAgo = new Date(todayUTC.getTime() - 2 * 24 * 60 * 60 * 1000);
-  const tomorrow = new Date(todayUTC.getTime() + 24 * 60 * 60 * 1000);
+  // Buat range query untuk hari ini: 00:00:00.000 sampai 23:59:59.999 (tanggal WIB hari ini)
+  const todayStart = new Date(
+    Date.UTC(
+      todayWIBDate.year,
+      todayWIBDate.month,
+      todayWIBDate.day,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
+  const todayEnd = new Date(
+    Date.UTC(
+      todayWIBDate.year,
+      todayWIBDate.month,
+      todayWIBDate.day,
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
 
-  // Ambil semua data dari rentang luas, lalu filter manual
-  const allSales = await prismaClient.penjualan.findMany({
+  // Buat range query untuk kemarin
+  const yesterdayStart = new Date(
+    Date.UTC(
+      yesterdayWIBDate.year,
+      yesterdayWIBDate.month,
+      yesterdayWIBDate.day,
+      0,
+      0,
+      0,
+      0,
+    ),
+  );
+  const yesterdayEnd = new Date(
+    Date.UTC(
+      yesterdayWIBDate.year,
+      yesterdayWIBDate.month,
+      yesterdayWIBDate.day,
+      23,
+      59,
+      59,
+      999,
+    ),
+  );
+
+  // Query penjualan hari ini
+  const salesToday = await prismaClient.penjualan.findMany({
     where: {
       created_at: {
-        gte: twoDaysAgo,
-        lt: tomorrow,
+        gte: todayStart,
+        lte: todayEnd,
       },
     },
   });
 
-  // Filter transaksi berdasarkan tanggal UTC yang sebenarnya
-  const salesToday = allSales.filter((sale) => {
-    const saleDate = new Date(sale.created_at);
-    return (
-      saleDate.getUTCFullYear() === todayUTCDate.year &&
-      saleDate.getUTCMonth() === todayUTCDate.month &&
-      saleDate.getUTCDate() === todayUTCDate.day
-    );
-  });
-
-  const salesYesterday = allSales.filter((sale) => {
-    const saleDate = new Date(sale.created_at);
-    return (
-      saleDate.getUTCFullYear() === yesterdayUTCDate.year &&
-      saleDate.getUTCMonth() === yesterdayUTCDate.month &&
-      saleDate.getUTCDate() === yesterdayUTCDate.day
-    );
+  // Query penjualan kemarin
+  const salesYesterday = await prismaClient.penjualan.findMany({
+    where: {
+      created_at: {
+        gte: yesterdayStart,
+        lte: yesterdayEnd,
+      },
+    },
   });
 
   // Menghitung total penjualan hari ini dan kemarin
@@ -71,34 +123,26 @@ const getDashboardIncome = async () => {
     totalSaleYesterday += parseFloat(sale.total_nilai_jual);
   });
 
-  // Untuk cash in out, kita juga perlu menggunakan logic yang sama
-  const allCashIn = await prismaClient.cashInOut.findMany({
+  // Query cash in hari ini
+  const cashInToday = await prismaClient.cashInOut.findMany({
     where: {
       id_cash: "1",
       tg_transaksi: {
-        gte: twoDaysAgo,
-        lt: tomorrow,
+        gte: todayStart,
+        lte: todayEnd,
       },
     },
   });
 
-  // Filter cash in berdasarkan tanggal UTC yang sebenarnya
-  const cashInToday = allCashIn.filter((cash) => {
-    const cashDate = new Date(cash.tg_transaksi);
-    return (
-      cashDate.getUTCFullYear() === todayUTCDate.year &&
-      cashDate.getUTCMonth() === todayUTCDate.month &&
-      cashDate.getUTCDate() === todayUTCDate.day
-    );
-  });
-
-  const cashInYesterday = allCashIn.filter((cash) => {
-    const cashDate = new Date(cash.tg_transaksi);
-    return (
-      cashDate.getUTCFullYear() === yesterdayUTCDate.year &&
-      cashDate.getUTCMonth() === yesterdayUTCDate.month &&
-      cashDate.getUTCDate() === yesterdayUTCDate.day
-    );
+  // Query cash in kemarin
+  const cashInYesterday = await prismaClient.cashInOut.findMany({
+    where: {
+      id_cash: "1",
+      tg_transaksi: {
+        gte: yesterdayStart,
+        lte: yesterdayEnd,
+      },
+    },
   });
 
   let totalCashInToday = 0;
@@ -157,7 +201,7 @@ const getStatisticIncomeMonthly = async (request) => {
   const penjualanToko = total_current_month_sale;
   const presentasePenjualan = getPercentageChange(
     total_current_month_sale,
-    total_last_month_sale
+    total_last_month_sale,
   );
 
   // Keuntungan
@@ -167,7 +211,7 @@ const getStatisticIncomeMonthly = async (request) => {
     total_last_month_sale - total_last_month_sale_nilai_beli;
   const presentaseKeuntungan = getPercentageChange(
     keuntunganToko,
-    keuntunganTokoLastMonth
+    keuntunganTokoLastMonth,
   );
 
   const pendapatanToko = {
@@ -188,7 +232,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentasePendapatanKoperasi = getPercentageChange(
     pendapatanKoperasi,
-    pendapatanKoperasiLastMonth
+    pendapatanKoperasiLastMonth,
   );
 
   // Pengeluaran Koperasi
@@ -202,7 +246,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentasePengeluaranKoperasi = getPercentageChange(
     pengeluaranKoperasi,
-    pengeluaranKoperasiLastMonth
+    pengeluaranKoperasiLastMonth,
   );
 
   // Keuntungan Koperasi
@@ -212,7 +256,7 @@ const getStatisticIncomeMonthly = async (request) => {
 
   const presentaseKeuntunganKoperasi = getPercentageChange(
     keuntunganKoperasi,
-    keuntunganKoperasiLastMonth
+    keuntunganKoperasiLastMonth,
   );
 
   const koperasi = {

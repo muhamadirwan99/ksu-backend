@@ -98,17 +98,52 @@ const generateHarianToDoList = async (idTutupKasir, shift) => {
 
   // 1. Get products with transactions in this shift
   // Dari Penjualan
+
+  /**
+   * PENTING: CARA KERJA TIMEZONE GMT+7
+   * ===================================
+   *
+   * 1. generateDate() menambah 7 jam ke UTC saat menyimpan data
+   *    Contoh: Tanggal 2 Feb 2026 pukul 10:00 WIB
+   *            → disimpan sebagai: 2026-02-02T10:00:00.000Z (bukan 2026-02-02T03:00:00.000Z)
+   *
+   * 2. Database menyimpan data dengan offset +7 jam sudah ter-apply
+   *    Transaksi tanggal 2 Feb WIB → created_at antara 2026-02-02T00:00:00Z sampai 2026-02-02T23:59:59Z
+   *
+   * 3. Query yang BENAR: Langsung pakai UTC date TANPA kurang/tambah offset
+   *    ✅ BENAR: Query 2026-02-02T00:00:00.000Z to 2026-02-02T23:59:59.999Z
+   *    ❌ SALAH: Query 2026-02-01T17:00:00.000Z to 2026-02-02T16:59:59.999Z (ini akan ambil data tanggal 1 juga!)
+   *
+   * 4. Kenapa? Karena data sudah disimpan dengan +7 jam offset, jadi tidak perlu dikurangi lagi
+   *
+   * Ringkasan: generateDate() sudah handle timezone, query tinggal pakai date UTC langsung!
+   */
+
+  const today = generateDate(); // Waktu saat ini di GMT+7 (sudah +7 jam dari server UTC)
+
+  // Extract tahun, bulan, tanggal dari GMT+7
+  const year = today.getUTCFullYear();
+  const month = today.getUTCMonth();
+  const date = today.getUTCDate();
+
+  // Buat Date UTC untuk hari ini tanpa offset tambahan
+  // Karena generateDate() sudah menambah 7 jam saat save, maka data hari ini
+  // disimpan sebagai YYYY-MM-DDT00:00:00Z sampai YYYY-MM-DDT23:59:59Z
+  const startOfDay = new Date(Date.UTC(year, month, date, 0, 0, 0, 0));
+  const endOfDay = new Date(Date.UTC(year, month, date, 23, 59, 59, 999));
+
   const salesProducts = await prismaClient.detailPenjualan.findMany({
     where: {
       penjualan: {
         created_at: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          lt: new Date(new Date().setHours(23, 59, 59, 999)),
+          gte: startOfDay,
+          lte: endOfDay,
         },
       },
     },
     select: {
       id_product: true,
+      created_at: true,
       product: {
         select: {
           id_product: true,
@@ -147,13 +182,14 @@ const generateHarianToDoList = async (idTutupKasir, shift) => {
     where: {
       pembelian: {
         created_at: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          lt: new Date(new Date().setHours(23, 59, 59, 999)),
+          gte: startOfDay,
+          lte: endOfDay,
         },
       },
     },
     select: {
       id_product: true,
+      created_at: true,
       product: {
         select: {
           id_product: true,

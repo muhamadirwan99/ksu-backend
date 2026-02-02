@@ -50,7 +50,7 @@ const batchUpdateStocktakeItemsValidation = Joi.object({
         id_stocktake_item: Joi.number().integer().positive().required(),
         stok_fisik: Joi.number().integer().min(0).required(),
         notes: Joi.string().max(255).optional().allow(""),
-      })
+      }),
     )
     .min(1)
     .max(100) // Limit batch size
@@ -108,7 +108,7 @@ const reviewStocktakeValidation = Joi.object({
         Joi.object({
           id_stocktake_item: Joi.number().integer().positive().required(),
           flag_reason: Joi.string().max(255).required(),
-        })
+        }),
       )
       .min(1)
       .required()
@@ -122,7 +122,7 @@ const reviewStocktakeValidation = Joi.object({
         Joi.object({
           id_stocktake_item: Joi.number().integer().positive().required(),
           flag_reason: Joi.string().max(255).required(),
-        })
+        }),
       )
       .optional(),
   }),
@@ -217,7 +217,7 @@ const getStocktakeSessionsValidation = Joi.object({
   end_date: Joi.date().min(Joi.ref("start_date")).optional(),
   shift: Joi.string().max(20).optional(),
   page: Joi.number().integer().min(1).default(1),
-  limit: Joi.number().integer().min(1).max(100).default(20),
+  limit: Joi.number().integer().min(1).max(10000).default(20),
 });
 
 const getStocktakeItemsValidation = Joi.object({
@@ -233,7 +233,7 @@ const getStocktakeItemsValidation = Joi.object({
   is_high_risk: Joi.boolean().optional(),
   has_variance: Joi.boolean().optional(), // Filter yang ada selisih
   page: Joi.number().integer().min(1).default(1),
-  limit: Joi.number().integer().min(1).max(500).default(50),
+  limit: Joi.number().integer().min(1).max(10000).default(50),
 });
 
 // ========================================

@@ -30,7 +30,10 @@ const getProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const result = await productService.updateProduct(req.body);
+    const result = await productService.updateProduct(
+      req.body,
+      req.user.username,
+    );
     const responses = new ResponseSuccess(
       "Success update product",
       result,
@@ -84,6 +87,20 @@ const aktivitasStock = async (req, res, next) => {
   }
 };
 
+const getProductHistory = async (req, res, next) => {
+  try {
+    const result = await productService.getProductHistory(req.body);
+    const responses = new ResponseSuccess(
+      "Success get product history log",
+      result,
+    ).getResponse();
+
+    res.status(200).json(responses);
+  } catch (e) {
+    next(e);
+  }
+};
+
 export default {
   createProduct,
   getProduct,
@@ -91,4 +108,5 @@ export default {
   removeProduct,
   listProduct,
   aktivitasStock,
+  getProductHistory,
 };

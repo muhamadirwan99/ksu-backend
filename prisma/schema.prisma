@@ -133,10 +133,28 @@ model Product {
   // Stocktake V2 Relations
   StocktakeItems   StocktakeItem[]
   HighRiskProducts StocktakeHighRiskProduct[]
+  ProductHistoryLog ProductHistoryLog[]
 
   @@index([id_divisi], map: "products_id_divisi_fkey")
   @@index([id_supplier], map: "products_id_supplier_fkey")
   @@map("products")
+}
+
+model ProductHistoryLog {
+  id_log           Int       @id @default(autoincrement())
+  id_product       String    @db.VarChar(100)
+  nm_product       String    @db.VarChar(100)
+  jumlah_sebelum   Int
+  jumlah_sesudah   Int
+  selisih          Int
+  nm_divisi        String    @default("Unknown") @db.VarChar(100)           
+  username         String    @db.VarChar(100)
+  keterangan       String?   @db.Text
+  created_at       DateTime  @db.Timestamp(6)
+  product          Product   @relation(fields: [id_product], references: [id_product])
+
+  @@index([id_product], map: "product_history_log_id_product_fkey")
+  @@map("product_history_log")
 }
 
 model CashInOut {

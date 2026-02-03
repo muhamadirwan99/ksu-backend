@@ -8,7 +8,7 @@ const addProductValidation = Joi.object({
   harga_jual: Joi.number().required(),
   harga_beli: Joi.number().required(),
   status_product: Joi.boolean().required(),
-  jumlah: Joi.number().required(),
+  // jumlah: Joi.number().required(),
   keterangan: Joi.string().max(255).optional(),
 });
 
@@ -47,10 +47,19 @@ const aktivitasStockValidation = Joi.object({
   sort_order: Joi.array().optional(),
 });
 
+const getProductHistoryValidation = Joi.object({
+  page: Joi.number().min(1).positive().default(1),
+  size: Joi.number().min(1).positive().max(10000).default(10),
+  id_product: Joi.string().optional(),
+  nm_product: Joi.string().optional(),
+  username: Joi.string().optional(),
+});
+
 export {
   addProductValidation,
   getProductValidation,
   updateProductValidation,
   searchProductValidation,
   aktivitasStockValidation,
+  getProductHistoryValidation,
 };

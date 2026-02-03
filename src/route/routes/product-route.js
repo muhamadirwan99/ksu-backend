@@ -21,6 +21,10 @@ const productRoute = () => {
     "/api/products/aktivitas-stock",
     productController.aktivitasStock,
   );
+  userRouter.post(
+    "/api/products/history-log",
+    productController.getProductHistory,
+  );
 };
 
 export default productRoute;

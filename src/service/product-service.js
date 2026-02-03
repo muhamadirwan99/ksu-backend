@@ -8,6 +8,7 @@ import {
   getProductValidation,
   searchProductValidation,
   updateProductValidation,
+  getProductHistoryValidation,
 } from "../validation/product-validation.js";
 import { updateFields } from "../utils/update-fields.js";
 
@@ -25,6 +26,7 @@ const createProduct = async (request) => {
   }
 
   request.created_at = generateDate();
+  request.jumlah = 0;
 
   return prismaClient.product.create({
     data: request,
@@ -47,7 +49,7 @@ const getProduct = async (request) => {
   return product;
 };
 
-const updateProduct = async (request) => {
+const updateProduct = async (request, username) => {
   request = validate(updateProductValidation, request);
   const fieldProduct = [
     "nm_product",
@@ -70,18 +72,53 @@ const updateProduct = async (request) => {
     throw new ResponseError("Product is not found", {});
   }
 
+  // Ambil data product yang lama untuk membandingkan jumlah
+  const oldProduct = await prismaClient.product.findUnique({
+    where: {
+      id_product: request.id_product,
+    },
+  });
+
   const data = {};
   updateFields(request, data, fieldProduct);
 
   data.updated_at = generateDate();
 
-  return prismaClient.product.update({
+  // Update product
+  const updatedProduct = await prismaClient.product.update({
     where: {
       id_product: request.id_product,
       updated_at: request.updated_at,
     },
     data: data,
   });
+
+  // Jika jumlah berubah, tambahkan log ke ProductHistoryLog
+  if (request.jumlah !== undefined && oldProduct.jumlah !== request.jumlah) {
+    const nm_divisi = await prismaClient.divisi
+      .findUnique({
+        where: {
+          id_divisi: updatedProduct.id_divisi,
+        },
+      })
+      .then((divisi) => (divisi ? divisi.nm_divisi : "Unknown"));
+
+    await prismaClient.productHistoryLog.create({
+      data: {
+        id_product: request.id_product,
+        nm_product: updatedProduct.nm_product,
+        nm_divisi: nm_divisi,
+        jumlah_sebelum: oldProduct.jumlah,
+        jumlah_sesudah: request.jumlah,
+        selisih: request.jumlah - oldProduct.jumlah,
+        username: username || "system",
+        keterangan: request.keterangan_log || "Update jumlah product manual",
+        created_at: generateDate(),
+      },
+    });
+  }
+
+  return updatedProduct;
 };
 
 const removeProduct = async (request) => {
@@ -272,6 +309,11 @@ const aktivitasStock = async (request) => {
     orderBy: { id_stocktake_item: "desc" },
   });
 
+  const productUpdateHistory = await prismaClient.productHistoryLog.findMany({
+    where: filterStockTake,
+    orderBy: { created_at: "desc" },
+  });
+
   const aktivitas = penjualanList.flatMap((penjualanItem) =>
     penjualanItem.DetailPenjualan.filter((detail) => {
       const matchId = request.id_product
@@ -322,8 +364,8 @@ const aktivitasStock = async (request) => {
 
   aktivitas.push(
     ...stockTake.map((stockItem) => ({
-      tg_aktivitas: stockItem.created_at,
-      tg_update_aktivitas: stockItem.updated_at || stockItem.created_at,
+      tg_aktivitas: stockItem.counted_at,
+      tg_update_aktivitas: stockItem.counted_at || stockItem.counted_at,
       id_product: stockItem.id_product,
       nm_product: stockItem.nm_product,
       divisi: stockItem.nm_divisi,
@@ -337,6 +379,27 @@ const aktivitasStock = async (request) => {
       aktivitas: "Stock Take",
       id_aktivitas: stockItem.id_stocktake_item.toString(),
       user: stockItem.username || "",
+      is_checkpoint: true, // marker bahwa ini adalah checkpoint
+    })),
+  );
+
+  aktivitas.push(
+    ...productUpdateHistory.map((historyItem) => ({
+      tg_aktivitas: historyItem.created_at,
+      tg_update_aktivitas: historyItem.created_at || historyItem.created_at,
+      id_product: historyItem.id_product,
+      nm_product: historyItem.nm_product,
+      divisi: historyItem.nm_divisi,
+      stok_fisik: historyItem.jumlah_sesudah, // nilai benar untuk checkpoint
+      stok_sistem: historyItem.jumlah_sebelum, // nilai sistem sebelum koreksi
+      jumlah_transaksi: historyItem.selisih, // selisih untuk display dan perhitungan
+      jumlah_display:
+        historyItem.selisih === 0
+          ? "0"
+          : (historyItem.selisih > 0 ? "+" : "") + historyItem.selisih, // tampilkan selisih
+      aktivitas: "Product Update",
+      id_aktivitas: historyItem.id_log.toString(),
+      user: historyItem.username || "",
       is_checkpoint: true, // marker bahwa ini adalah checkpoint
     })),
   );
@@ -357,13 +420,13 @@ const aktivitasStock = async (request) => {
     if (item.is_checkpoint) {
       // Stock sebelumnya adalah stok_sistem (nilai sebelum koreksi)
       item.stock_sebelumnya = item.stok_sistem;
-      
+
       // Stock setelahnya adalah stok_fisik (nilai yang benar setelah stocktake)
       item.stock_setelahnya = item.stok_fisik;
-      
+
       // Reset balance ke nilai yang benar dari stocktake
       stockBalance[item.id_product] = item.stok_fisik;
-      
+
       // Cleanup field sementara
       delete item.stok_fisik;
       delete item.stok_sistem;
@@ -407,6 +470,80 @@ const aktivitasStock = async (request) => {
   };
 };
 
+const getProductHistory = async (request) => {
+  // Jika request kosong, ambil semua data
+  if (Object.keys(request).length === 0) {
+    const historyLogs = await prismaClient.productHistoryLog.findMany({
+      orderBy: {
+        created_at: "desc",
+      },
+    });
+    return {
+      data_history: historyLogs,
+      paging: {
+        page: 1,
+        total_item: historyLogs.length,
+        total_page: 1,
+      },
+    };
+  }
+
+  request = validate(getProductHistoryValidation, request);
+  const skip = (request.page - 1) * request.size;
+
+  const filters = [];
+
+  if (request.id_product) {
+    filters.push({
+      id_product: {
+        contains: request.id_product,
+      },
+    });
+  }
+
+  if (request.nm_product) {
+    filters.push({
+      nm_product: {
+        contains: request.nm_product,
+      },
+    });
+  }
+
+  if (request.username) {
+    filters.push({
+      username: {
+        contains: request.username,
+      },
+    });
+  }
+
+  const historyLogs = await prismaClient.productHistoryLog.findMany({
+    where: {
+      AND: filters,
+    },
+    take: request.size,
+    skip: skip,
+    orderBy: {
+      created_at: "desc",
+    },
+  });
+
+  const totalItems = await prismaClient.productHistoryLog.count({
+    where: {
+      AND: filters,
+    },
+  });
+
+  return {
+    data_history: historyLogs,
+    paging: {
+      page: request.page,
+      total_item: totalItems,
+      total_page: Math.ceil(totalItems / request.size),
+    },
+  };
+};
+
 export default {
   createProduct,
   getProduct,
@@ -414,4 +551,5 @@ export default {
   removeProduct,
   searchProduct,
   aktivitasStock,
+  getProductHistory,
 };

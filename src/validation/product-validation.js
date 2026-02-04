@@ -8,7 +8,7 @@ const addProductValidation = Joi.object({
   harga_jual: Joi.number().required(),
   harga_beli: Joi.number().required(),
   status_product: Joi.boolean().required(),
-  jumlah: Joi.number().optional(),
+  jumlah: Joi.optional(),
   keterangan: Joi.string().max(255).optional(),
 });
 
